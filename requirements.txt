@@ -1,7 +1,15 @@
+atomicwrites==1.1.5
+attrs==18.1.0
+coverage==4.5.1
 flake8==2.6.2
 hacking==1.1.0
+hypothesis==3.57.0
 mccabe==0.5.3
+more-itertools==4.2.0
 pbr==4.0.3
+pluggy==0.6.0
+py==1.5.3
 pycodestyle==2.0.0
 pyflakes==1.2.3
+pytest==3.6.0
 six==1.11.0

@@ -1,0 +1,5 @@
+# python cache
+*.pyc
+
+# virtual env
+venv

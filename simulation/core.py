@@ -5,10 +5,17 @@ from agent import Agent
 from transaction import Transaction
 from plot import Plot
 
-simu = Simulation()
-arrival_times = simu.cum_random_values
+try:
+    simu = Simulation()
 
-print(arrival_times)
+    simu.setup()
 
-plot = Plot(arrival_times)
-plot.show_plot()
+    simu.run()
+
+    # plot = Plot(arrival_times)
+    # plot.show_plot()
+
+    trans = Transaction()
+except Exception as e:
+    print(e)
+

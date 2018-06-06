@@ -8,13 +8,24 @@ from agent import Agent
 from transaction import Transaction
 from plot import Plot
 
+
 class Simulation:
-    def __init__(self):
-        print("Hello, I'm a simulation")
+    def __init__(self, _no_of_transactions, _lambda, _no_of_agents, _distance):
+        self.no_of_transactions = _no_of_transactions
+        self.lam = _lambda
+        self.no_of_agents = _no_of_agents
+
+        if (self.no_of_agents < 1):
+            print("The number of agents can not be less than 1!")
+            sys.exit()
+        elif (self.no_of_agents == 1):
+            self.distance = 0
+            
+        self.distance = _distance
 
     def setup(self):
         try:
-            random_values = np.random.exponential(1 / constants.LAMDBA, constants.NO_OF_TRANSACTIONS)
+            random_values = np.random.exponential(1 / self.lam, self.no_of_transactions)
             self.cum_random_values = np.cumsum(random_values)
 
             self.DG = nx.DiGraph()
@@ -24,12 +35,6 @@ class Simulation:
 
     def run(self):
         try:
-            if(constants.NO_OF_AGENTS < 1):
-                print("The number of agents can not be less than 1!")
-                sys.exit()
-            elif(constants.NO_OF_AGENTS == 1):
-                constants.DISTANCE = 0
-
             arrival_times = self.cum_random_values
 
             #plot = Plot(arrival_times)

@@ -4,7 +4,8 @@ from simulation import Simulation
 from plot import Plot
 
 try:
-    simu = Simulation()
+    #Parameters: no_of_transactions, lambda, no_of_agents, distance
+    simu = Simulation(100, 2, 1, 0)
 
     simu.setup()
 

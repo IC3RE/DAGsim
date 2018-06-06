@@ -10,9 +10,6 @@ try:
 
     simu.run()
 
-    # plot = Plot(arrival_times)
-    # plot.show_plot()
-
 except Exception as e:
     print(e)
 

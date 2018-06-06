@@ -4,9 +4,9 @@ import helpers
 import constants
 
 class Plot:
-    def __init__(self, x):
+    def __init__(self, x, _no_of_transactions):
         self.x = x
-        self.y = np.random.rand(constants.NO_OF_TRANSACTIONS)
+        self.y = np.random.rand(_no_of_transactions)
 
     def show_plot(self):
         plt.scatter(self.x, self.y)

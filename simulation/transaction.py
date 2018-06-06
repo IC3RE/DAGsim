@@ -8,9 +8,8 @@ class Transaction:
         self.is_genesis = False
         self.agent, self.trunk, self.branch = None, None, None
 
-    def __str__(self):
-        return "I'm a transaction with arrival time " + str(self.arrival_time)
+        #Give transaction a random hash as identifier?
+        self.id = sha3.keccak_256(self.arrival_time).hexdigest()
 
-        #data = "randomstring"
-        #s = sha3.keccak_256(data.encode('utf-8')).hexdigest()
-        #print(s)
+    def __str__(self):
+        return "Transaction with arrival time " + str(self.arrival_time) + " and hash " + self.id

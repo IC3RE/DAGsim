@@ -10,11 +10,12 @@ from plot import Plot
 
 
 class Simulation:
-    def __init__(self, _no_of_transactions, _lambda, _no_of_agents, _alpha, _distance):
+    def __init__(self, _no_of_transactions, _lambda, _no_of_agents, _alpha, _latency, _distance):
         self.no_of_transactions = _no_of_transactions
         self.lam = _lambda
         self.no_of_agents = _no_of_agents
         self.alpha = _alpha
+        self.latency = _latency
 
         if (self.no_of_agents < 1):
             print("The number of agents can not be less than 1!")
@@ -42,37 +43,38 @@ class Simulation:
             #plot = Plot(arrival_times, self.no_of_transactions)
             #plot.show_plot()
 
+            #Create transactions
             transactions = []
+            counter = 0
             for i in range(len(arrival_times)):
-                transactions.append(Transaction(arrival_times[i]))
+                transactions.append(Transaction(arrival_times[i], counter))
+                counter += 1
 
+            #Initialize genesis
             transactions[0].is_genesis = True
 
-            self.DG.add_nodes_from(transactions)
-
-            '''
-            for transaction in transactions:
-                #Genesis transaction is a special case
-                if (transaction.is_genesis == False):
-                    if(self.DG.number_of_edges() < 1):
-            '''
-            #for transaction in transactions:
-                #print(transaction)
-
-            print(len(transactions))
-
-            test_time = 0
+            #Run simulation
+            time = 0
             transaction_count = 0
-            while(transaction_count < 100):
-                test_time += 0.001
-                #print(np.round(test_time,3))
+            while(transaction_count < self.no_of_transactions):
+                time += 0.001
+                #print(np.round(time,3))
 
-                if(np.round(test_time,3) == transactions[transaction_count].arrival_time):
+                #Check if transaction arrives
+                if(np.round(time,3) == transactions[transaction_count].arrival_time):
+                    print("Transaction " + str(transaction_count) + " arrived") #Just to check
 
-                    self.unweighted_random_walk(transactions[transaction_count])
+                    #Add to graph object
+                    self.DG.add_node(transactions[transaction_count])
+
+                    #Select tips
+                    self.tip_selection(transactions, transactions[transaction_count], time)
 
                     transaction_count += 1
 
+            # nx.draw(self.DG, with_labels=True)
+            # plt.show()
+            # plt.savefig('graph.png')
 
             '''
             TO-DO:
@@ -84,19 +86,46 @@ class Simulation:
             3. At each time in point check if new transaction is coming in, which tips are visible and run tip-selection?
             
             '''
-
-            #nx.draw(self.DG, with_labels=False)
-            #plt.show()
-            #plt.savefig('graph.png')
-
         except Exception as e:
             print(e)
 
-    def unweighted_random_walk(self, transaction):
+    def tip_selection(self, transactions, transaction, time):
+
+        visible_transactions = self.get_visible_transactions(transactions, time)
+
+        #self.unweighted_random_walk(transactions, transactions[transaction_count], time)
+
+
+    def unweighted_random_walk(self, transactions, transaction, time):
 
         # Genesis transaction is a special case
         if(transaction.is_genesis == False):
-            print(transaction)
+            if (self.DG.number_of_edges() < 1):
+                self.DG.add_edge(transaction,transactions[0])
+            else:
+
+                #WIP
+
+                #rand1 = np.random.random_integers(0,transaction.id-1)
+                #if (len(list(self.DG.predecessors(transactions[0])))) ==
+
+                tips = self.get_tips(self.DG, transactions)
+
+                '''
+                found1 = False
+                while(found1 == False):
+                    random_no = np.random.random_integers(0,transaction.id-1)
+                    print(random_no)
+                    if(len(list(self.DG.predecessors(transactions[random_no]))) == 0):
+                        self.DG.add_edge(transaction,transactions[random_no])
+                        found1 = True
+                '''
+
+                # From current transaction to 2 other random transactions (but not itself)
+                #self.DG.add_edge(transaction,transactions[np.random.random_integers(0,transaction.id-1)])
+                #self.DG.add_edge(transaction,transactions[np.random.random_integers(0,transaction.id-1)])
+
+            # Pick two random transactions to approve (could be the same)
 
         '''
 
@@ -105,12 +134,11 @@ class Simulation:
         1. Check which tips are currently visible
         2. Check which transactions are directly approving the current one (= next)
         3. If next == tips that are currently visible
-            Walk towards next transaction with random probability and store as tip
+            Walk towards next transaction with random probability and store as approver
            Else
             Walk towards next transaction with random probability and repeat
 
         '''
-        print("Placeholder")
 
     def weighted_random_walk(self):
         '''
@@ -121,6 +149,27 @@ class Simulation:
 
         '''
         print("Placeholder")
+
+
+    def get_tips(self, DG, transactions):
+        tips = []
+        for transaction in self.DG.nodes:
+            if (len(list(self.DG.predecessors(transaction))) == 0):
+                tips.append(transaction)
+        return tips
+
+
+    def get_visible_transactions(self, transactions, time):
+
+        visible_transactions = []
+
+        for transaction in transactions:
+            if(time + self.latency < transaction.arrival_time):
+                visible_transactions.append(transaction)
+
+        return visible_transactions
+
+
 
 
 

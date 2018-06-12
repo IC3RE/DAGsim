@@ -55,26 +55,17 @@ class Simulation:
     #############################################################################
 
     def run(self):
-        time = 0.000
 
-        #Start with first transaction (not genesis)
-        transaction_index = 1
+        #Start with first real transaction (not genesis)
+        for transaction in self.transactions[1:]:
+            #Just to check
+            print("Transaction " + str(transaction) + " arrived")
 
-        while(transaction_index < self.no_of_transactions):
-            time += 0.001
+            #Add to directed graph object (with random y coordinate for plotting the graph)
+            self.DG.add_node(transaction,pos=(transaction.arrival_time, random.uniform(-1, 1)))
 
-            #Check if transaction arrives, might be able to change this and just loop over transactions
-            if(np.round(time,3) == self.transactions[transaction_index].arrival_time):
-                print("Transaction " + str(transaction_index) + " arrived") #Just to check
-
-                #Add to directed graph object (with random y coordinate for plotting the graph)
-                y = random.uniform(-1, 1)
-                self.DG.add_node(self.transactions[transaction_index],pos=(self.transactions[transaction_index].arrival_time,y))
-
-                #Select tips
-                self.tip_selection(self.transactions[transaction_index], np.round(time,3))
-
-                transaction_index += 1
+            #Select tips
+            self.tip_selection(transaction, transaction.arrival_time)
 
         #Plot the graph
         pos = nx.get_node_attributes(self.DG, 'pos')
@@ -99,6 +90,9 @@ class Simulation:
 
     def random_selection(self, transaction, time):
 
+        #A tip can be selected if:
+        # 1. it is visible
+        # 2. it has no approvers at all OR it has some approvers, but all approvers are technically not visible yet
         visible_transactions, not_visible_transactions = self.get_visible_transactions(transaction, time)
         valid_tips = self.get_valid_tips(visible_transactions, not_visible_transactions)
 
@@ -117,8 +111,8 @@ class Simulation:
         for transaction in self.DG.nodes:
 
             if((transaction.arrival_time + self.latency <= time
-            or transaction.arrival_time == 0)
-            and transaction != incoming_transaction):
+            or transaction.arrival_time == 0)                                       #Genesis always visible
+            and transaction != incoming_transaction):                               #Transaction can't approve itself
 
                 visible_transactions.append(transaction)
 
@@ -134,11 +128,11 @@ class Simulation:
 
         for transaction in visible_transactions:
 
-            if(len(list(self.DG.predecessors(transaction))) == 0):
+            if(len(list(self.DG.predecessors(transaction))) == 0):                  #Transaction has no approvers at all
 
                 valid_tips.append(transaction)
 
-            elif(len(list(self.DG.predecessors(transaction))) >= 1
+            elif(len(list(self.DG.predecessors(transaction))) >= 1                  #All approvers tech. not visible yet
             and self.all_approvers_not_visible(transaction, not_visible_transactions)):
 
                 valid_tips.append(transaction)

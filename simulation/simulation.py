@@ -154,14 +154,6 @@ class Simulation:
     #############################################################################
 
     def unweighted_random_walk(self, transaction, time):
-
-        # Genesis transaction is a special case
-        if(transaction.is_genesis == False):
-            if (self.DG.number_of_edges() < 1):
-                self.DG.add_edge(transaction,self.transactions[0])
-            else:
-                print("Placeholder")
-
         '''
         Algorithm:
         0. Start at genesis
@@ -172,6 +164,7 @@ class Simulation:
            Else
             Walk towards next transaction with random probability and repeat
         '''
+        print("Placeholder")
 
     #############################################################################
     # TIP-SELECTION: WEIGHTED
@@ -179,7 +172,6 @@ class Simulation:
 
     def weighted_random_walk(self, transaction, time):
         '''
-
         Algorithm:
 
         TBD

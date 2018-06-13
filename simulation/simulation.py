@@ -11,6 +11,7 @@ from transaction import Transaction
 class Simulation:
     def __init__(self, _no_of_transactions, _lambda, _no_of_agents, _alpha, _latency, _distance, _tip_selection_algo):
         self.transactions = []
+        self.agents = []
         self.no_of_transactions = _no_of_transactions
         self.lam = _lambda
         self.no_of_agents = _no_of_agents
@@ -26,29 +27,38 @@ class Simulation:
         elif (self.no_of_agents == 1):
             self.distance = 0
 
+        # self.arrival_times = []
+        # self.record_tips = []
+
     #############################################################################
     # SIMULATION: SETUP
     #############################################################################
 
     def setup(self):
+        #Create agents
+        agent_counter = 0
+        for agent in range(self.no_of_agents):
+            self.agents.append(Agent(agent_counter))
+            agent_counter += 1
+
         #Create directed graph object
         self.DG = nx.DiGraph()
 
         #Create random arrival times
         random_values = np.random.exponential(1 / self.lam, self.no_of_transactions)
         arrival_times = np.round(np.cumsum(random_values),3)
+        self.arrival_times = arrival_times
 
         #Create genesis transaction object, store in list and add to graph object
-        counter = 0
-        self.transactions.append(Transaction(0, counter))
-        counter += 1
-        self.no_of_transactions += 1
+        transaction_counter = 0
+        self.transactions.append(Transaction(0, transaction_counter))
+        transaction_counter += 1
         self.DG.add_node(self.transactions[0], pos=(0, 0))
 
         #Create other transaction objects and store in list
         for i in range(len(arrival_times)):
-            self.transactions.append(Transaction(arrival_times[i], counter))
-            counter += 1
+            self.transactions.append(Transaction(arrival_times[i], transaction_counter))
+            transaction_counter += 1
 
     #############################################################################
     # SIMULATION: MAIN LOOP
@@ -61,15 +71,24 @@ class Simulation:
             #Just to check
             print("Transaction " + str(transaction) + " arrived")
 
-            #Add to directed graph object (with random y coordinate for plotting the graph)
+            #Add to directed graph object (with random y coordinate for plotting the graph), assume one agent for now
+            transaction.agent = self.agents[0]
             self.DG.add_node(transaction,pos=(transaction.arrival_time, random.uniform(-1, 1)))
 
             #Select tips
             self.tip_selection(transaction, transaction.arrival_time)
 
+        # #Plotting number of tips
+        # lens = []
+        # for i in self.record_tips:
+        #     lens.append(len(i))
+        # plt.plot(self.arrival_times, lens)
+        # plt.show()
+
         #Plot the graph
         pos = nx.get_node_attributes(self.DG, 'pos')
         nx.draw_networkx(self.DG, pos, with_labels=True)
+        plt.title("Transactions = " + str(self.no_of_transactions) + ",  " + r'$\lambda$' + " = " + str(self.lam))
         plt.show()
 
         #Save the graph
@@ -102,6 +121,8 @@ class Simulation:
         #Reference two random valid tips
         self.DG.add_edge(transaction,random.choice(valid_tips))
         self.DG.add_edge(transaction,random.choice(valid_tips))
+        # self.record_tips.append(self.get_tips())
+        # print("Tips: " + str(self.get_tips()))
 
     def get_visible_transactions(self, incoming_transaction, time):
 
@@ -172,3 +193,13 @@ class Simulation:
 
         '''
         print("Placeholder")
+
+    def get_tips(self):
+
+        tips = []
+
+        for transaction in self.DG.nodes:
+            if (len(list(self.DG.predecessors(transaction))) == 0):
+                tips.append(transaction)
+
+        return tips

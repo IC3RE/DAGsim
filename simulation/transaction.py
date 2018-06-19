@@ -6,6 +6,7 @@ class Transaction:
     def __init__(self, _arrival_time, counter):
         self.arrival_time = _arrival_time
         self.agent, self.tip1, self.tip2 = None, None, None
+        self.cum_weight = 0
 
         #Give transaction a random hash as identifier? For now just using numbers
         self.id = counter

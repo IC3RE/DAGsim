@@ -1,5 +1,6 @@
 import sys
 import random
+import math
 import numpy as np
 import networkx as nx
 import matplotlib.pyplot as plt
@@ -78,18 +79,20 @@ class Simulation:
             #Select tips
             self.tip_selection(transaction)
 
-        #Plotting number of tips
-        # lens = []
-        # for i in self.record_tips:
-        #     lens.append(len(i))
-        # plt.plot(self.arrival_times, lens)
-        # plt.show()
+    def print_graph(self):
+
+        # Plotting number of tips
+        lens = []
+        for i in self.record_tips:
+            lens.append(len(i))
+        plt.plot(self.arrival_times, lens)
+        plt.show()
 
         #Plot the graph
-        pos = nx.get_node_attributes(self.DG, 'pos')
-        nx.draw_networkx(self.DG, pos, with_labels=True)
-        plt.title("Transactions = " + str(self.no_of_transactions) + ",  " + r'$\lambda$' + " = " + str(self.lam))
-        plt.show()
+        # pos = nx.get_node_attributes(self.DG, 'pos')
+        # nx.draw_networkx(self.DG, pos, with_labels=True)
+        # plt.title("Transactions = " + str(self.no_of_transactions) + ",  " + r'$\lambda$' + " = " + str(self.lam))
+        # plt.show()
 
         #Save the graph
         #plt.savefig('graph.png')
@@ -119,13 +122,14 @@ class Simulation:
             return
 
         #Reference two random valid tips
-        self.DG.add_edge(transaction,random.choice(valid_tips))
+        tip1 = random.choice(valid_tips)
+        tip2 = random.choice(valid_tips)
 
-        #Include here a check to not add double edges?
+        self.DG.add_edge(transaction, tip1)
+        if (tip1 != tip2):
+            self.DG.add_edge(transaction, tip2)
 
-        self.DG.add_edge(transaction,random.choice(valid_tips))
-        # self.record_tips.append(self.get_tips())
-        # print("Tips: " + str(self.get_tips()))
+        #self.record_tips.append(self.get_tips())
 
     def get_visible_transactions(self, incoming_transaction):
 
@@ -173,7 +177,7 @@ class Simulation:
 
     def unweighted_MCMC(self, transaction):
 
-        # Start at genesis
+        #Start at genesis
         start = self.transactions[0]
 
         tip1 = self.random_walk(start, transaction)
@@ -183,19 +187,7 @@ class Simulation:
         if(tip1 != tip2):
             self.DG.add_edge(transaction,tip2)
 
-        self.record_tips.append(self.get_tips())
-
-        '''
-        Algorithm:
-        0. Start at genesis
-        1. Call random walk
-        2. Check which tips are currently visible
-        3. Check which transactions are directly approving the current one (= next)
-        4. If next == tips that are currently visible
-            Walk towards next transaction with random probability and store as approver
-           Else
-            Walk towards next transaction with random probability and repeat
-        '''
+        #self.record_tips.append(self.get_tips())
 
     def random_walk(self, start, transaction):
 
@@ -203,24 +195,18 @@ class Simulation:
         visible_transactions, not_visible_transactions = self.get_visible_transactions(transaction)
         valid_tips = self.get_valid_tips(visible_transactions, not_visible_transactions)
 
-        #print("Valid tips: " + str(valid_tips))
-
         #If only genesis a valid tip, approve genesis
         if (valid_tips == [walker_on]):
             #print("Return early: " + str(walker_on))
             return walker_on
 
-
-        #print("Walker on: " + str(walker_on))
         while (walker_on not in valid_tips):
 
             approvers = list(self.DG.predecessors(walker_on))
-            #print("Approvers: " + str(approvers))
             if approvers == []:
                 return walker_on
 
             walker_on = random.choice(approvers)
-            #print("Walk to: " + str(walker_on))
 
         #print("Return after loop: " + str(walker_on))
         return walker_on
@@ -230,15 +216,71 @@ class Simulation:
     #############################################################################
 
     def weighted_MCMC(self, transaction):
-        '''
-        Algorithm:
 
-        TBD
+        #Start at genesis
+        start = self.transactions[0]
 
-        '''
-        print("Placeholder")
+        self.calc_weights()
 
-    #For printing number of tips per time
+        tip1 = self.weighted_random_walk(start, transaction)
+        tip2 = self.weighted_random_walk(start, transaction)
+
+        self.DG.add_edge(transaction, tip1)
+        if (tip1 != tip2):
+            self.DG.add_edge(transaction, tip2)
+
+        self.record_tips.append(self.get_tips())
+
+    def calc_weights(self):
+
+        for transaction in self.DG.nodes:
+            transaction.cum_weight = len(list(nx.ancestors(self.DG, transaction))) + 1
+            #print("Transaction " + str(transaction) + " has cum_weight " + str(transaction.cum_weight))
+
+    def weighted_random_walk(self, start, transaction):
+
+        walker_on = start
+        visible_transactions, not_visible_transactions = self.get_visible_transactions(transaction)
+        valid_tips = self.get_valid_tips(visible_transactions, not_visible_transactions)
+
+        #print("Valid tips: " + str(valid_tips))
+
+        # If only genesis a valid tip, approve genesis
+        if (valid_tips == [walker_on]):
+            #print("Return early: " + str(walker_on))
+            return walker_on
+
+        while (walker_on not in valid_tips):
+
+            approvers = list(self.DG.predecessors(walker_on))
+            if approvers == []:
+                return walker_on
+            #print("Approvers: " + str(approvers))
+
+            weights = [approver.cum_weight for approver in approvers]
+            normalized_weights = [weight - max(weights) for weight in weights]
+            weights = [math.exp(self.alpha * weight) for weight in normalized_weights]
+
+            walker_on = self.weigthed_choice(approvers, weights)
+
+        #print("Return after loop: " + str(walker_on))
+        return walker_on
+
+    def weigthed_choice(self, approvers, weights):
+
+        sum_of_weights = sum(weights)
+        rand = random.random() * sum_of_weights
+
+        cum_sum = weights[0]
+
+        for i in range(1, len(weights)):
+            if rand < cum_sum:
+                return approvers[i-1]
+            cum_sum += weights[i]
+
+        return approvers[-1]
+
+    #For printing number of tips as function of time
     def get_tips(self):
 
         tips = []

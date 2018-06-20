@@ -81,18 +81,18 @@ class Simulation:
 
     def print_graph(self):
 
-        # Plotting number of tips
-        lens = []
-        for i in self.record_tips:
-            lens.append(len(i))
-        plt.plot(self.arrival_times, lens)
-        plt.show()
+        #Plotting number of tips
+        # lens = []
+        # for i in self.record_tips:
+        #     lens.append(len(i))
+        # plt.plot(self.arrival_times, lens)
+        # plt.show()
 
         #Plot the graph
-        # pos = nx.get_node_attributes(self.DG, 'pos')
-        # nx.draw_networkx(self.DG, pos, with_labels=True)
-        # plt.title("Transactions = " + str(self.no_of_transactions) + ",  " + r'$\lambda$' + " = " + str(self.lam))
-        # plt.show()
+        pos = nx.get_node_attributes(self.DG, 'pos')
+        nx.draw_networkx(self.DG, pos, with_labels=True)
+        plt.title("Transactions = " + str(self.no_of_transactions) + ",  " + r'$\lambda$' + " = " + str(self.lam))
+        plt.show()
 
         #Save the graph
         #plt.savefig('graph.png')
@@ -187,7 +187,7 @@ class Simulation:
         if(tip1 != tip2):
             self.DG.add_edge(transaction,tip2)
 
-        #self.record_tips.append(self.get_tips())
+        self.record_tips.append(self.get_tips())
 
     def random_walk(self, start, transaction):
 
@@ -220,7 +220,7 @@ class Simulation:
         #Start at genesis
         start = self.transactions[0]
 
-        self.calc_weights()
+        #self.calc_weights(list(self.DX.nodes))
 
         tip1 = self.weighted_random_walk(start, transaction)
         tip2 = self.weighted_random_walk(start, transaction)
@@ -231,11 +231,24 @@ class Simulation:
 
         self.record_tips.append(self.get_tips())
 
-    def calc_weights(self):
+    def calc_weights(self, transactions):
 
-        for transaction in self.DG.nodes:
+        for transaction in transactions:
             transaction.cum_weight = len(list(nx.ancestors(self.DG, transaction))) + 1
             #print("Transaction " + str(transaction) + " has cum_weight " + str(transaction.cum_weight))
+
+        # sorted = nx.topological_sort(self.DG)
+        #
+        # for transaction in sorted:
+        #     children = self.DG.successors(transaction)
+        #
+        #     for child in children:
+        #         child.ancestors = child.ancestors.union(transaction.ancestors)
+        #         set1 = set()
+        #         set1.add(transaction)
+        #         child.ancestors = child.ancestors.union(set1)
+        #
+        #     transaction.cum_weight = len(transaction.ancestors) + 1
 
     def weighted_random_walk(self, start, transaction):
 
@@ -243,9 +256,7 @@ class Simulation:
         visible_transactions, not_visible_transactions = self.get_visible_transactions(transaction)
         valid_tips = self.get_valid_tips(visible_transactions, not_visible_transactions)
 
-        #print("Valid tips: " + str(valid_tips))
-
-        # If only genesis a valid tip, approve genesis
+        #If only genesis a valid tip, approve genesis
         if (valid_tips == [walker_on]):
             #print("Return early: " + str(walker_on))
             return walker_on
@@ -255,30 +266,35 @@ class Simulation:
             approvers = list(self.DG.predecessors(walker_on))
             if approvers == []:
                 return walker_on
-            #print("Approvers: " + str(approvers))
 
+            self.calc_weights(approvers)
+
+            #Calculate transition probabilities
             weights = [approver.cum_weight for approver in approvers]
             normalized_weights = [weight - max(weights) for weight in weights]
             weights = [math.exp(self.alpha * weight) for weight in normalized_weights]
+            sum_of_weights = sum(weights)
+            transition_probabilities = [math.exp(self.alpha * approver.cum_weight)/sum_of_weights for approver in approvers]
 
-            walker_on = self.weigthed_choice(approvers, weights)
+            walker_on = np.random.choice(approvers, p=transition_probabilities)
+            #walker_on = self.weigthed_choice(approvers, weights)
 
         #print("Return after loop: " + str(walker_on))
         return walker_on
 
-    def weigthed_choice(self, approvers, weights):
-
-        sum_of_weights = sum(weights)
-        rand = random.random() * sum_of_weights
-
-        cum_sum = weights[0]
-
-        for i in range(1, len(weights)):
-            if rand < cum_sum:
-                return approvers[i-1]
-            cum_sum += weights[i]
-
-        return approvers[-1]
+    # def weigthed_choice(self, approvers, weights):
+    #
+    #     sum_of_weights = sum(weights)
+    #     rand = random.random() * sum_of_weights
+    #
+    #     cum_sum = weights[0]
+    #
+    #     for i in range(1, len(weights)):
+    #         if rand < cum_sum:
+    #             return approvers[i-1]
+    #         cum_sum += weights[i]
+    #
+    #     return approvers[-1]
 
     #For printing number of tips as function of time
     def get_tips(self):

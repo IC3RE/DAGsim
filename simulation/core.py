@@ -10,12 +10,13 @@ simu.setup()
 
 simu.run()
 
+#simu.print_graph()
+
+#simu.print_tips_over_time()
+
 #Move this to tests
 # for transaction in simu.DG.nodes:
 #     print("Transaction " + str(transaction) + " has cum_weight " + str(transaction.cum_weight))
 #     if (transaction.cum_weight != len(list(nx.ancestors(simu.DG, transaction))) + 1):
 #         print("ERROR")
-
-#simu.print_graph()
-#simu.print_tips_over_time()
 

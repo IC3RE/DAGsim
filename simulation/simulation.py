@@ -82,17 +82,17 @@ class Simulation:
     def print_graph(self):
 
         #Plotting number of tips
-        # lens = []
-        # for i in self.record_tips:
-        #     lens.append(len(i))
-        # plt.plot(self.arrival_times, lens)
-        # plt.show()
+        lens = []
+        for i in self.record_tips:
+            lens.append(len(i))
+        plt.plot(self.arrival_times, lens)
+        plt.show()
 
         #Plot the graph
-        pos = nx.get_node_attributes(self.DG, 'pos')
-        nx.draw_networkx(self.DG, pos, with_labels=True)
-        plt.title("Transactions = " + str(self.no_of_transactions) + ",  " + r'$\lambda$' + " = " + str(self.lam))
-        plt.show()
+        # pos = nx.get_node_attributes(self.DG, 'pos')
+        # nx.draw_networkx(self.DG, pos, with_labels=True)
+        # plt.title("Transactions = " + str(self.no_of_transactions) + ",  " + r'$\lambda$' + " = " + str(self.lam))
+        # plt.show()
 
         #Save the graph
         #plt.savefig('graph.png')
@@ -258,7 +258,6 @@ class Simulation:
 
         #If only genesis a valid tip, approve genesis
         if (valid_tips == [walker_on]):
-            #print("Return early: " + str(walker_on))
             return walker_on
 
         while (walker_on not in valid_tips):
@@ -272,29 +271,14 @@ class Simulation:
             #Calculate transition probabilities
             weights = [approver.cum_weight for approver in approvers]
             normalized_weights = [weight - max(weights) for weight in weights]
-            weights = [math.exp(self.alpha * weight) for weight in normalized_weights]
-            sum_of_weights = sum(weights)
-            transition_probabilities = [math.exp(self.alpha * approver.cum_weight)/sum_of_weights for approver in approvers]
+            sum_of_weights = sum([math.exp(self.alpha * weight) for weight in normalized_weights])
 
+            transition_probabilities = [math.exp(self.alpha * (approver.cum_weight - max(weights)))/sum_of_weights for approver in approvers]
+
+            #Choose with transition probabilities
             walker_on = np.random.choice(approvers, p=transition_probabilities)
-            #walker_on = self.weigthed_choice(approvers, weights)
 
-        #print("Return after loop: " + str(walker_on))
         return walker_on
-
-    # def weigthed_choice(self, approvers, weights):
-    #
-    #     sum_of_weights = sum(weights)
-    #     rand = random.random() * sum_of_weights
-    #
-    #     cum_sum = weights[0]
-    #
-    #     for i in range(1, len(weights)):
-    #         if rand < cum_sum:
-    #             return approvers[i-1]
-    #         cum_sum += weights[i]
-    #
-    #     return approvers[-1]
 
     #For printing number of tips as function of time
     def get_tips(self):

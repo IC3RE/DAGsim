@@ -290,7 +290,7 @@ class Simulation:
     #############################################################################
 
     def print_info(self):
-        text = "Parameters:  Transactions = " + str(self.no_of_transactions) + \
+        text = "\nParameters:  Transactions = " + str(self.no_of_transactions) + \
                 ",  Tip-Selection = " + str(self.tip_selection_algo).upper() + \
                 ",  Lambda = " + str(self.lam)
         if(self.tip_selection_algo == "weighted"):

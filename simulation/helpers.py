@@ -17,6 +17,6 @@ def update_progress(progress, transaction):
         status = "| Simulation completed...\r\n"
     block = int(round(bar_length*progress))
     text = "\rPercent:  [{0}] {1}% | Transactions:  {2} {3}".\
-        format( "#"*block + "-"*(bar_length-block), np.round((progress*100),2), transaction, status)
+        format( "#"*block + "-"*(bar_length-block), np.round((progress*100),1), transaction, status)
     sys.stdout.write(text)
     sys.stdout.flush()

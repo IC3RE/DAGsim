@@ -21,7 +21,7 @@ class Simulation:
         self.tip_selection_algo = _tip_selection_algo
 
         if (self.no_of_agents < 1):
-            print("The number of agents can not be less than 1!")
+            print("ERROR:  The number of agents can not be less than 1")
             sys.exit()
 
         elif (self.no_of_agents == 1):
@@ -96,7 +96,9 @@ class Simulation:
             self.unweighted_MCMC(transaction)
         elif(self.tip_selection_algo == "weighted"):
             self.weighted_MCMC(transaction)
-
+        else:
+            print("ERROR:  Tip selection algorithms are 'random', 'weighted', 'unweighted'")
+            sys.exit()
 
     #############################################################################
     # SIMULATION: HELPERS
@@ -217,7 +219,7 @@ class Simulation:
         for transaction in nx.descendants(self.DG, transaction):
             transaction.cum_weight = transaction.cum_weight + 1
 
-        #Other approach 1
+        #Other approach 1, currently testing which is fastest
         # if(transaction == self.transactions[0]):
         #     return
         # else:
@@ -289,6 +291,7 @@ class Simulation:
 
     def print_info(self):
         text = "Parameters:  Transactions = " + str(self.no_of_transactions) + \
+                ",  Tip-Selection = " + str(self.tip_selection_algo).upper() + \
                 ",  Lambda = " + str(self.lam)
         if(self.tip_selection_algo == "weighted"):
             text += ",  Alpha = " + str(self.alpha)
@@ -301,11 +304,13 @@ class Simulation:
     def print_graph(self):
 
         pos = nx.get_node_attributes(self.DG, 'pos')
+        plt.figure(figsize=(12, 6))
         nx.draw_networkx(self.DG, pos, with_labels=True)
         title = "Transactions = " + str(self.no_of_transactions) +\
                 ",  " + r'$\lambda$' + " = " + str(self.lam)
         if(self.tip_selection_algo == "weighted"):
             title += ",  " + r'$\alpha$' + " = " + str(self.alpha)
+        plt.xlabel("Time (s)")
         plt.title(title)
         plt.show()
         #Save the graph
@@ -316,11 +321,15 @@ class Simulation:
         lens = []
         for i in self.record_tips:
             lens.append(len(i))
+
+        plt.figure(figsize=(12, 6))
         plt.plot(self.arrival_times, lens)
         title = "Transactions = " + str(self.no_of_transactions) + \
                 ",  " + r'$\lambda$' + " = " + str(self.lam)
         if (self.tip_selection_algo == "weighted"):
             title += ",  " + r'$\alpha$' + " = " + str(self.alpha)
+        plt.xlabel("Time (s)")
+        plt.ylabel("Number of tips")
         plt.title(title)
         plt.show()
 

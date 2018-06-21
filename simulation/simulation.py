@@ -4,8 +4,7 @@ import math
 import numpy as np
 import networkx as nx
 import matplotlib.pyplot as plt
-import helpers
-import constants
+from helpers import update_progress
 from agent import Agent
 from transaction import Transaction
 
@@ -31,6 +30,7 @@ class Simulation:
         self.arrival_times = []
         self.record_tips = []
 
+
     #############################################################################
     # SIMULATION: SETUP
     #############################################################################
@@ -47,7 +47,7 @@ class Simulation:
 
         #Create random arrival times
         random_values = np.random.exponential(1 / self.lam, self.no_of_transactions)
-        arrival_times = np.round(np.cumsum(random_values),3)
+        arrival_times = np.cumsum(random_values)
         self.arrival_times = arrival_times
 
         #Create genesis transaction object, store in list and add to graph object
@@ -61,16 +61,17 @@ class Simulation:
             self.transactions.append(Transaction(arrival_times[i], transaction_counter))
             transaction_counter += 1
 
+
     #############################################################################
     # SIMULATION: MAIN LOOP
     #############################################################################
 
     def run(self):
 
-        #Start with first real transaction (not genesis)
+        self.print_info()
+
+        #Start with first transaction (NOT genesis)
         for transaction in self.transactions[1:]:
-            #Just to check
-            print("Transaction " + str(transaction) + " arrived")
 
             #Add to directed graph object (with random y coordinate for plotting the graph), assume one agent for now
             transaction.agent = self.agents[0]
@@ -79,23 +80,13 @@ class Simulation:
             #Select tips
             self.tip_selection(transaction)
 
-    def print_graph(self):
+            #Update weights (of transactions referenced by the current transaction)
+            self.update_weights(transaction)
 
-        #Plotting number of tips
-        lens = []
-        for i in self.record_tips:
-            lens.append(len(i))
-        plt.plot(self.arrival_times, lens)
-        plt.show()
+            #Progress bar update
+            update_progress(int(str(transaction))/self.no_of_transactions, str(transaction))
 
-        #Plot the graph
-        # pos = nx.get_node_attributes(self.DG, 'pos')
-        # nx.draw_networkx(self.DG, pos, with_labels=True)
-        # plt.title("Transactions = " + str(self.no_of_transactions) + ",  " + r'$\lambda$' + " = " + str(self.lam))
-        # plt.show()
-
-        #Save the graph
-        #plt.savefig('graph.png')
+        self.print_graph_info()
 
     def tip_selection(self, transaction):
 
@@ -106,30 +97,10 @@ class Simulation:
         elif(self.tip_selection_algo == "weighted"):
             self.weighted_MCMC(transaction)
 
+
     #############################################################################
-    # TIP-SELECTION: RANDOM
+    # SIMULATION: HELPERS
     #############################################################################
-
-    def random_selection(self, transaction):
-
-        #A tip can be selected if:
-        # 1. it is visible
-        # 2. it has no approvers at all OR it has some approvers, but all approvers are technically not visible yet
-        visible_transactions, not_visible_transactions = self.get_visible_transactions(transaction)
-        valid_tips = self.get_valid_tips(visible_transactions, not_visible_transactions)
-
-        if (valid_tips == []):
-            return
-
-        #Reference two random valid tips
-        tip1 = random.choice(valid_tips)
-        tip2 = random.choice(valid_tips)
-
-        self.DG.add_edge(transaction, tip1)
-        if (tip1 != tip2):
-            self.DG.add_edge(transaction, tip2)
-
-        #self.record_tips.append(self.get_tips())
 
     def get_visible_transactions(self, incoming_transaction):
 
@@ -171,6 +142,33 @@ class Simulation:
     def all_approvers_not_visible(self, transaction, not_visible_transactions):
         return set(self.DG.predecessors(transaction)).issubset(set(not_visible_transactions))
 
+
+    #############################################################################
+    # TIP-SELECTION: RANDOM
+    #############################################################################
+
+    def random_selection(self, transaction):
+
+        #A tip can be selected if:
+        # 1. it is visible
+        # 2. it has no approvers at all OR it has some approvers, but all approvers are technically not visible yet
+        visible_transactions, not_visible_transactions = self.get_visible_transactions(transaction)
+        valid_tips = self.get_valid_tips(visible_transactions, not_visible_transactions)
+
+        if (valid_tips == []):
+            return
+
+        #Reference two random valid tips
+        tip1 = random.choice(valid_tips)
+        tip2 = random.choice(valid_tips)
+
+        self.DG.add_edge(transaction, tip1)
+        if (tip1 != tip2):
+            self.DG.add_edge(transaction, tip2)
+
+        self.record_tips.append(self.get_tips())
+
+
     #############################################################################
     # TIP-SELECTION: UNWEIGHTED
     #############################################################################
@@ -197,7 +195,6 @@ class Simulation:
 
         #If only genesis a valid tip, approve genesis
         if (valid_tips == [walker_on]):
-            #print("Return early: " + str(walker_on))
             return walker_on
 
         while (walker_on not in valid_tips):
@@ -208,19 +205,46 @@ class Simulation:
 
             walker_on = random.choice(approvers)
 
-        #print("Return after loop: " + str(walker_on))
         return walker_on
+
 
     #############################################################################
     # TIP-SELECTION: WEIGHTED
     #############################################################################
 
+    def update_weights(self, transaction):
+
+        for transaction in nx.descendants(self.DG, transaction):
+            transaction.cum_weight = transaction.cum_weight + 1
+
+        #Other approach 1
+        # if(transaction == self.transactions[0]):
+        #     return
+        # else:
+        #     for child in self.DG.successors(transaction):
+        #
+        #         child.ancestors = child.ancestors.union(transaction.ancestors).union({transaction})
+        #         child.cum_weight = len(child.ancestors) + 1
+        #         self.update_weights(child)
+        #
+        #Other approach 2
+        # for transaction in transactions:
+        #     transaction.cum_weight = len(list(nx.ancestors(self.DG, transaction))) + 1
+        #
+        #Other approach 3
+        # sorted = nx.topological_sort(self.DG)
+        # for transaction in sorted:
+        #     children = self.DG.successors(transaction)
+        #
+        #     for child in children:
+        #         child.ancestors = child.ancestors.union(transaction.ancestors).union({transaction})
+        #
+        #     transaction.cum_weight = len(transaction.ancestors) + 1
+
     def weighted_MCMC(self, transaction):
 
         #Start at genesis
         start = self.transactions[0]
-
-        #self.calc_weights(list(self.DX.nodes))
 
         tip1 = self.weighted_random_walk(start, transaction)
         tip2 = self.weighted_random_walk(start, transaction)
@@ -230,25 +254,6 @@ class Simulation:
             self.DG.add_edge(transaction, tip2)
 
         self.record_tips.append(self.get_tips())
-
-    def calc_weights(self, transactions):
-
-        for transaction in transactions:
-            transaction.cum_weight = len(list(nx.ancestors(self.DG, transaction))) + 1
-            #print("Transaction " + str(transaction) + " has cum_weight " + str(transaction.cum_weight))
-
-        # sorted = nx.topological_sort(self.DG)
-        #
-        # for transaction in sorted:
-        #     children = self.DG.successors(transaction)
-        #
-        #     for child in children:
-        #         child.ancestors = child.ancestors.union(transaction.ancestors)
-        #         set1 = set()
-        #         set1.add(transaction)
-        #         child.ancestors = child.ancestors.union(set1)
-        #
-        #     transaction.cum_weight = len(transaction.ancestors) + 1
 
     def weighted_random_walk(self, start, transaction):
 
@@ -266,25 +271,62 @@ class Simulation:
             if approvers == []:
                 return walker_on
 
-            self.calc_weights(approvers)
-
             #Calculate transition probabilities
             weights = [approver.cum_weight for approver in approvers]
             normalized_weights = [weight - max(weights) for weight in weights]
-            sum_of_weights = sum([math.exp(self.alpha * weight) for weight in normalized_weights])
-
-            transition_probabilities = [math.exp(self.alpha * (approver.cum_weight - max(weights)))/sum_of_weights for approver in approvers]
+            denominator_transition_probabilities = sum([math.exp(self.alpha * weight) for weight in normalized_weights])
+            transition_probabilities = [math.exp(self.alpha * (approver.cum_weight - max(weights)))/denominator_transition_probabilities for approver in approvers]
 
             #Choose with transition probabilities
             walker_on = np.random.choice(approvers, p=transition_probabilities)
 
         return walker_on
 
-    #For printing number of tips as function of time
+
+    #############################################################################
+    # PRINTING AND PLOTTING
+    #############################################################################
+
+    def print_info(self):
+        text = "Parameters:  Transactions = " + str(self.no_of_transactions) + \
+                ",  Lambda = " + str(self.lam)
+        if(self.tip_selection_algo == "weighted"):
+            text += ",  Alpha = " + str(self.alpha)
+        text += " | Simulation started...\n"
+        print(text)
+
+    def print_graph_info(self):
+        print("\nGraph information:\n" + nx.info(self.DG))
+
+    def print_graph(self):
+
+        pos = nx.get_node_attributes(self.DG, 'pos')
+        nx.draw_networkx(self.DG, pos, with_labels=True)
+        title = "Transactions = " + str(self.no_of_transactions) +\
+                ",  " + r'$\lambda$' + " = " + str(self.lam)
+        if(self.tip_selection_algo == "weighted"):
+            title += ",  " + r'$\alpha$' + " = " + str(self.alpha)
+        plt.title(title)
+        plt.show()
+        #Save the graph
+        #plt.savefig('graph.png')
+
+    def print_tips_over_time(self):
+
+        lens = []
+        for i in self.record_tips:
+            lens.append(len(i))
+        plt.plot(self.arrival_times, lens)
+        title = "Transactions = " + str(self.no_of_transactions) + \
+                ",  " + r'$\lambda$' + " = " + str(self.lam)
+        if (self.tip_selection_algo == "weighted"):
+            title += ",  " + r'$\alpha$' + " = " + str(self.alpha)
+        plt.title(title)
+        plt.show()
+
     def get_tips(self):
 
         tips = []
-
         for transaction in self.DG.nodes:
             if (len(list(self.DG.predecessors(transaction))) == 0):
                 tips.append(transaction)

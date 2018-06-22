@@ -323,13 +323,21 @@ class Simulation:
             lens.append(len(i))
 
         plt.figure(figsize=(12, 6))
-        plt.plot(self.arrival_times, lens)
+        plt.plot(self.arrival_times, lens, label="Tips")
+
+        # Plot mean
+        x_mean = [0, self.arrival_times[-1]]
+        y_mean = [np.mean(lens), np.mean(lens)]
+        plt.plot(x_mean, y_mean, label="Average Tips", linestyle='--')
+
+        #plt.plot(np.unique(self.arrival_times), np.poly1d(np.polyfit(self.arrival_times, lens, 1))(np.unique(self.arrival_times)), label="Best Fit Line")
         title = "Transactions = " + str(self.no_of_transactions) + \
                 ",  " + r'$\lambda$' + " = " + str(self.lam)
         if (self.tip_selection_algo == "weighted"):
             title += ",  " + r'$\alpha$' + " = " + str(self.alpha)
         plt.xlabel("Time (s)")
         plt.ylabel("Number of tips")
+        plt.legend(loc='upper left')
         plt.title(title)
         plt.show()
 

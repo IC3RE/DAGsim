@@ -4,7 +4,7 @@ from simulation import Simulation
 #Parameters: no_of_transactions, lambda, no_of_agents, alpha, latency, distance, tip_selection_algo
 #Tip selection algorithms are "random", "weighted", "unweighted"
 
-simu = Simulation(1000, 50, 1, 0.001, 1, 0, "weighted")
+simu = Simulation(100, 3, 1, 0.001, 1, 0, "weighted")
 
 simu.setup()
 

@@ -5,7 +5,8 @@ class Transaction:
         self.arrival_time = _arrival_time
         self.agent, self.tip1, self.tip2 = None, None, None
         self.cum_weight = 1
-        self.ancestors = set()
+        self.exit_probability = 0
+        self.confirmation_confidence = 0
 
         #Give transaction a random hash as identifier? For now just using numbers
         self.id = counter

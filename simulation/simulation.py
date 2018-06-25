@@ -1,12 +1,17 @@
 import sys
+import timeit
 import random
 import math
+import pydot
 import numpy as np
 import networkx as nx
 import matplotlib.pyplot as plt
+from networkx.drawing.nx_agraph import graphviz_layout
+
 from helpers import update_progress
 from agent import Agent
 from transaction import Transaction
+
 
 class Simulation:
     def __init__(self, _no_of_transactions, _lambda, _no_of_agents, _alpha, _latency, _distance, _tip_selection_algo):
@@ -53,7 +58,7 @@ class Simulation:
         #Create genesis transaction object, store in list and add to graph object
         transaction_counter = 0
         self.transactions.append(Transaction(0, transaction_counter))
-        self.DG.add_node(self.transactions[0], pos=(0, 0), no=transaction_counter)
+        self.DG.add_node(self.transactions[0], pos=(0, 0), no=transaction_counter, node_color='r')
         transaction_counter += 1
 
         #Create other transaction objects and store in list
@@ -68,6 +73,7 @@ class Simulation:
 
     def run(self):
 
+        start_time = timeit.default_timer()
         self.print_info()
 
         #Start with first transaction (NOT genesis)
@@ -86,7 +92,9 @@ class Simulation:
             #Progress bar update
             update_progress(int(str(transaction))/self.no_of_transactions, str(transaction))
 
-        self.print_graph_info()
+        self.calc_exit_probabilities()
+
+        self.print_end_info(timeit.default_timer() - start_time)
 
     def tip_selection(self, transaction):
 
@@ -100,9 +108,19 @@ class Simulation:
             print("ERROR:  Tip selection algorithms are 'random', 'weighted', 'unweighted'")
             sys.exit()
 
+
     #############################################################################
     # SIMULATION: HELPERS
     #############################################################################
+
+    def get_tips(self):
+
+        tips = []
+        for transaction in self.DG.nodes:
+            if (len(list(self.DG.predecessors(transaction))) == 0):
+                tips.append(transaction)
+
+        return tips
 
     def get_visible_transactions(self, incoming_transaction):
 
@@ -143,6 +161,15 @@ class Simulation:
 
     def all_approvers_not_visible(self, transaction, not_visible_transactions):
         return set(self.DG.predecessors(transaction)).issubset(set(not_visible_transactions))
+
+    def calc_transition_probabilities(self, approvers):
+
+        weights = [approver.cum_weight for approver in approvers]
+        normalized_weights = [weight - max(weights) for weight in weights]
+        denominator_transition_probabilities = sum([math.exp(self.alpha * weight) for weight in normalized_weights])
+
+        return [math.exp(self.alpha * (approver.cum_weight - max(weights))) / denominator_transition_probabilities for
+                approver in approvers]
 
 
     #############################################################################
@@ -273,16 +300,42 @@ class Simulation:
             if approvers == []:
                 return walker_on
 
-            #Calculate transition probabilities
-            weights = [approver.cum_weight for approver in approvers]
-            normalized_weights = [weight - max(weights) for weight in weights]
-            denominator_transition_probabilities = sum([math.exp(self.alpha * weight) for weight in normalized_weights])
-            transition_probabilities = [math.exp(self.alpha * (approver.cum_weight - max(weights)))/denominator_transition_probabilities for approver in approvers]
+            transition_probabilities = self.calc_transition_probabilities(approvers)
 
             #Choose with transition probabilities
             walker_on = np.random.choice(approvers, p=transition_probabilities)
 
         return walker_on
+
+
+    #############################################################################
+    # CONFIRMATION CONFIDENCE
+    #############################################################################
+
+    def calc_exit_probabilities(self):
+
+        #Start at genesis, tips in the end
+        sorted = list(reversed(list(nx.topological_sort(self.DG))))
+
+        #Initialize genesis
+        self.transactions[0].exit_probability = 1
+
+        for transaction in sorted:
+            approvers = list(self.DG.predecessors(transaction))
+            transition_probabilities = self.calc_transition_probabilities(approvers)
+
+            for (approver, transition_probability) in zip (approvers, transition_probabilities):
+                approver.exit_probability = approver.exit_probability + (transaction.exit_probability * transition_probability)
+
+    def calc_confirmation_confidence(self):
+
+        tips = self.get_tips()
+
+        for transaction in self.DG.nodes:
+            for tip in tips:
+                if(nx.has_path(self.DG,tip,transaction)):
+                    transaction.confirmation_confidence += tip.exit_probability
+            #print(str(transaction) + "   " + str(transaction.confirmation_confidence))
 
 
     #############################################################################
@@ -298,14 +351,21 @@ class Simulation:
         text += " | Simulation started...\n"
         print(text)
 
-    def print_graph_info(self):
+    def print_end_info(self, elapsed_time):
+
+        print("\nSimulation time: " + str(np.round(elapsed_time,3)) + " seconds")
         print("\nGraph information:\n" + nx.info(self.DG))
 
     def print_graph(self):
 
         pos = nx.get_node_attributes(self.DG, 'pos')
+        #pos = graphviz_layout(self.DG, prog="dot", args="")
+        col = list(nx.get_node_attributes(self.DG, 'node_color').values())
+        labels = dict((transaction, str(transaction) + ", " + str(np.round(transaction.exit_probability,2))) for transaction in self.DG.nodes())
+
         plt.figure(figsize=(12, 6))
-        nx.draw_networkx(self.DG, pos, with_labels=True)
+        nx.draw_networkx(self.DG, pos, with_labels=True, labels=labels, node_color = col)
+
         title = "Transactions = " + str(self.no_of_transactions) +\
                 ",  " + r'$\lambda$' + " = " + str(self.lam)
         if(self.tip_selection_algo == "weighted"):
@@ -325,12 +385,14 @@ class Simulation:
         plt.figure(figsize=(12, 6))
         plt.plot(self.arrival_times, lens, label="Tips")
 
-        # Plot mean
+        #Plot mean
         x_mean = [0, self.arrival_times[-1]]
         y_mean = [np.mean(lens), np.mean(lens)]
         plt.plot(x_mean, y_mean, label="Average Tips", linestyle='--')
 
-        #plt.plot(np.unique(self.arrival_times), np.poly1d(np.polyfit(self.arrival_times, lens, 1))(np.unique(self.arrival_times)), label="Best Fit Line")
+        #Plot best fitted line
+        plt.plot(np.unique(self.arrival_times), np.poly1d(np.polyfit(self.arrival_times, lens, 1))(np.unique(self.arrival_times)), label="Best Fit Line", linestyle='--')
+
         title = "Transactions = " + str(self.no_of_transactions) + \
                 ",  " + r'$\lambda$' + " = " + str(self.lam)
         if (self.tip_selection_algo == "weighted"):
@@ -340,12 +402,3 @@ class Simulation:
         plt.legend(loc='upper left')
         plt.title(title)
         plt.show()
-
-    def get_tips(self):
-
-        tips = []
-        for transaction in self.DG.nodes:
-            if (len(list(self.DG.predecessors(transaction))) == 0):
-                tips.append(transaction)
-
-        return tips

@@ -1,4 +1,4 @@
-# Project Title
+# IOTA TANGLE SIMULATION
 
 This is a single- and multi-agent simulation of the IOTA Tangle, as described in the white-paper.
 

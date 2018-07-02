@@ -17,13 +17,13 @@ virtualenv -p python3 envname
 
 ### Installing packages
 
-The used Python libraries/packages with:
+The used Python libraries/packages can be installed with:
 
 ```
 make
 ```
 
-Or, alternatively, with:
+or alternatively with:
 
 ```
 pip install -r requirements.txt
@@ -51,7 +51,7 @@ In this file you can also change the configurations of the simulation.
 
 ## Authors
 
-* **Manuel Zander**
+* Manuel Zander
 
 ## License
 

@@ -27,7 +27,6 @@ or alternatively with:
 
 ```
 pip install -r requirements.txt
-
 ```
 
 ## Running the tests

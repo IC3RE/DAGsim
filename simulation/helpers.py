@@ -1,6 +1,7 @@
 import sys
 import numpy as np
 
+
 def update_progress(progress, transaction):
     bar_length = 50 #Modify this to change the length of the progress bar
     status = ""

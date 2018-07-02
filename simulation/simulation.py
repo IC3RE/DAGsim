@@ -2,15 +2,13 @@ import sys
 import timeit
 import random
 import math
-import pydot
 import numpy as np
 import networkx as nx
 import matplotlib.pyplot as plt
-from networkx.drawing.nx_agraph import graphviz_layout
 
-from helpers import update_progress
-from agent import Agent
-from transaction import Transaction
+from simulation.helpers import update_progress
+from simulation.agent import Agent
+from simulation.transaction import Transaction
 
 
 class Simulation:
@@ -58,7 +56,8 @@ class Simulation:
         #Create genesis transaction object, store in list and add to graph object
         transaction_counter = 0
         self.transactions.append(Transaction(0, transaction_counter))
-        self.DG.add_node(self.transactions[0], pos=(0, 0), no=transaction_counter, node_color='r')
+        self.DG.add_node(self.transactions[0], pos=(0, 0), no=transaction_counter, node_color='##ffadad')
+
         transaction_counter += 1
 
         #Create other transaction objects and store in list
@@ -81,7 +80,7 @@ class Simulation:
 
             #Add to directed graph object (with random y coordinate for plotting the graph), assume one agent for now
             transaction.agent = self.agents[0]
-            self.DG.add_node(transaction,pos=(transaction.arrival_time, random.uniform(-1, 1)))
+            self.DG.add_node(transaction,pos=(transaction.arrival_time, random.uniform(-1, 1)), node_color='#ffadad')
 
             #Select tips
             self.tip_selection(transaction)
@@ -119,6 +118,7 @@ class Simulation:
         for transaction in self.DG.nodes:
             if (len(list(self.DG.predecessors(transaction))) == 0):
                 tips.append(transaction)
+
 
         return tips
 
@@ -317,8 +317,8 @@ class Simulation:
         #Start at genesis, tips in the end
         sorted = list(reversed(list(nx.topological_sort(self.DG))))
 
-        #Initialize genesis
-        self.transactions[0].exit_probability = 1
+        #Initialize genesis to 100%
+        self.transactions[0].exit_probability = 1.0
 
         for transaction in sorted:
             approvers = list(self.DG.predecessors(transaction))
@@ -333,8 +333,16 @@ class Simulation:
 
         for transaction in self.DG.nodes:
             for tip in tips:
-                if(nx.has_path(self.DG,tip,transaction)):
+                if(nx.has_path(self.DG,tip,transaction) and tip != transaction):
+
                     transaction.confirmation_confidence += tip.exit_probability
+
+                    if (np.round(transaction.confirmation_confidence, 2) == 1.0):
+                        self.DG.node[transaction]["node_color"] = '#b4ffa3'
+
+                    elif(np.round(transaction.confirmation_confidence,2) >= 0.50):
+                        self.DG.node[transaction]["node_color"] = '#fff694'
+
             #print(str(transaction) + "   " + str(transaction.confirmation_confidence))
 
 
@@ -358,13 +366,25 @@ class Simulation:
 
     def print_graph(self):
 
+        #Positioning and text of labels
         pos = nx.get_node_attributes(self.DG, 'pos')
-        #pos = graphviz_layout(self.DG, prog="dot", args="")
-        col = list(nx.get_node_attributes(self.DG, 'node_color').values())
-        labels = dict((transaction, str(transaction) + ", " + str(np.round(transaction.exit_probability,2))) for transaction in self.DG.nodes())
+        lower_pos = {key: (x, y-0.1) for key, (x, y) in pos.items()} #For label offset (0.1)
 
+        labels = dict((transaction, str(np.round(transaction.confirmation_confidence,2))) for transaction in self.DG.nodes())
+
+        #pos = graphviz_layout(self.DG, prog="dot", args="")
+        #col = [['r','b'][int(np.round(transaction.confirmation_confidence,1))] for transaction in self.DG.nodes()] #Color change for 100% confidence
+
+        #Coloring of nodes
+        tips = self.get_tips()
+        for tip in tips:
+            self.DG.node[tip]["node_color"] = '#ffdbb8'
+        col = list(nx.get_node_attributes(self.DG, 'node_color').values())
+
+        #Creating figure
         plt.figure(figsize=(12, 6))
-        nx.draw_networkx(self.DG, pos, with_labels=True, labels=labels, node_color = col)
+        nx.draw_networkx(self.DG, pos, with_labels=True, node_color = col)
+        nx.draw_networkx_labels(self.DG, lower_pos, labels=labels)
 
         title = "Transactions = " + str(self.no_of_transactions) +\
                 ",  " + r'$\lambda$' + " = " + str(self.lam)
@@ -378,20 +398,27 @@ class Simulation:
 
     def print_tips_over_time(self):
 
-        lens = []
+        #Get no of tips per time
+        no_tips = []
         for i in self.record_tips:
-            lens.append(len(i))
+            no_tips.append(len(i))
 
         plt.figure(figsize=(12, 6))
-        plt.plot(self.arrival_times, lens, label="Tips")
+        plt.plot(self.arrival_times, no_tips, label="Tips")
+
+        #Cut off first 250 transactions for mean and best fit
+        if(self.no_of_transactions >= 250):
+            cut_off = 250
+        else:
+            cut_off = 0
 
         #Plot mean
-        x_mean = [0, self.arrival_times[-1]]
-        y_mean = [np.mean(lens), np.mean(lens)]
+        x_mean = [self.arrival_times[cut_off], self.arrival_times[-1]]
+        y_mean = [np.mean(no_tips[cut_off:]), np.mean(no_tips[cut_off:])]
         plt.plot(x_mean, y_mean, label="Average Tips", linestyle='--')
 
         #Plot best fitted line
-        plt.plot(np.unique(self.arrival_times), np.poly1d(np.polyfit(self.arrival_times, lens, 1))(np.unique(self.arrival_times)), label="Best Fit Line", linestyle='--')
+        plt.plot(np.unique(self.arrival_times[cut_off:]), np.poly1d(np.polyfit(self.arrival_times[cut_off:], no_tips[cut_off:], 1))(np.unique(self.arrival_times[cut_off:])), label="Best Fit Line", linestyle='--')
 
         title = "Transactions = " + str(self.no_of_transactions) + \
                 ",  " + r'$\lambda$' + " = " + str(self.lam)

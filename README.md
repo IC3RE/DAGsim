@@ -39,6 +39,16 @@ Run the tests with:
 python -m unittest discover
 ```
 
+## Running the simulation
+
+Run the simulation with:
+
+```
+python core.py
+```
+
+In this file you can also change the configurations of the simulation.
+
 ## Authors
 
 * **Manuel Zander**

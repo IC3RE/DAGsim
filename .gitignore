@@ -6,3 +6,6 @@ venv
 
 # pycharm
 .idea/
+
+# DS_Store
+.DS_Store

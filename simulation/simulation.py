@@ -56,7 +56,7 @@ class Simulation:
         #Create genesis transaction object, store in list and add to graph object
         transaction_counter = 0
         self.transactions.append(Transaction(0, transaction_counter))
-        self.DG.add_node(self.transactions[0], pos=(0, 0), no=transaction_counter, node_color='##ffadad')
+        self.DG.add_node(self.transactions[0], pos=(0, 0), no=transaction_counter, node_color='#99ffff')
 
         transaction_counter += 1
 
@@ -229,7 +229,7 @@ class Simulation:
 
             approvers = list(self.DG.predecessors(walker_on))
             if approvers == []:
-                return walker_on
+                return self.weighted_random_walk(self.transactions[0], transaction)
 
             walker_on = random.choice(approvers)
 
@@ -297,7 +297,7 @@ class Simulation:
 
             approvers = list(self.DG.predecessors(walker_on))
             if approvers == []:
-                return walker_on
+                return self.weighted_random_walk(self.transactions[0], transaction)
 
             transition_probabilities = self.calc_transition_probabilities(approvers)
 
@@ -361,7 +361,7 @@ class Simulation:
     def print_end_info(self, elapsed_time):
 
         print("\nSimulation time: " + str(np.round(elapsed_time,3)) + " seconds")
-        print("\nGraph information:\n" + nx.info(self.DG))
+        #print("\nGraph information:\n" + nx.info(self.DG))
 
     def print_graph(self):
 
@@ -390,6 +390,7 @@ class Simulation:
         if(self.tip_selection_algo == "weighted"):
             title += ",  " + r'$\alpha$' + " = " + str(self.alpha)
         plt.xlabel("Time (s)")
+        plt.yticks([])
         plt.title(title)
         plt.show()
         #Save the graph

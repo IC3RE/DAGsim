@@ -11,8 +11,8 @@ from simulation.agent import Agent
 from simulation.transaction import Transaction
 
 
-class Simulation:
-    def __init__(self, _no_of_transactions, _lambda, _no_of_agents, _alpha, _latency, _distance, _tip_selection_algo):
+class Multi_Simulation:
+    def __init__(self, _no_of_transactions, _lambda, _no_of_agents, _alpha, _latency, _distances, _tip_selection_algo):
         self.transactions = []
         self.agents = []
         self.no_of_transactions = _no_of_transactions
@@ -20,7 +20,7 @@ class Simulation:
         self.no_of_agents = _no_of_agents
         self.alpha = _alpha
         self.latency = _latency
-        self.distance = _distance
+        self.distances = _distances
         self.tip_selection_algo = _tip_selection_algo
 
         if (self.no_of_agents < 1):
@@ -46,6 +46,9 @@ class Simulation:
             agent_counter += 1
 
         #Create directed graph object
+        self.distance_matrix = nx.Graph()
+
+        #Create directed graph object
         self.DG = nx.DiGraph()
 
         #Create random arrival times
@@ -56,7 +59,7 @@ class Simulation:
         #Create genesis transaction object, store in list and add to graph object
         transaction_counter = 0
         self.transactions.append(Transaction(0, transaction_counter))
-        self.DG.add_node(self.transactions[0], pos=(0, 0), no=transaction_counter, node_color='##ffadad')
+        self.DG.add_node(self.transactions[0], pos=(0, 0), no=transaction_counter, node_color='#99ffff')
 
         transaction_counter += 1
 
@@ -78,9 +81,19 @@ class Simulation:
         #Start with first transaction (NOT genesis)
         for transaction in self.transactions[1:]:
 
-            #Add to directed graph object (with random y coordinate for plotting the graph), assume one agent for now
-            transaction.agent = self.agents[0]
-            self.DG.add_node(transaction,pos=(transaction.arrival_time, random.uniform(-1, 1)), node_color='#ffadad')
+            if(int(str(transaction)) == 10):
+                self.distances = [[0, 100], [100, 0]]
+            elif (int(str(transaction)) == 170):
+                self.distances = [[0, 0], [0, 0]]
+
+            #Choose an agent
+            transaction.agent = np.random.choice(self.agents)
+
+            #Potentially move the whole coloring to the end (after Tangle is created)
+            colors = ['#ffadad', '#dbeeff', '#e5d1e6', '#e6ff99'] #For four max. four agents
+
+            #Add to directed graph object (with random y coordinate for plotting the graph)
+            self.DG.add_node(transaction,pos=(transaction.arrival_time, random.uniform(0, 1)-int(str(transaction.agent))*1.3), node_color=colors[int(str(transaction.agent))])#'#ffadad')
 
             #Select tips
             self.tip_selection(transaction)
@@ -89,7 +102,7 @@ class Simulation:
             self.update_weights(transaction)
 
             #Progress bar update
-            update_progress(int(str(transaction))/self.no_of_transactions, str(transaction))
+            update_progress(int(str(transaction))/self.no_of_transactions, transaction)
 
         self.calc_exit_probabilities()
 
@@ -128,14 +141,37 @@ class Simulation:
 
         for transaction in self.DG.nodes:
 
-            if((transaction.arrival_time + self.latency <= incoming_transaction.arrival_time
-            or transaction.arrival_time == 0)                                       #Genesis always visible
-            and transaction != incoming_transaction):                               #Transaction can't approve itself
-
+            # Genesis always visible
+            if (transaction.arrival_time == 0):
                 visible_transactions.append(transaction)
-
             else:
-                not_visible_transactions.append(transaction)
+                # Get distance from distance matrix
+                distance = self.distances[int(str(incoming_transaction.agent))][int(str(transaction.agent))]
+
+                # Transaction must be visible to other transaction
+                if (transaction.arrival_time + self.latency + distance <= incoming_transaction.arrival_time
+                # Transaction can't approve itself
+                and transaction != incoming_transaction):
+
+                    visible_transactions.append(transaction)
+
+                else:
+                    not_visible_transactions.append(transaction)
+
+            # if (transaction.arrival_time == 0):
+            #     distance = 0
+            # else:
+            #     #Get distance from distance matrix
+            #     distance = self.distances[int(str(incoming_transaction.agent))][int(str(transaction.agent))]
+            #
+            # if((transaction.arrival_time + self.latency + distance <= incoming_transaction.arrival_time
+            # or transaction.arrival_time == 0)                                       #Genesis always visible
+            # and transaction != incoming_transaction):                               #Transaction can't approve itself
+            #
+            #     visible_transactions.append(transaction)
+            #
+            # else:
+            #     not_visible_transactions.append(transaction)
 
         #print("Visible tips: " + str(visible_transactions))
         return visible_transactions, not_visible_transactions
@@ -155,7 +191,6 @@ class Simulation:
 
                 valid_tips.append(transaction)
 
-        #print("Valid tips: " + str(valid_tips))
         return valid_tips
 
     def all_approvers_not_visible(self, transaction, not_visible_transactions):
@@ -187,8 +222,8 @@ class Simulation:
             return
 
         #Reference two random valid tips
-        tip1 = random.choice(valid_tips)
-        tip2 = random.choice(valid_tips)
+        tip1 = np.random.choice(valid_tips)
+        tip2 = np.random.choice(valid_tips)
 
         self.DG.add_edge(transaction, tip1)
         if (tip1 != tip2):
@@ -229,9 +264,9 @@ class Simulation:
 
             approvers = list(self.DG.predecessors(walker_on))
             if approvers == []:
-                return walker_on
+                return self.weighted_random_walk(self.transactions[0], transaction)
 
-            walker_on = random.choice(approvers)
+            walker_on = np.random.choice(approvers)
 
         return walker_on
 
@@ -244,30 +279,6 @@ class Simulation:
 
         for transaction in nx.descendants(self.DG, transaction):
             transaction.cum_weight += 1
-
-        #Other approach 1, currently testing which is fastest
-        # if(transaction == self.transactions[0]):
-        #     return
-        # else:
-        #     for child in self.DG.successors(transaction):
-        #
-        #         child.ancestors = child.ancestors.union(transaction.ancestors).union({transaction})
-        #         child.cum_weight = len(child.ancestors) + 1
-        #         self.update_weights(child)
-        #
-        #Other approach 2
-        # for transaction in transactions:
-        #     transaction.cum_weight = len(list(nx.ancestors(self.DG, transaction))) + 1
-        #
-        #Other approach 3
-        # sorted = nx.topological_sort(self.DG)
-        # for transaction in sorted:
-        #     children = self.DG.successors(transaction)
-        #
-        #     for child in children:
-        #         child.ancestors = child.ancestors.union(transaction.ancestors).union({transaction})
-        #
-        #     transaction.cum_weight = len(transaction.ancestors) + 1
 
     def weighted_MCMC(self, transaction):
 
@@ -297,11 +308,12 @@ class Simulation:
 
             approvers = list(self.DG.predecessors(walker_on))
             if approvers == []:
-                return walker_on
+                return self.weighted_random_walk(self.transactions[0], transaction)
 
             transition_probabilities = self.calc_transition_probabilities(approvers)
 
             #Choose with transition probabilities
+
             walker_on = np.random.choice(approvers, p=transition_probabilities)
 
         return walker_on
@@ -342,8 +354,6 @@ class Simulation:
                     elif(np.round(transaction.confirmation_confidence,2) >= 0.50):
                         self.DG.node[transaction]["node_color"] = '#fff694'
 
-            #print(str(transaction) + "   " + str(transaction.confirmation_confidence))
-
 
     #############################################################################
     # PRINTING AND PLOTTING
@@ -361,7 +371,7 @@ class Simulation:
     def print_end_info(self, elapsed_time):
 
         print("\nSimulation time: " + str(np.round(elapsed_time,3)) + " seconds")
-        print("\nGraph information:\n" + nx.info(self.DG))
+        #print("\nGraph information:\n" + nx.info(self.DG))
 
     def print_graph(self):
 
@@ -390,6 +400,7 @@ class Simulation:
         if(self.tip_selection_algo == "weighted"):
             title += ",  " + r'$\alpha$' + " = " + str(self.alpha)
         plt.xlabel("Time (s)")
+        plt.yticks([])
         plt.title(title)
         plt.show()
         #Save the graph

@@ -13,25 +13,19 @@ from simulation.simulation_multi_agent import Multi_Simulation
 # #simu.print_graph()
 # simu.print_tips_over_time()
 
-#distances = [[0,2,2],[2,0,2],[2,2,0]]#[[0,100,100,100],[100,0,100,100],[100,100,0,100],[100,100,100,0]]
-distances = [[0,0],[0,0]]
+# distances = [[0,2],[2,0]]
+distances = [[0,100],[100,0]]
+# distances = [[0,2,2],[2,0,2],[2,2,0]]
+# distances = [[0,100,100,100],[100,0,100,100],[100,100,0,100],[100,100,100,0]]
 
-simu2 = Multi_Simulation(200, 5, 2, 0.005, 1, distances, "random")
+simu2 = Multi_Simulation(10, 3, 2, 0.005, 1, distances, "weighted")
 simu2.setup()
 simu2.run()
-simu2.calc_confirmation_confidence()
-# simu2.print_tips_over_time()
 
-simu3 = Multi_Simulation(200, 5, 2, 0.005, 1, distances, "unweighted")
-simu3.setup()
-simu3.run()
-simu3.calc_confirmation_confidence()
-
-simu4 = Multi_Simulation(200, 5, 2, 0.005, 1, distances, "weighted")
-simu4.setup()
-simu4.run()
-simu4.calc_confirmation_confidence()
+simu2.calc_confirmation_confidence_multiple_agents()
+simu2.measure_partitioning()
 
 simu2.print_graph()
-simu3.print_graph()
-simu4.print_graph()
+#simu2.print_tips_over_time()
+
+

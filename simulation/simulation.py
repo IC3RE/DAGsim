@@ -323,8 +323,8 @@ class Simulation:
             approvers = list(self.DG.predecessors(transaction))
             transition_probabilities = self.calc_transition_probabilities(approvers)
 
-            for (approver, transition_probability) in zip (approvers, transition_probabilities):
-                approver.exit_probability = approver.exit_probability + (transaction.exit_probability * transition_probability)
+            for (approver, transition_probability) in zip(approvers, transition_probabilities):
+                approver.exit_probability += (transaction.exit_probability * transition_probability)
 
     def calc_confirmation_confidence(self):
 

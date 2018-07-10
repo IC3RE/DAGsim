@@ -20,3 +20,13 @@ def update_progress(progress, transaction):
         format( "#"*block + "-"*(bar_length-block), np.round((progress*100),1), transaction, status)
     sys.stdout.write(text)
     sys.stdout.flush()
+
+
+def common_elements(a, b):
+    a_set = set(a)
+    b_set = set(b)
+
+    if len(a_set.intersection(b_set)) > 0:
+        return list((a_set.intersection(b_set)))
+    else:
+        return []

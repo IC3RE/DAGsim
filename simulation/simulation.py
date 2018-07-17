@@ -9,27 +9,24 @@ import matplotlib.pyplot as plt
 from simulation.helpers import update_progress
 from simulation.agent import Agent
 from simulation.transaction import Transaction
+from simulation.plot import print_info
 
 
-class Simulation:
-    def __init__(self, _no_of_transactions, _lambda, _no_of_agents, _alpha, _latency, _distance, _tip_selection_algo):
-        self.transactions = []
-        self.agents = []
+class Single_Agent_Simulation:
+    def __init__(self, _no_of_transactions, _lambda, _no_of_agents, _alpha, _latency, _tip_selection_algo):
         self.no_of_transactions = _no_of_transactions
         self.lam = _lambda
         self.no_of_agents = _no_of_agents
         self.alpha = _alpha
         self.latency = _latency
-        self.distance = _distance
         self.tip_selection_algo = _tip_selection_algo
 
         if (self.no_of_agents < 1):
             print("ERROR:  The number of agents can not be less than 1")
             sys.exit()
 
-        elif (self.no_of_agents == 1):
-            self.distance = 0
-
+        self.transactions = []
+        self.agents = []
         self.arrival_times = []
         self.record_tips = []
 
@@ -73,7 +70,7 @@ class Simulation:
     def run(self):
 
         start_time = timeit.default_timer()
-        self.print_info()
+        print_info(self)
 
         #Start with first transaction (NOT genesis)
         for transaction in self.transactions[1:]:
@@ -93,7 +90,8 @@ class Simulation:
 
         self.calc_exit_probabilities()
 
-        self.print_end_info(timeit.default_timer() - start_time)
+        print("\nSimulation time: " + str(np.round(timeit.default_timer() - start_time, 3)) + " seconds")
+        #print("\nGraph information:\n" + nx.info(self.DG))
 
     def tip_selection(self, transaction):
 
@@ -240,35 +238,6 @@ class Simulation:
     # TIP-SELECTION: WEIGHTED
     #############################################################################
 
-    def update_weights(self, transaction):
-
-        for transaction in nx.descendants(self.DG, transaction):
-            transaction.cum_weight += 1
-
-        #Other approach 1, currently testing which is fastest
-        # if(transaction == self.transactions[0]):
-        #     return
-        # else:
-        #     for child in self.DG.successors(transaction):
-        #
-        #         child.ancestors = child.ancestors.union(transaction.ancestors).union({transaction})
-        #         child.cum_weight = len(child.ancestors) + 1
-        #         self.update_weights(child)
-        #
-        #Other approach 2
-        # for transaction in transactions:
-        #     transaction.cum_weight = len(list(nx.ancestors(self.DG, transaction))) + 1
-        #
-        #Other approach 3
-        # sorted = nx.topological_sort(self.DG)
-        # for transaction in sorted:
-        #     children = self.DG.successors(transaction)
-        #
-        #     for child in children:
-        #         child.ancestors = child.ancestors.union(transaction.ancestors).union({transaction})
-        #
-        #     transaction.cum_weight = len(transaction.ancestors) + 1
-
     def weighted_MCMC(self, transaction):
 
         #Start at genesis
@@ -308,15 +277,20 @@ class Simulation:
 
 
     #############################################################################
-    # CONFIRMATION CONFIDENCE
+    # CONFIRMATION CONFIDENCE: SINGLE AGENT
     #############################################################################
+
+    def update_weights(self, incoming_transaction):
+
+        for transaction in nx.descendants(self.DG, incoming_transaction):
+            transaction.cum_weight += 1
 
     def calc_exit_probabilities(self):
 
-        #Start at genesis, tips in the end
+        # Start at genesis, tips in the end
         sorted = list(reversed(list(nx.topological_sort(self.DG))))
 
-        #Initialize genesis to 100%
+        # Initialize genesis to 100%
         self.transactions[0].exit_probability = 1.0
 
         for transaction in sorted:
@@ -332,18 +306,16 @@ class Simulation:
 
         for transaction in self.DG.nodes:
             for tip in tips:
-                if(nx.has_path(self.DG,tip,transaction) and tip != transaction):
+                if (nx.has_path(self.DG, tip, transaction) and tip != transaction):
 
                     transaction.confirmation_confidence += tip.exit_probability
 
+                    # (Potentially move the whole coloring to the end, after Tangle is created)
                     if (np.round(transaction.confirmation_confidence, 2) == 1.0):
                         self.DG.node[transaction]["node_color"] = '#b4ffa3'
 
-                    elif(np.round(transaction.confirmation_confidence,2) >= 0.50):
+                    elif (np.round(transaction.confirmation_confidence, 2) >= 0.50):
                         self.DG.node[transaction]["node_color"] = '#fff694'
-
-            #print(str(transaction) + "   " + str(transaction.confirmation_confidence))
-
 
     #############################################################################
     # PRINTING AND PLOTTING

@@ -14,7 +14,8 @@ class Transaction:
         self.confirmation_confidence_multiple_agents = defaultdict(lambda: 0)
 
         #For measuring partitioning
-        self.average_confirmation_confidence = 0
+        self.tx_average_confirmation_confidence = 0
+        self.tx_confirmation_confidence_variance = 0
 
         #Give transaction a random hash as identifier? For now just using numbers
         self.id = counter #self.id = sha3.keccak_256(self.arrival_time).hexdigest()

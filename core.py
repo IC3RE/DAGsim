@@ -26,17 +26,19 @@ from simulation.plot import print_graph, print_tips_over_time
 #Tip selection algorithms: Choose among "random", "weighted", "unweighted" as input
 #Distances: input a list, e.g. with 2 agents just [5], with 3 agents [5,5,5], denoting the distance of A to B, A to C, B to C
 
+# distances = [
+#     [0,500],
+#     [500,0]
+# ]
+
+
 distances = [
-    [0,5],
-    [5,0]
+    [0,500,500],
+    [500,0,500],
+    [500,500,0]
 ]
 
-# distances = [
-#     [0,2,2],
-#     [2,0,2],
-#     [2,2,0]
-# ]
-#
+
 # distances = [
 #     [0,100,100,100],
 #     [100,0,100,100],
@@ -46,8 +48,8 @@ distances = [
 
 p = []
 av = []
-for i in range(500):
-    simu2 = Multi_Agent_Simulation(200, 2, 2, 0.005, 1, distances, "weighted")
+for i in range(1):
+    simu2 = Multi_Agent_Simulation(20, 1, 2, 0.005, 1, distances, "weighted")
     simu2.setup()
     simu2.run()
 
@@ -56,7 +58,7 @@ for i in range(500):
     p.append(simu2.measure_partitioning())
     av.append(np.mean(p))
 
-#print(p)
+print(p)
 # print(np.mean(p))
 # print(np.var(p))
 #

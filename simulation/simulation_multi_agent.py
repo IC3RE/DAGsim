@@ -85,9 +85,9 @@ class Multi_Agent_Simulation:
         for transaction in self.transactions[1:]:
 
             #Change distance after a certain number of transactions
-            # if(int(str(transaction)) == 10):
-            #     self.distances = [[0, 100], [100, 0]]
-            # elif (int(str(transaction)) == 170):
+            # if(int(str(transaction)) == 50):
+            #     self.distances = [[0, 2000], [2000, 0]]
+            # elif (int(str(transaction)) == 150):
             #     self.distances = [[0, 0], [0, 0]]
 
             #Choose an agent
@@ -396,11 +396,6 @@ class Multi_Agent_Simulation:
 
             tips = self.get_valid_tips_multiple_agents(agent)
 
-            # print("FOR AGENT   " + str(agent) + "   " + str(tips))
-            # list = [tx.exit_probability_multiple_agents[agent] for tx in tips]
-            # print(str(agent) + "   " + str(list))
-
-
             for transaction in self.DG.nodes:
                 for tip in tips:
 
@@ -413,23 +408,43 @@ class Multi_Agent_Simulation:
 
                         transaction.confirmation_confidence_multiple_agents[agent] += tip.exit_probability_multiple_agents[agent]
 
-        #visible_tips = common_elements(tips, agent.visible_transactions)
+                print(str(transaction) + "   " + str(transaction.cum_weight_multiple_agents))
+                print(str(transaction) + "   " + str(transaction.exit_probability_multiple_agents))
+                print(str(transaction) + "   " + str(transaction.confirmation_confidence_multiple_agents) + "\n")
+
         #print(str(agent) + "   " + str(sum(tx.exit_probability_multiple_agents[agent] for tx in tips)))
 
-                        # (Potentially move the whole coloring to the end, after Tangle is created)
-                        # if (np.round(transaction.confirmation_confidence_multiple_agents[agent], 2) == 1.0):
-                        #     self.DG.node[transaction]["node_color"] = '#b4ffa3'
-                        #
-                        # elif(np.round(transaction.confirmation_confidence_multiple_agents[agent],2) >= 0.50):
-                        #     self.DG.node[transaction]["node_color"] = '#fff694'
-
-                # print(str(transaction) + "   " + str(transaction.cum_weight_multiple_agents))
-                # print(str(transaction) + "   " + str(transaction.exit_probability_multiple_agents))
-                # print(str(transaction) + "   " + str(transaction.confirmation_confidence_multiple_agents) + "\n")
+        # (Potentially move the whole coloring to the end, after Tangle is created)
+        # if (np.round(transaction.confirmation_confidence_multiple_agents[agent], 2) == 1.0):
+        #     self.DG.node[transaction]["node_color"] = '#b4ffa3'
+        #
+        # elif(np.round(transaction.confirmation_confidence_multiple_agents[agent],2) >= 0.50):
+        #     self.DG.node[transaction]["node_color"] = '#fff694'
 
     def measure_partitioning(self):
 
-        #1. Calculate average confirmation rate of an agent
+        #Calculate average confirmation rate of a transaction
+        #Calculate confirmation rate variance of a transaction and global confirmation rate variance
+        tx_confirmation_confidence_variances = []
+
+        for transaction in self.DG.nodes:
+
+            transaction.tx_average_confirmation_confidence \
+                = (sum(transaction.confirmation_confidence_multiple_agents.values()) / len(self.agents))
+
+            total = 0
+            for agent in self.agents:
+
+                total += (transaction.confirmation_confidence_multiple_agents[agent] \
+                         - transaction.tx_average_confirmation_confidence) ** 2
+
+            transaction.tx_confirmation_confidence_variance = total / len(self.agents)
+            #print("Check NP:   " + str(np.var(list(transaction.confirmation_confidence_multiple_agents.values()))))
+            tx_confirmation_confidence_variances.append(transaction.tx_confirmation_confidence_variance)
+
+        return (np.mean(tx_confirmation_confidence_variances))
+
+        # Calculate average confirmation rate of an agent
         # for agent in self.agents:
         #     total = 0
         #     agent_no_of_transactions = 0
@@ -448,26 +463,3 @@ class Multi_Agent_Simulation:
         #     print(total)
         #     print(agent_no_of_transactions)
         #     print(str(agent) + "   " + str(agent.agent_average_confirmation_confidence))
-
-
-        #2. Calculate average confirmation rate of a transaction
-        # 3. Calculate confirmation rate variance of a transaction and global confirmation rate variance
-        tx_confirmation_confidence_variances = []
-
-        for transaction in self.DG.nodes:
-
-            transaction.tx_average_confirmation_confidence \
-                = (sum(transaction.confirmation_confidence_multiple_agents.values()) / len(self.agents))
-
-            total = 0
-            for agent in self.agents:
-
-                total += (transaction.confirmation_confidence_multiple_agents[agent] \
-                         - transaction.tx_average_confirmation_confidence) ** 2
-
-            transaction.tx_confirmation_confidence_variance = total / len(self.agents)
-            #print("Check NP:   " + str(np.var(list(transaction.confirmation_confidence_multiple_agents.values()))))
-            #print("SELF_CALC:  " + str(transaction.tx_confirmation_confidence_variance))
-            tx_confirmation_confidence_variances.append(transaction.tx_confirmation_confidence_variance)
-
-        return (np.mean(tx_confirmation_confidence_variances))

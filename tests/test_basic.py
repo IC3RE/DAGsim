@@ -1,12 +1,20 @@
 import networkx as nx
 import unittest
 
-from simulation.simulation import Simulation
+from simulation.simulation_multi_agent import Multi_Agent_Simulation
 
+
+distance = 500
+
+distances = [
+    [0,distance,distance],
+    [distance,0,distance],
+    [distance,distance,0]
+]
 
 class SimulationSetupAndRunTestSuite(unittest.TestCase):
     def setUp(self):
-        self.simu = Simulation(200, 5, 1, 0.005, 1, 0, "random")
+        self.simu = Multi_Agent_Simulation(100, 10, 2, 0.005, 1, distances, "weighted")
 
     def tearDown(self):
         pass
@@ -24,7 +32,7 @@ class SimulationSetupAndRunTestSuite(unittest.TestCase):
 
 class AfterSimulationWeightedRandomWalkTestSuite(unittest.TestCase):
     def setUp(self):
-        self.simu = Simulation(200, 5, 1, 0.005, 1, 0, "weighted")
+        self.simu = Multi_Agent_Simulation(100, 10, 2, 0.005, 1, distances, "weighted")
         self.simu.setup()
         self.simu.run()
 
@@ -37,9 +45,15 @@ class AfterSimulationWeightedRandomWalkTestSuite(unittest.TestCase):
         for transaction in self.simu.DG.nodes:
             self.assertEqual(transaction.cum_weight, len(list(nx.ancestors(self.simu.DG, transaction))) + 1)
 
+    def test_calculation_exit_probabilities(self):
+        for agent in self.simu.agents:
+            self.assertEqual(sum(tip.exit_probability_multiple_agents[agent] for tip in agent.tips), 1)
+
     def test_calculation_conf_conf(self):
-        self.simu.calc_confirmation_confidence()
+        self.simu.calc_confirmation_confidence_multiple_agents()
         #Test to be written
+
+
 
 if __name__ == '__main__':
     unittest.main()

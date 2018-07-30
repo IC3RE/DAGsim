@@ -7,6 +7,7 @@ import networkx as nx
 import matplotlib.pyplot as plt
 
 from simulation.helpers import update_progress, common_elements
+from simulation.plot import print_graph, print_tips_over_time
 from simulation.agent import Agent
 from simulation.transaction import Transaction
 from simulation.plot import print_info
@@ -33,8 +34,11 @@ class Multi_Agent_Simulation:
         self.transactions = []
         self.agents = []
         self.arrival_times = []
-        self.record_tips = []
         self.not_visible_transactions = []
+
+        #For analysis only
+        self.record_tips = []
+        self.record_partitioning = []
 
 
     #############################################################################
@@ -47,9 +51,6 @@ class Multi_Agent_Simulation:
         for agent in range(self.no_of_agents):
             self.agents.append(Agent(agent_counter))
             agent_counter += 1
-
-        #Create directed graph object
-        self.distance_matrix = nx.Graph()
 
         #Create directed graph object
         self.DG = nx.DiGraph()
@@ -84,11 +85,58 @@ class Multi_Agent_Simulation:
         #Start with first transaction (NOT genesis)
         for transaction in self.transactions[1:]:
 
-            #Change distance after a certain number of transactions
-            # if(int(str(transaction)) == 50):
-            #     self.distances = [[0, 2000], [2000, 0]]
+            #############################################################################
+            # START EVENTS DURING SIMULATION (CHANGE DISTANCE ETC. HERE)
+            #############################################################################
+
+            if (int(str(transaction)) == 80):
+                # self.calc_exit_probabilities_multiple_agents(transaction)
+                # self.calc_confirmation_confidence_multiple_agents(transaction)
+                # self.measure_partitioning()
+
+                distance = 50000
+
+                self.distances = [
+                    [0, distance, distance],
+                    [distance, 0, distance],
+                    [distance, distance, 0]
+                ]
+
+                print_graph(self)
+                print_tips_over_time(self)
+
+            elif (int(str(transaction)) == 100):
+
+                print_graph(self)
+                print_tips_over_time(self)
+
+            elif (int(str(transaction)) == 120):
+                self.calc_exit_probabilities_multiple_agents(transaction)
+                self.calc_confirmation_confidence_multiple_agents(transaction)
+                self.measure_partitioning()
+
+                distance = 0.5
+
+                self.distances = [
+                    [0, distance, distance],
+                    [distance, 0, distance],
+                    [distance, distance, 0]
+                ]
+
+                print_graph(self)
+                print_tips_over_time(self)
+
             # elif (int(str(transaction)) == 150):
-            #     self.distances = [[0, 0], [0, 0]]
+            #     self.calc_exit_probabilities_multiple_agents(transaction)
+            #     self.calc_confirmation_confidence_multiple_agents(transaction)
+            #     self.measure_partitioning()
+            #
+            #     print_graph(self)
+            #     print_tips_over_time(self)
+
+            #############################################################################
+            # END EVENTS DURING SIMULATION
+            #############################################################################
 
             #Choose an agent
             transaction.agent = np.random.choice(self.agents)
@@ -103,15 +151,32 @@ class Multi_Agent_Simulation:
 
             #Update weights (of transactions referenced by the current transaction)
             self.update_weights_multiple_agents(transaction)
-            #self.update_weights(transaction)
 
             #Progress bar update
             update_progress(int(str(transaction))/self.no_of_transactions, transaction)
 
-        self.calc_exit_probabilities_multiple_agents()
+        self.calc_exit_probabilities_multiple_agents(transaction)
+        self.calc_confirmation_confidence_multiple_agents(transaction)
+        self.measure_partitioning()
 
-        print("\nSimulation time: " + str(np.round(timeit.default_timer() - start_time, 3)) + " seconds")
+        #Sanity checks
+        # for agent in self.agents:
+        #     print("VALID TIPS OF AGENT " + str(agent) + ":   " + str(agent.tips))
+        #     print("SUM OF EXIT PROBS FOR ALL TIPS:   " + str(
+        #         sum(tip.exit_probability_multiple_agents[agent] for tip in agent.tips)) + "\n")
+        #
+        #     for transaction in self.DG.nodes:
+        #         # print(str(transaction) + "   " + str(transaction.cum_weight_multiple_agents[agent]))
+        #         # print(str(transaction) + "   " + str(transaction.exit_probability_multiple_agents[agent]))
+        #         print(str(transaction) + "   " + str(transaction.confirmation_confidence_multiple_agents[agent]))
+
+        # for agent in self.agents:
+        #     for transaction in self.DG.nodes:
+        #         transaction.confirmation_confidence_multiple_agents[agent] = 0
+
+        print("Simulation time: " + str(np.round(timeit.default_timer() - start_time, 3)) + " seconds\n")
         # print("\nGraph information:\n" + nx.info(self.DG))
+
 
     def tip_selection(self, transaction):
 
@@ -138,6 +203,7 @@ class Multi_Agent_Simulation:
                 tips.append(transaction)
 
         return tips
+
 
     def get_visible_transactions(self, incoming_transaction_time, incoming_transaction_agent):
 
@@ -166,36 +232,34 @@ class Multi_Agent_Simulation:
 
                         agent.visible_transactions.append(transaction)
 
-                    #Record not visible transactions for 'current agent' only (reduces overhead, only needed once)
+                    #Record not visible transactions for 'current agent' only (reduces overhead)
                     elif(incoming_transaction_agent == agent):
                         self.not_visible_transactions.append(transaction)
-                        #agent.not_visible_transactions.append(transaction)
 
-        # for agent in self.agents:
-        #     print("AGENT   " + str(agent) + "  VISIBLE " + str(agent.visible_transactions))
 
-    def get_valid_tips(self, incoming_transaction):
+    # def get_valid_tips(self, incoming_transaction):
+    #
+    #     valid_tips = []
+    #
+    #     for transaction in incoming_transaction.agent.visible_transactions:
+    #
+    #         #Transaction has no approvers at all
+    #         if(len(list(self.DG.predecessors(transaction))) == 0
+    #         #Transaction can't approve itself
+    #         and transaction != incoming_transaction):
+    #
+    #             valid_tips.append(transaction)
+    #
+    #         #Add to valid tips if all approvers not visible yet
+    #         elif(len(list(self.DG.predecessors(transaction))) >= 1
+    #         #Transaction can't approve itself
+    #         and transaction != incoming_transaction
+    #         and self.all_approvers_not_visible(transaction)):
+    #
+    #             valid_tips.append(transaction)
+    #
+    #     return valid_tips
 
-        valid_tips = []
-
-        for transaction in incoming_transaction.agent.visible_transactions:
-
-            #Transaction has no approvers at all
-            if(len(list(self.DG.predecessors(transaction))) == 0
-            #Transaction can't approve itself
-            and transaction != incoming_transaction):
-
-                valid_tips.append(transaction)
-
-            #Add to valid tips if all approvers not visible yet
-            elif(len(list(self.DG.predecessors(transaction))) >= 1
-            #Transaction can't approve itself
-            and transaction != incoming_transaction
-            and self.all_approvers_not_visible(transaction)):
-
-                valid_tips.append(transaction)
-
-        return valid_tips
 
     def get_valid_tips_multiple_agents(self, agent):
 
@@ -216,9 +280,11 @@ class Multi_Agent_Simulation:
 
         return valid_tips
 
+
     def all_approvers_not_visible(self, transaction):
         #Return true if all approvers not visible yet, false otherwise
         return set(self.DG.predecessors(transaction)).issubset(set(self.not_visible_transactions))
+
 
     def calc_transition_probabilities(self, approvers):
 
@@ -236,11 +302,10 @@ class Multi_Agent_Simulation:
 
     def random_selection(self, transaction):
 
-        #A tip can be selected if:
-        # 1. it is visible
-        # 2. it has no approvers at all OR it has some approvers, but all approvers are technically not visible yet
+        #Get visible transactions and valid tips (and record these)
         self.get_visible_transactions(transaction.arrival_time, transaction.agent)
-        valid_tips = self.get_valid_tips(transaction)
+        valid_tips = self.get_valid_tips_multiple_agents(transaction.agent)
+        self.record_tips.append(valid_tips)
 
         if (valid_tips == []):
             return
@@ -253,8 +318,6 @@ class Multi_Agent_Simulation:
         if (tip1 != tip2):
             self.DG.add_edge(transaction, tip2)
 
-        self.record_tips.append(self.get_tips())
-
 
     #############################################################################
     # TIP-SELECTION: UNWEIGHTED
@@ -262,23 +325,27 @@ class Multi_Agent_Simulation:
 
     def unweighted_MCMC(self, transaction):
 
-        #Start at genesis
+        #Get visible transactions and valid tips (and record these)
+        self.get_visible_transactions(transaction.arrival_time, transaction.agent)
+        valid_tips = self.get_valid_tips_multiple_agents(transaction.agent)
+        self.record_tips.append(valid_tips)
+
+        #Start walk at genesis
         start = self.transactions[0]
 
-        tip1 = self.random_walk(start, transaction)
-        tip2 = self.random_walk(start, transaction)
+        #Walk to two tips
+        tip1 = self.random_walk(start, transaction, valid_tips)
+        tip2 = self.random_walk(start, transaction, valid_tips)
 
+        #Add tips to graph (only once)
         self.DG.add_edge(transaction,tip1)
         if(tip1 != tip2):
             self.DG.add_edge(transaction,tip2)
 
-        self.record_tips.append(self.get_tips())
 
-    def random_walk(self, start, transaction):
+    def random_walk(self, start, transaction, valid_tips):
 
         walker_on = start
-        self.get_visible_transactions(transaction.arrival_time, transaction.agent)
-        valid_tips = self.get_valid_tips(transaction)
 
         #If only genesis a valid tip, approve genesis
         if (valid_tips == [walker_on]):
@@ -287,10 +354,9 @@ class Multi_Agent_Simulation:
         while (walker_on not in valid_tips):
 
             approvers = list(self.DG.predecessors(walker_on))
-            if approvers == []:
-                return self.weighted_random_walk(self.transactions[0], transaction)
+            visible_approvers = common_elements(approvers, transaction.agent.visible_transactions)
 
-            walker_on = np.random.choice(approvers)
+            walker_on = np.random.choice(visible_approvers)
 
         return walker_on
 
@@ -301,23 +367,27 @@ class Multi_Agent_Simulation:
 
     def weighted_MCMC(self, transaction):
 
-        #Start at genesis
+        #Get visible transactions and valid tips (and record these)
+        self.get_visible_transactions(transaction.arrival_time, transaction.agent)
+        valid_tips = self.get_valid_tips_multiple_agents(transaction.agent)
+        self.record_tips.append(valid_tips)
+
+        #Start walk at genesis
         start = self.transactions[0]
 
-        tip1 = self.weighted_random_walk(start, transaction)
-        tip2 = self.weighted_random_walk(start, transaction)
+        #Walk to two tips
+        tip1 = self.weighted_random_walk(start, transaction, valid_tips)
+        tip2 = self.weighted_random_walk(start, transaction, valid_tips)
 
+        #Add tips to graph (only once)
         self.DG.add_edge(transaction, tip1)
         if (tip1 != tip2):
             self.DG.add_edge(transaction, tip2)
 
-        self.record_tips.append(self.get_tips())
 
-    def weighted_random_walk(self, start, transaction):
+    def weighted_random_walk(self, start, transaction, valid_tips):
 
         walker_on = start
-        self.get_visible_transactions(transaction.arrival_time, transaction.agent)
-        valid_tips = self.get_valid_tips(transaction)
 
         #If only genesis a valid tip, approve genesis
         if (valid_tips == [walker_on]):
@@ -326,13 +396,12 @@ class Multi_Agent_Simulation:
         while (walker_on not in valid_tips):
 
             approvers = list(self.DG.predecessors(walker_on))
-            if approvers == []:
-                return self.weighted_random_walk(self.transactions[0], transaction)
+            visible_approvers = common_elements(approvers, transaction.agent.visible_transactions)
 
-            transition_probabilities = self.calc_transition_probabilities(approvers)
+            transition_probabilities = self.calc_transition_probabilities(visible_approvers)
 
             #Choose with transition probabilities
-            walker_on = np.random.choice(approvers, p=transition_probabilities)
+            walker_on = np.random.choice(visible_approvers, p=transition_probabilities)
 
         return walker_on
 
@@ -348,58 +417,87 @@ class Multi_Agent_Simulation:
 
             #Update for each agent separately
             for agent in self.agents:
-
                 if(transaction in agent.visible_transactions):
                     transaction.cum_weight_multiple_agents[agent] += 1
 
         #For all current tips set cum_weight to 1 (default value)
         tips = self.get_tips()
-
         for transaction in tips:
+
+            #Update for each agent separately
             for agent in self.agents:
                 if (agent not in transaction.cum_weight_multiple_agents):
                     transaction.cum_weight_multiple_agents[agent] = 1
 
-    def calc_exit_probabilities_multiple_agents(self):
 
-        #Determine visible transaction for t + 1, so that all transactions (h = 1) are included
-        self.get_visible_transactions(self.transactions[-1].arrival_time + 1, self.transactions[-1].agent)
+    # def calc_exit_probabilities_multiple_agents(self):
+    #
+    #     self.get_visible_transactions(self.transactions[-1].arrival_time + 1, self.transactions[-1].agent)
+    #
+    #     #Start at genesis, tips in the end
+    #     sorted = list(reversed(list(nx.topological_sort(self.DG))))
+    #
+    #     #Initialize genesis to 100% for both agents
+    #     for agent in self.agents:
+    #         self.transactions[0].exit_probability_multiple_agents[agent] = 1
+    #
+    #     for transaction in sorted:
+    #
+    #         #Update for each agent separately
+    #         for agent in self.agents:
+    #
+    #             if (transaction in agent.visible_transactions):
+    #
+    #                 approvers = list(self.DG.predecessors(transaction))
+    #                 visible_approvers = common_elements(approvers, agent.visible_transactions)
+    #
+    #                 transition_probabilities = self.calc_transition_probabilities(visible_approvers)
+    #
+    #                 for (approver, transition_probability) in zip(visible_approvers, transition_probabilities):
+    #                     approver.exit_probability_multiple_agents[agent] += (transaction.exit_probability_multiple_agents[agent] * transition_probability)
+
+
+    def calc_exit_probabilities_multiple_agents(self, incoming_transaction):
 
         #Start at genesis, tips in the end
         sorted = list(reversed(list(nx.topological_sort(self.DG))))
 
-        #Initialize genesis to 100% for both agents
         for agent in self.agents:
-            self.transactions[0].exit_probability_multiple_agents[agent] = 1.0
 
-        for transaction in sorted:
+            #Reset exit probability of genesis to 100% for both agents, all others to 0%
+            for transaction in self.DG.nodes:
+                transaction.exit_probability_multiple_agents[agent] = 0
+            self.transactions[0].exit_probability_multiple_agents[agent] = 1
 
-            #Update for each agent separately
-            for agent in self.agents:
+            #Determine visible transaction for t + 1, so that all transactions (h = 1) are included
+            self.get_visible_transactions(incoming_transaction.arrival_time + 1, agent)
+
+            #Calculate exit probabilities
+            for transaction in sorted:
 
                 if (transaction in agent.visible_transactions):
 
                     approvers = list(self.DG.predecessors(transaction))
                     visible_approvers = common_elements(approvers, agent.visible_transactions)
-
                     transition_probabilities = self.calc_transition_probabilities(visible_approvers)
 
                     for (approver, transition_probability) in zip(visible_approvers, transition_probabilities):
                         approver.exit_probability_multiple_agents[agent] += (transaction.exit_probability_multiple_agents[agent] * transition_probability)
 
-    def calc_confirmation_confidence_multiple_agents(self):
 
-        #Update for each agent separately
+    def calc_confirmation_confidence_multiple_agents(self, incoming_transaction):
+
         for agent in self.agents:
 
-            self.get_visible_transactions(self.transactions[-1].arrival_time + 1, agent)
+            self.get_visible_transactions(incoming_transaction.arrival_time + 1, agent)
 
-            tips = self.get_valid_tips_multiple_agents(agent)
+            agent.tips = self.get_valid_tips_multiple_agents(agent)
 
             for transaction in self.DG.nodes:
-                for tip in tips:
+                #Reset confirmation confidence to 0%
+                transaction.confirmation_confidence_multiple_agents[agent] = 0
 
-                    #if (tip in agent.visible_transactions):
+                for tip in agent.tips:
 
                     #Tips have 0 confirmation confidence by default
                     tip.confirmation_confidence_multiple_agents[agent] = 0
@@ -408,18 +506,13 @@ class Multi_Agent_Simulation:
 
                         transaction.confirmation_confidence_multiple_agents[agent] += tip.exit_probability_multiple_agents[agent]
 
-                print(str(transaction) + "   " + str(transaction.cum_weight_multiple_agents))
-                print(str(transaction) + "   " + str(transaction.exit_probability_multiple_agents))
-                print(str(transaction) + "   " + str(transaction.confirmation_confidence_multiple_agents) + "\n")
+                # (Potentially move the whole coloring to the end, after Tangle is created)
+                # if (np.round(transaction.confirmation_confidence_multiple_agents[agent], 2) == 1.0):
+                #     self.DG.node[transaction]["node_color"] = '#b4ffa3'
+                #
+                # elif(np.round(transaction.confirmation_confidence_multiple_agents[agent],2) >= 0.50):
+                #     self.DG.node[transaction]["node_color"] = '#fff694'
 
-        #print(str(agent) + "   " + str(sum(tx.exit_probability_multiple_agents[agent] for tx in tips)))
-
-        # (Potentially move the whole coloring to the end, after Tangle is created)
-        # if (np.round(transaction.confirmation_confidence_multiple_agents[agent], 2) == 1.0):
-        #     self.DG.node[transaction]["node_color"] = '#b4ffa3'
-        #
-        # elif(np.round(transaction.confirmation_confidence_multiple_agents[agent],2) >= 0.50):
-        #     self.DG.node[transaction]["node_color"] = '#fff694'
 
     def measure_partitioning(self):
 
@@ -440,26 +533,26 @@ class Multi_Agent_Simulation:
 
             transaction.tx_confirmation_confidence_variance = total / len(self.agents)
             #print("Check NP:   " + str(np.var(list(transaction.confirmation_confidence_multiple_agents.values()))))
+
             tx_confirmation_confidence_variances.append(transaction.tx_confirmation_confidence_variance)
 
-        return (np.mean(tx_confirmation_confidence_variances))
+        print(np.mean(tx_confirmation_confidence_variances))
 
         # Calculate average confirmation rate of an agent
-        # for agent in self.agents:
-        #     total = 0
-        #     agent_no_of_transactions = 0
-        #
-        #     for transaction in self.DG.nodes:
-        #
-        #         if(agent in transaction.confirmation_confidence_multiple_agents):
-        #             total += transaction.confirmation_confidence_multiple_agents[agent]
-        #             agent_no_of_transactions += 1
-        #
-        #     if(agent_no_of_transactions != 0):
-        #         agent.agent_average_confirmation_confidence = total / agent_no_of_transactions
-        #     else:
-        #         print("Agent has no transactions")
-        #
-        #     print(total)
-        #     print(agent_no_of_transactions)
-        #     print(str(agent) + "   " + str(agent.agent_average_confirmation_confidence))
+        for agent in self.agents:
+            total = 0
+            agent_no_of_transactions = 0
+
+            for transaction in self.DG.nodes:
+
+                if(agent in transaction.confirmation_confidence_multiple_agents):
+                    total += transaction.confirmation_confidence_multiple_agents[agent]
+                    agent_no_of_transactions += 1
+
+            if(agent_no_of_transactions != 0):
+                agent.agent_average_confirmation_confidence = total / agent_no_of_transactions
+            else:
+                print("Agent has no transactions")
+
+            print("Average confirmation per agent")
+            print(str(agent) + "   " + str(agent.agent_average_confirmation_confidence))

@@ -66,21 +66,21 @@ def print_tips_over_time(self):
 
     plt.figure(figsize=(12, 6))
 
-    plt.plot(self.arrival_times, no_tips, label="Tips")
+    plt.plot(no_tips, label="Tips")
 
-    #Cut off first 250 transactions for mean and best fit
-    if(self.no_of_transactions >= 250):
-        cut_off = 250
-    else:
-        cut_off = 0
-
-    #Plot mean
-    x_mean = [self.arrival_times[cut_off], self.arrival_times[-1]]
-    y_mean = [np.mean(no_tips[cut_off:]), np.mean(no_tips[cut_off:])]
-    plt.plot(x_mean, y_mean, label="Average Tips", linestyle='--')
-
-    #Plot best fitted line
-    plt.plot(np.unique(self.arrival_times[cut_off:]), np.poly1d(np.polyfit(self.arrival_times[cut_off:], no_tips[cut_off:], 1))(np.unique(self.arrival_times[cut_off:])), label="Best Fit Line", linestyle='--')
+    # #Cut off first 250 transactions for mean and best fit
+    # if(self.no_of_transactions >= 250):
+    #     cut_off = 250
+    # else:
+    #     cut_off = 0
+    #
+    # #Plot mean
+    # x_mean = [self.arrival_times[cut_off], self.arrival_times[-1]]
+    # y_mean = [np.mean(no_tips[cut_off:]), np.mean(no_tips[cut_off:])]
+    # plt.plot(x_mean, y_mean, label="Average Tips", linestyle='--')
+    #
+    # #Plot best fitted line
+    # plt.plot(np.unique(self.arrival_times[cut_off:]), np.poly1d(np.polyfit(self.arrival_times[cut_off:], no_tips[cut_off:], 1))(np.unique(self.arrival_times[cut_off:])), label="Best Fit Line", linestyle='--')
 
     #Print title
     title = "Transactions = " + str(self.no_of_transactions) + \
@@ -92,14 +92,3 @@ def print_tips_over_time(self):
     plt.legend(loc='upper left')
     plt.title(title)
     plt.show()
-
-# class Plot:
-#     def __init__(self, x, _no_of_transactions):
-#         self.x = x
-#         self.y = np.random.rand(_no_of_transactions)
-#
-#     def show_plot(self):
-#         plt.scatter(self.x, self.y)
-#         plt.xlabel('$Time$')
-#         #plt.ylabel('$y$')
-#         plt.show()

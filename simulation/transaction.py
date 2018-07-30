@@ -3,6 +3,7 @@ from collections import defaultdict
 class Transaction:
     def __init__(self, _arrival_time, counter):
         self.arrival_time = _arrival_time
+        self.id = counter
         self.agent = None
 
         #For tip selection and calculating confirmation_confidence
@@ -16,9 +17,6 @@ class Transaction:
         #For measuring partitioning
         self.tx_average_confirmation_confidence = 0
         self.tx_confirmation_confidence_variance = 0
-
-        #Give transaction a random hash as identifier? For now just using numbers
-        self.id = counter #self.id = sha3.keccak_256(self.arrival_time).hexdigest()
 
     def __str__(self):
         return str(self.id)

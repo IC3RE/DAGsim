@@ -145,7 +145,8 @@ class Multi_Agent_Simulation:
             #############################################################################
 
             #Choose an agent
-            transaction.agent = np.random.choice(self.agents)
+            #transaction.agent = np.random.choice(self.agents)
+            transaction.agent = np.random.choice(self.agents, p=[0.8,0.2])
 
             colors = ['#ffadad', '#dbeeff', '#e5d1e6', '#e6ff99'] #For max. four agents
 
@@ -591,16 +592,3 @@ class Multi_Agent_Simulation:
         #
         #     print("Average confirmation per agent")
         #     print(str(agent) + "   " + str(agent.agent_average_confirmation_confidence))
-
-    def csv_export(self):
-
-        with open('some.csv', 'w', newline='') as file:
-            writer = csv.writer(file, dialect='excel')
-
-            for transaction in self.DG.nodes:
-                line = []
-                line.append(transaction)
-                line.append(list(self.DG.successors(transaction)))
-                line.append(transaction.arrival_time)
-                line.append(transaction.agent)
-                writer.writerow(line)

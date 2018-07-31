@@ -30,3 +30,17 @@ def common_elements(a, b):
         return list((a_set.intersection(b_set)))
     else:
         return []
+
+
+def csv_export(self):
+
+    with open('some.csv', 'w', newline='') as file:
+        writer = csv.writer(file, dialect='excel')
+
+        for transaction in self.DG.nodes:
+            line = []
+            line.append(transaction)
+            line.append(list(self.DG.successors(transaction)))
+            line.append(transaction.arrival_time)
+            line.append(transaction.agent)
+            writer.writerow(line)

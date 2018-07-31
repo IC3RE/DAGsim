@@ -3,7 +3,7 @@ import scipy.stats as st
 import networkx as nx
 import matplotlib.pyplot as plt
 
-from simulation.helpers import update_progress
+from simulation.helpers import update_progress, csv_export
 from simulation.simulation import Single_Agent_Simulation
 from simulation.simulation_multi_agent import Multi_Agent_Simulation
 from simulation.plot import print_graph, print_tips_over_time, print_tips_over_time_multiple_agents
@@ -28,12 +28,7 @@ from simulation.plot import print_graph, print_tips_over_time, print_tips_over_t
 #Parameters: no_of_transactions, lambda, no_of_agents, alpha, latency (h), distances (see note below), tip_selection_algo
 #Tip selection algorithms: Choose among "random", "weighted", "unweighted" as input
 
-distance = 0.5
-
-# distances = [
-#     [0,distance],
-#     [distance,0]
-# ]
+distance = 500.5
 
 distances = [
     [0,distance,distance],
@@ -41,22 +36,14 @@ distances = [
     [distance,distance,0]
 ]
 
-# distances = [
-#     [0,distance,distance,distance],
-#     [distance,0,distance,distance],
-#     [distance,distance,0,distance],
-#     [distance,distance,distance,0]
-# ]
-
 partitioning_values = []
 average_partitioning_across_simus = []
 
 runs = 1
 counter = 0
-
 for i in range(runs):
 
-    simu2 = Multi_Agent_Simulation(2000, 10, 2, 0.005, 1, distances, "weighted")
+    simu2 = Multi_Agent_Simulation(1000, 20, 2, 0.005, 1, distances, "weighted")
     simu2.setup()
     simu2.run()
     #simu2.csv_export()
@@ -67,16 +54,16 @@ for i in range(runs):
     # update_progress(i/runs, str(i))
     # counter += 1
 
-    # Sanity checks
+    #Sanity checks
     # print("SANITY CHECKS:\n")
     # for agent in simu2.agents:
     #     print("VALID TIPS OF AGENT " + str(agent) + ":   " + str(agent.tips))
     #     print("SUM OF EXIT PROBS FOR ALL TIPS:   " + str(sum(tip.exit_probability_multiple_agents[agent] for tip in agent.tips)) + "\n")
-    #
-    #     for transaction in simu2.DG.nodes:
-    #             #print(str(transaction) + "   " + str(transaction.cum_weight_multiple_agents[agent]))
-    #             print(str(transaction) + "   " + str(transaction.exit_probability_multiple_agents[agent]))
-    #             print(str(transaction) + "   " + str(transaction.confirmation_confidence_multiple_agents[agent]))
+        #
+        # for transaction in simu2.DG.nodes:
+        #         #print(str(transaction) + "   " + str(transaction.cum_weight_multiple_agents[agent]))
+        #         print(str(transaction) + "   " + str(transaction.exit_probability_multiple_agents[agent]))
+        #         # print(str(transaction) + "   " + str(transaction.confirmation_confidence_multiple_agents[agent]))
 
 # print(partitioning_values)
 # print(np.mean(partitioning_values))

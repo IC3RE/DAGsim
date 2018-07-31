@@ -89,42 +89,42 @@ class Multi_Agent_Simulation:
             # START EVENTS DURING SIMULATION (CHANGE DISTANCE ETC. HERE)
             #############################################################################
 
-            if (int(str(transaction)) == 80):
-                # self.calc_exit_probabilities_multiple_agents(transaction)
-                # self.calc_confirmation_confidence_multiple_agents(transaction)
-                # self.measure_partitioning()
-
-                distance = 50000
-
-                self.distances = [
-                    [0, distance, distance],
-                    [distance, 0, distance],
-                    [distance, distance, 0]
-                ]
-
-                print_graph(self)
-                print_tips_over_time(self)
-
-            elif (int(str(transaction)) == 100):
-
-                print_graph(self)
-                print_tips_over_time(self)
-
-            elif (int(str(transaction)) == 120):
-                self.calc_exit_probabilities_multiple_agents(transaction)
-                self.calc_confirmation_confidence_multiple_agents(transaction)
-                self.measure_partitioning()
-
-                distance = 0.5
-
-                self.distances = [
-                    [0, distance, distance],
-                    [distance, 0, distance],
-                    [distance, distance, 0]
-                ]
-
-                print_graph(self)
-                print_tips_over_time(self)
+            # if (int(str(transaction)) == 80):
+            #     # self.calc_exit_probabilities_multiple_agents(transaction)
+            #     # self.calc_confirmation_confidence_multiple_agents(transaction)
+            #     # self.measure_partitioning()
+            #
+            #     distance = 50000
+            #
+            #     self.distances = [
+            #         [0, distance, distance],
+            #         [distance, 0, distance],
+            #         [distance, distance, 0]
+            #     ]
+            #
+            #     print_graph(self)
+            #     print_tips_over_time(self)
+            #
+            # elif (int(str(transaction)) == 100):
+            #
+            #     print_graph(self)
+            #     print_tips_over_time(self)
+            #
+            # elif (int(str(transaction)) == 120):
+            #     self.calc_exit_probabilities_multiple_agents(transaction)
+            #     self.calc_confirmation_confidence_multiple_agents(transaction)
+            #     self.measure_partitioning()
+            #
+            #     distance = 0.5
+            #
+            #     self.distances = [
+            #         [0, distance, distance],
+            #         [distance, 0, distance],
+            #         [distance, distance, 0]
+            #     ]
+            #
+            #     print_graph(self)
+            #     print_tips_over_time(self)
 
             # elif (int(str(transaction)) == 150):
             #     self.calc_exit_probabilities_multiple_agents(transaction)
@@ -141,10 +141,10 @@ class Multi_Agent_Simulation:
             #Choose an agent
             transaction.agent = np.random.choice(self.agents)
 
-            colors = ['#ffadad', '#dbeeff', '#e5d1e6', '#e6ff99'] #For four max. four agents
+            colors = ['#ffadad', '#dbeeff', '#e5d1e6', '#e6ff99'] #For max. four agents
 
             #Add to directed graph object (with random y coordinate for plotting the graph)
-            self.DG.add_node(transaction,pos=(transaction.arrival_time, random.uniform(0, 1)-int(str(transaction.agent))*1.3), node_color=colors[int(str(transaction.agent))])#'#ffadad')
+            self.DG.add_node(transaction,pos=(transaction.arrival_time, random.uniform(0, 1)-int(str(transaction.agent))*1.3), node_color='#ffadad')#colors[int(str(transaction.agent))])#'#ffadad')
 
             #Select tips
             self.tip_selection(transaction)

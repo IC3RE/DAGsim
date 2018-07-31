@@ -26,7 +26,7 @@ from simulation.plot import print_graph, print_tips_over_time
 #Parameters: no_of_transactions, lambda, no_of_agents, alpha, latency (h), distances (see note below), tip_selection_algo
 #Tip selection algorithms: Choose among "random", "weighted", "unweighted" as input
 
-distance = 0.5
+distance = 500
 
 # distances = [
 #     [0,distance],
@@ -50,7 +50,7 @@ partitioning_values = []
 average_partitioning_across_simus = []
 
 for i in range(1):
-    simu2 = Multi_Agent_Simulation(200, 2, 2, 0.5, 1, distances, "weighted")
+    simu2 = Multi_Agent_Simulation(10, 2, 2, 0.5, 1, distances, "weighted")
     simu2.setup()
     simu2.run()
 
@@ -87,4 +87,4 @@ for i in range(1):
 # plt.show()
 
 print_graph(simu2)
-print_tips_over_time(simu2)
+# print_tips_over_time(simu2)

@@ -1,10 +1,12 @@
 import numpy as np
 import scipy.stats as st
+import networkx as nx
 import matplotlib.pyplot as plt
 
+from simulation.helpers import update_progress
 from simulation.simulation import Single_Agent_Simulation
 from simulation.simulation_multi_agent import Multi_Agent_Simulation
-from simulation.plot import print_graph, print_tips_over_time
+from simulation.plot import print_graph, print_tips_over_time, print_tips_over_time_multiple_agents
 
 #############################################################################
 # SIMULATION: SINGLE AGENT
@@ -26,7 +28,7 @@ from simulation.plot import print_graph, print_tips_over_time
 #Parameters: no_of_transactions, lambda, no_of_agents, alpha, latency (h), distances (see note below), tip_selection_algo
 #Tip selection algorithms: Choose among "random", "weighted", "unweighted" as input
 
-distance = 500
+distance = 0.5
 
 # distances = [
 #     [0,distance],
@@ -49,13 +51,21 @@ distances = [
 partitioning_values = []
 average_partitioning_across_simus = []
 
-for i in range(1):
-    simu2 = Multi_Agent_Simulation(10, 2, 2, 0.5, 1, distances, "weighted")
+runs = 1
+counter = 0
+
+for i in range(runs):
+
+    simu2 = Multi_Agent_Simulation(2000, 10, 2, 0.005, 1, distances, "weighted")
     simu2.setup()
     simu2.run()
+    #simu2.csv_export()
 
-    # partitioning_values.append(simu2.measure_partitioning())
+    # partitioning_values.append(simu2.measure_partitioning()*100)
     # average_partitioning_across_simus.append(np.mean(partitioning_values))
+
+    # update_progress(i/runs, str(i))
+    # counter += 1
 
     # Sanity checks
     # print("SANITY CHECKS:\n")
@@ -88,3 +98,4 @@ for i in range(1):
 
 print_graph(simu2)
 # print_tips_over_time(simu2)
+print_tips_over_time_multiple_agents(simu2)

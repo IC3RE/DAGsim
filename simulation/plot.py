@@ -38,7 +38,11 @@ def print_graph(self):
     tips = self.get_tips()
     for tip in tips:
         self.DG.node[tip]["node_color"] = '#ffdbb8'
-    col = list(nx.get_node_attributes(self.DG, 'node_color').values())
+
+    # col = list(nx.get_node_attributes(self.DG, 'node_color').values()) #Didn't work on Linux
+    col = []
+    for transaction in self.DG:
+        col.append(self.DG.node[transaction]["node_color"])
 
     #Creating figure
     plt.figure(figsize=(12, 6))
@@ -59,28 +63,71 @@ def print_graph(self):
 
 def print_tips_over_time(self):
 
+    plt.figure(figsize=(12, 6))
+
     #Get no of tips per time
     no_tips = []
     for i in self.record_tips:
         no_tips.append(len(i))
 
-    plt.figure(figsize=(12, 6))
-
-    plt.plot(no_tips, label="Tips")
+    plt.plot(self.arrival_times, no_tips, label="Tips")
 
     # #Cut off first 250 transactions for mean and best fit
-    # if(self.no_of_transactions >= 250):
-    #     cut_off = 250
-    # else:
-    #     cut_off = 0
-    #
-    # #Plot mean
-    # x_mean = [self.arrival_times[cut_off], self.arrival_times[-1]]
-    # y_mean = [np.mean(no_tips[cut_off:]), np.mean(no_tips[cut_off:])]
-    # plt.plot(x_mean, y_mean, label="Average Tips", linestyle='--')
-    #
-    # #Plot best fitted line
-    # plt.plot(np.unique(self.arrival_times[cut_off:]), np.poly1d(np.polyfit(self.arrival_times[cut_off:], no_tips[cut_off:], 1))(np.unique(self.arrival_times[cut_off:])), label="Best Fit Line", linestyle='--')
+    if(self.no_of_transactions >= 250):
+        cut_off = 250
+    else:
+        cut_off = 0
+
+    #Plot mean
+    x_mean = [self.arrival_times[cut_off], self.arrival_times[-1]]
+    y_mean = [np.mean(no_tips[cut_off:]), np.mean(no_tips[cut_off:])]
+    plt.plot(x_mean, y_mean, label="Average Tips", linestyle='--')
+
+    #Plot best fitted line
+    plt.plot(np.unique(self.arrival_times[cut_off:]), np.poly1d(np.polyfit(self.arrival_times[cut_off:], no_tips[cut_off:], 1))(np.unique(self.arrival_times[cut_off:])), label="Best Fit Line", linestyle='--')
+
+    #Print title
+    title = "Transactions = " + str(self.no_of_transactions) + \
+            ",  " + r'$\lambda$' + " = " + str(self.lam)
+    if (self.tip_selection_algo == "weighted"):
+        title += ",  " + r'$\alpha$' + " = " + str(self.alpha)
+    plt.xlabel("Time (s)")
+    plt.ylabel("Number of tips")
+    plt.legend(loc='upper left')
+    plt.title(title)
+    plt.show()
+
+def print_tips_over_time_multiple_agents(self):
+
+    plt.figure(figsize=(12, 6))
+
+    #Get no of tips per time
+    for agent in self.agents:
+        no_tips = []
+        for i in agent.record_tips:
+            no_tips.append(len(i))
+            label = "Tips agent " + str(agent)
+        plt.plot(self.arrival_times, no_tips, label=label)
+
+    no_tips = []
+    for i in self.record_tips:
+        no_tips.append(len(i))
+
+    plt.plot(self.arrival_times, no_tips, label="Tips issueing agent")
+
+    #Cut off first 250 transactions for mean and best fit
+    if(self.no_of_transactions >= 250):
+        cut_off = 250
+    else:
+        cut_off = 0
+
+    #Plot mean
+    x_mean = [self.arrival_times[cut_off], self.arrival_times[-1]]
+    y_mean = [np.mean(no_tips[cut_off:]), np.mean(no_tips[cut_off:])]
+    plt.plot(x_mean, y_mean, label="Average Tips", linestyle='--')
+
+    #Plot best fitted line
+    plt.plot(np.unique(self.arrival_times[cut_off:]), np.poly1d(np.polyfit(self.arrival_times[cut_off:], no_tips[cut_off:], 1))(np.unique(self.arrival_times[cut_off:])), label="Best Fit Line", linestyle='--')
 
     #Print title
     title = "Transactions = " + str(self.no_of_transactions) + \

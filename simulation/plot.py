@@ -47,7 +47,7 @@ def print_graph(self):
     #Creating figure
     plt.figure(figsize=(12, 6))
     nx.draw_networkx(self.DG, pos, with_labels=True, node_color = col)
-    nx.draw_networkx_labels(self.DG, lower_pos, labels=labels)
+    #nx.draw_networkx_labels(self.DG, lower_pos, labels=labels)
 
     #Print title
     title = "Transactions = " + str(self.no_of_transactions) +\
@@ -99,7 +99,7 @@ def print_tips_over_time(self):
     plt.title(title)
     plt.show()
 
-def print_tips_over_time_multiple_agents(self):
+def print_tips_over_time_multiple_agents(self, no_current_transactions):
 
     plt.figure(figsize=(12, 6))
 
@@ -110,7 +110,7 @@ def print_tips_over_time_multiple_agents(self):
             no_tips.append(len(i))
             label = "Tips agent " + str(agent)
 
-        plt.plot(self.arrival_times, no_tips, label=label)
+        plt.plot(self.arrival_times[:no_current_transactions-1], no_tips, label=label)
 
         #Cut off first 250 transactions for mean and best fit
         if(self.no_of_transactions >= 250):
@@ -119,14 +119,14 @@ def print_tips_over_time_multiple_agents(self):
             cut_off = 0
 
         #Plot mean
-        x_mean = [self.arrival_times[cut_off], self.arrival_times[-1]]
-        y_mean = [np.mean(no_tips[cut_off:]), np.mean(no_tips[cut_off:])]
+        x_mean = [self.arrival_times[cut_off], self.arrival_times[no_current_transactions]]
+        y_mean = [np.mean(no_tips[cut_off:no_current_transactions-1]), np.mean(no_tips[cut_off:no_current_transactions-1])]
         plt.plot(x_mean, y_mean, label="Average Tips", linestyle='--')
 
         #Plot best fitted line
-        plt.plot(np.unique(self.arrival_times[cut_off:]), \
-        np.poly1d(np.polyfit(self.arrival_times[cut_off:], no_tips[cut_off:], 1))\
-        (np.unique(self.arrival_times[cut_off:])), label="Best Fit Line", linestyle='--')
+        plt.plot(np.unique(self.arrival_times[cut_off:no_current_transactions-1]), \
+        np.poly1d(np.polyfit(self.arrival_times[cut_off:no_current_transactions-1], no_tips[cut_off:no_current_transactions-1], 1))\
+        (np.unique(self.arrival_times[cut_off:no_current_transactions-1])), label="Best Fit Line", linestyle='--')
 
     # no_tips = []
     # for i in self.record_tips:

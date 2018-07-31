@@ -83,6 +83,8 @@ class Multi_Agent_Simulation:
         start_time = timeit.default_timer()
         print_info(self)
 
+        agent_choice = [1.0,0.0]
+
         #Start with first transaction (NOT genesis)
         for transaction in self.transactions[1:]:
 
@@ -96,49 +98,51 @@ class Multi_Agent_Simulation:
             #     self.record_partitioning.append(self.measure_partitioning())
 
 
-            # if (int(str(transaction)) == 500):
-            #     self.calc_exit_probabilities_multiple_agents(transaction)
-            #     self.calc_confirmation_confidence_multiple_agents(transaction)
-            #     self.measure_partitioning()
-            #
-            #     distance = 50000
-            #
-            #     self.distances = [
-            #         [0, distance, distance],
-            #         [distance, 0, distance],
-            #         [distance, distance, 0]
-            #     ]
-            #
-            #     print_graph(self)
-            #     # print_tips_over_time(self)
-            #     print_tips_over_time_multiple_agents(self)
-            #
+            if (int(str(transaction)) == 500):
+
+                agent_choice = [0.9,0.1]
+
+                distance = 50000
+                self.distances = [
+                    [0, distance, distance],
+                    [distance, 0, distance],
+                    [distance, distance, 0]
+                ]
+
+                self.calc_exit_probabilities_multiple_agents(transaction)
+                self.calc_confirmation_confidence_multiple_agents(transaction)
+                self.measure_partitioning()
+
+                print_graph(self)
+                # print_tips_over_time(self)
+                print_tips_over_time_multiple_agents(self, int(str(transaction)))
+
             # elif (int(str(transaction)) == 750):
             #     print_graph(self)
             #     # print_tips_over_time(self)
-            #     print_tips_over_time_multiple_agents(self)
-            #
-            # elif (int(str(transaction)) == 1000):
-            #     self.calc_exit_probabilities_multiple_agents(transaction)
-            #     self.calc_confirmation_confidence_multiple_agents(transaction)
-            #     self.measure_partitioning()
-            #
-            #     distance = 0.5
-            #
-            #     self.distances = [
-            #         [0, distance, distance],
-            #         [distance, 0, distance],
-            #         [distance, distance, 0]
-            #     ]
-            #
-            #     print_graph(self)
-            #     # print_tips_over_time(self)
-            #     print_tips_over_time_multiple_agents(self)
-            #
+            #     print_tips_over_time_multiple_agents(self, int(str(transaction)))
+
+            elif (int(str(transaction)) == 1000):
+
+                distance = 0.5
+                self.distances = [
+                    [0, distance, distance],
+                    [distance, 0, distance],
+                    [distance, distance, 0]
+                ]
+
+                self.calc_exit_probabilities_multiple_agents(transaction)
+                self.calc_confirmation_confidence_multiple_agents(transaction)
+                self.measure_partitioning()
+
+                print_graph(self)
+                # print_tips_over_time(self)
+                print_tips_over_time_multiple_agents(self, int(str(transaction)))
+
             # elif (int(str(transaction)) == 1250):
             #     print_graph(self)
             #     # print_tips_over_time(self)
-            #     print_tips_over_time_multiple_agents(self)
+            #     print_tips_over_time_multiple_agents(self, int(str(transaction)))
 
             #############################################################################
             # END EVENTS DURING SIMULATION
@@ -146,7 +150,7 @@ class Multi_Agent_Simulation:
 
             #Choose an agent
             #transaction.agent = np.random.choice(self.agents)
-            transaction.agent = np.random.choice(self.agents, p=[0.8,0.2])
+            transaction.agent = np.random.choice(self.agents, p=agent_choice)
 
             colors = ['#ffadad', '#dbeeff', '#e5d1e6', '#e6ff99'] #For max. four agents
 

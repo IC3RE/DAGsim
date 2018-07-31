@@ -43,7 +43,7 @@ runs = 1
 counter = 0
 for i in range(runs):
 
-    simu2 = Multi_Agent_Simulation(1000, 20, 2, 0.005, 1, distances, "weighted")
+    simu2 = Multi_Agent_Simulation(2000, 20, 2, 0.2, 1, distances, "weighted")
     simu2.setup()
     simu2.run()
     #simu2.csv_export()
@@ -85,4 +85,4 @@ for i in range(runs):
 
 print_graph(simu2)
 # print_tips_over_time(simu2)
-print_tips_over_time_multiple_agents(simu2)
+print_tips_over_time_multiple_agents(simu2, simu2.no_of_transactions-1)

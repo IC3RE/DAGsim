@@ -15,7 +15,8 @@ from simulation.plot import print_info
 
 
 class Multi_Agent_Simulation:
-    def __init__(self, _no_of_transactions, _lambda, _no_of_agents, _alpha, _latency, _distances, _tip_selection_algo):
+    def __init__(self, _no_of_transactions, _lambda, _no_of_agents, \
+                 _alpha, _latency, _distances, _tip_selection_algo, printing="OFF"):
         self.no_of_transactions = _no_of_transactions
         self.lam = _lambda
         self.no_of_agents = _no_of_agents
@@ -23,6 +24,7 @@ class Multi_Agent_Simulation:
         self.latency = _latency
         self.distances = _distances
         self.tip_selection_algo = _tip_selection_algo
+        self.printing = printing
 
         if (self.no_of_agents < 1):
             print("ERROR:  The number of agents can not be less than 1")
@@ -81,7 +83,9 @@ class Multi_Agent_Simulation:
     def run(self):
 
         start_time = timeit.default_timer()
-        print_info(self)
+
+        if(self.printing == 'ON'):
+            print_info(self)
 
         agent_choice = [1.0,0.0]
 
@@ -98,46 +102,46 @@ class Multi_Agent_Simulation:
             #     self.record_partitioning.append(self.measure_partitioning())
 
 
-            if (int(str(transaction)) == 500):
-
-                agent_choice = [0.8,0.2]
-
-                distance = 50000
-                self.distances = [
-                    [0, distance, distance],
-                    [distance, 0, distance],
-                    [distance, distance, 0]
-                ]
-
-                self.calc_exit_probabilities_multiple_agents(transaction)
-                self.calc_confirmation_confidence_multiple_agents(transaction)
-                self.measure_partitioning()
-
-                # print_graph(self)
-                # print_tips_over_time(self)
-                print_tips_over_time_multiple_agents(self, int(str(transaction)))
-
-            # elif (int(str(transaction)) == 750):
-            #     print_graph(self)
+            # if (int(str(transaction)) == 500):
+            #
+            #     agent_choice = [0.8,0.2]
+            #
+            #     distance = 50000
+            #     self.distances = [
+            #         [0, distance, distance],
+            #         [distance, 0, distance],
+            #         [distance, distance, 0]
+            #     ]
+            #
+            #     self.calc_exit_probabilities_multiple_agents(transaction)
+            #     self.calc_confirmation_confidence_multiple_agents(transaction)
+            #     self.measure_partitioning()
+            #
+            #     # print_graph(self)
             #     # print_tips_over_time(self)
             #     print_tips_over_time_multiple_agents(self, int(str(transaction)))
-
-            elif (int(str(transaction)) == 1000):
-
-                distance = 0.5
-                self.distances = [
-                    [0, distance, distance],
-                    [distance, 0, distance],
-                    [distance, distance, 0]
-                ]
-
-                self.calc_exit_probabilities_multiple_agents(transaction)
-                self.calc_confirmation_confidence_multiple_agents(transaction)
-                self.measure_partitioning()
-
-                # print_graph(self)
-                # print_tips_over_time(self)
-                print_tips_over_time_multiple_agents(self, int(str(transaction)))
+            #
+            # # elif (int(str(transaction)) == 750):
+            # #     print_graph(self)
+            # #     # print_tips_over_time(self)
+            # #     print_tips_over_time_multiple_agents(self, int(str(transaction)))
+            #
+            # elif (int(str(transaction)) == 1000):
+            #
+            #     distance = 0.5
+            #     self.distances = [
+            #         [0, distance, distance],
+            #         [distance, 0, distance],
+            #         [distance, distance, 0]
+            #     ]
+            #
+            #     self.calc_exit_probabilities_multiple_agents(transaction)
+            #     self.calc_confirmation_confidence_multiple_agents(transaction)
+            #     self.measure_partitioning()
+            #
+            #     # print_graph(self)
+            #     # print_tips_over_time(self)
+            #     print_tips_over_time_multiple_agents(self, int(str(transaction)))
 
             # elif (int(str(transaction)) == 1250):
             #     print_graph(self)
@@ -149,8 +153,8 @@ class Multi_Agent_Simulation:
             #############################################################################
 
             #Choose an agent
-            #transaction.agent = np.random.choice(self.agents)
-            transaction.agent = np.random.choice(self.agents, p=agent_choice)
+            transaction.agent = np.random.choice(self.agents)
+            #transaction.agent = np.random.choice(self.agents, p=agent_choice)
 
             colors = ['#dbeeff', '#ffadad', '#e5d1e6', '#e6ff99'] #For max. four agents
 
@@ -164,12 +168,13 @@ class Multi_Agent_Simulation:
             self.update_weights_multiple_agents(transaction)
 
             #Progress bar update
-            update_progress(int(str(transaction))/self.no_of_transactions, transaction)
+            if(self.printing == 'ON'):
+                update_progress(int(str(transaction))/self.no_of_transactions, transaction)
 
-        print_tips_over_time_multiple_agents(self, int(str(transaction)))
+        # print_tips_over_time_multiple_agents(self, int(str(transaction)))
 
-        # self.calc_exit_probabilities_multiple_agents(transaction)
-        # self.calc_confirmation_confidence_multiple_agents(transaction)
+        self.calc_exit_probabilities_multiple_agents(transaction)
+        self.calc_confirmation_confidence_multiple_agents(transaction)
         # self.measure_partitioning()
 
         #Sanity checks
@@ -187,7 +192,8 @@ class Multi_Agent_Simulation:
         #     for transaction in self.DG.nodes:
         #         transaction.confirmation_confidence_multiple_agents[agent] = 0
 
-        print("Simulation time: " + str(np.round(timeit.default_timer() - start_time, 3)) + " seconds\n")
+        if(self.printing == 'ON'):
+            print("Simulation time: " + str(np.round(timeit.default_timer() - start_time, 3)) + " seconds\n")
         # print("\nGraph information:\n" + nx.info(self.DG))
 
 

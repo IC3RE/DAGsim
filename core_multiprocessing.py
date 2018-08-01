@@ -29,14 +29,12 @@ if __name__ == '__main__':
 
     print("Runs:", len(number_of_runs))
 
-    builtin_outputs = map(simulation,number_of_runs)
-    #print('Built-in:', builtin_outputs)
-
     pool_size = multiprocessing.cpu_count() * 2
     pool = multiprocessing.Pool(
         processes=pool_size,
         initializer=start_process,
     )
+    
     pool_outputs = pool.map(simulation,number_of_runs)
     pool.close()  # no more tasks
     pool.join()  # wrap up current tasks

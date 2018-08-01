@@ -85,4 +85,4 @@ for i in range(runs):
 
 # print_graph(simu2)
 # print_tips_over_time(simu2)
-# print_tips_over_time_multiple_agents(simu2, simu2.no_of_transactions)
+print_tips_over_time_multiple_agents(simu2, simu2.no_of_transactions)

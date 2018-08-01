@@ -43,7 +43,7 @@ runs = 1
 counter = 0
 for i in range(runs):
 
-    simu2 = Multi_Agent_Simulation(2000, 20, 2, 0.2, 1, distances, "weighted")
+    simu2 = Multi_Agent_Simulation(2000, 30, 2, 0.15, 1, distances, "weighted")
     simu2.setup()
     simu2.run()
     #simu2.csv_export()
@@ -55,10 +55,10 @@ for i in range(runs):
     # counter += 1
 
     #Sanity checks
-    # print("SANITY CHECKS:\n")
-    # for agent in simu2.agents:
-    #     print("VALID TIPS OF AGENT " + str(agent) + ":   " + str(agent.tips))
-    #     print("SUM OF EXIT PROBS FOR ALL TIPS:   " + str(sum(tip.exit_probability_multiple_agents[agent] for tip in agent.tips)) + "\n")
+    print("SANITY CHECKS:\n")
+    for agent in simu2.agents:
+        print("VALID TIPS OF AGENT " + str(agent) + ":   " + str(agent.tips))
+        print("SUM OF EXIT PROBS FOR ALL TIPS:   " + str(sum(tip.exit_probability_multiple_agents[agent] for tip in agent.tips)) + "\n")
         #
         # for transaction in simu2.DG.nodes:
         #         #print(str(transaction) + "   " + str(transaction.cum_weight_multiple_agents[agent]))
@@ -83,6 +83,6 @@ for i in range(runs):
 # plt.axhline(y=upper_bound_95_confidence_interval, color='r', linestyle='-')
 # plt.show()
 
-print_graph(simu2)
+# print_graph(simu2)
 # print_tips_over_time(simu2)
-print_tips_over_time_multiple_agents(simu2, simu2.no_of_transactions-1)
+# print_tips_over_time_multiple_agents(simu2, simu2.no_of_transactions)

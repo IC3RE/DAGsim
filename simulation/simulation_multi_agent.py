@@ -100,7 +100,7 @@ class Multi_Agent_Simulation:
 
             if (int(str(transaction)) == 500):
 
-                agent_choice = [0.9,0.1]
+                agent_choice = [0.8,0.2]
 
                 distance = 50000
                 self.distances = [
@@ -113,7 +113,7 @@ class Multi_Agent_Simulation:
                 self.calc_confirmation_confidence_multiple_agents(transaction)
                 self.measure_partitioning()
 
-                print_graph(self)
+                # print_graph(self)
                 # print_tips_over_time(self)
                 print_tips_over_time_multiple_agents(self, int(str(transaction)))
 
@@ -135,7 +135,7 @@ class Multi_Agent_Simulation:
                 self.calc_confirmation_confidence_multiple_agents(transaction)
                 self.measure_partitioning()
 
-                print_graph(self)
+                # print_graph(self)
                 # print_tips_over_time(self)
                 print_tips_over_time_multiple_agents(self, int(str(transaction)))
 
@@ -152,7 +152,7 @@ class Multi_Agent_Simulation:
             #transaction.agent = np.random.choice(self.agents)
             transaction.agent = np.random.choice(self.agents, p=agent_choice)
 
-            colors = ['#ffadad', '#dbeeff', '#e5d1e6', '#e6ff99'] #For max. four agents
+            colors = ['#dbeeff', '#ffadad', '#e5d1e6', '#e6ff99'] #For max. four agents
 
             #Add to directed graph object (with random y coordinate for plotting the graph)
             self.DG.add_node(transaction,pos=(transaction.arrival_time, random.uniform(0, 1)-int(str(transaction.agent))*1.3), node_color=colors[int(str(transaction.agent))])#'#ffadad')
@@ -165,6 +165,8 @@ class Multi_Agent_Simulation:
 
             #Progress bar update
             update_progress(int(str(transaction))/self.no_of_transactions, transaction)
+
+        print_tips_over_time_multiple_agents(self, int(str(transaction)))
 
         # self.calc_exit_probabilities_multiple_agents(transaction)
         # self.calc_confirmation_confidence_multiple_agents(transaction)

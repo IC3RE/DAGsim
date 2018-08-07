@@ -72,7 +72,7 @@ def print_tips_over_time(self):
 
     plt.plot(self.arrival_times, no_tips, label="Tips")
 
-    # #Cut off first 250 transactions for mean and best fit
+    #Cut off first 250 transactions for mean and best fit
     if(self.no_of_transactions >= 250):
         cut_off = 250
     else:
@@ -116,6 +116,8 @@ def print_tips_over_time_multiple_agents(self, no_current_transactions):
         #Cut off first 60% of transactions
         if(no_current_transactions >= 500):
             cut_off = int(no_current_transactions * 0.6)
+        else:
+            cut_off = 0
 
         #Plot mean
         x_mean = [self.arrival_times[cut_off], self.arrival_times[no_current_transactions-1]]

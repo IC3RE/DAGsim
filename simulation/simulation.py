@@ -7,9 +7,9 @@ import networkx as nx
 import matplotlib.pyplot as plt
 
 from simulation.helpers import update_progress
+from simulation.plotting import print_info
 from simulation.agent import Agent
 from simulation.transaction import Transaction
-from simulation.plot import print_info
 
 
 class Single_Agent_Simulation:

@@ -4,9 +4,9 @@ import networkx as nx
 import matplotlib.pyplot as plt
 
 from simulation.helpers import update_progress, csv_export
+from simulation.plotting import print_graph, print_tips_over_time, print_tips_over_time_multiple_agents
 from simulation.simulation import Single_Agent_Simulation
 from simulation.simulation_multi_agent import Multi_Agent_Simulation
-from simulation.plot import print_graph, print_tips_over_time, print_tips_over_time_multiple_agents
 
 #############################################################################
 # SIMULATION: SINGLE AGENT
@@ -20,21 +20,12 @@ from simulation.plot import print_graph, print_tips_over_time, print_tips_over_t
 # simu.run()
 # simu.calc_confirmation_confidence()
 
-
 #############################################################################
 # SIMULATION: MULTI AGENT
 #############################################################################
 
-#Parameters: no_of_transactions, lambda, no_of_agents, alpha, latency (h), distances (see note below), tip_selection_algo
+#Parameters: no_of_transactions, lambda, no_of_agents, alpha, latency (h), distance, tip_selection_algo
 #Tip selection algorithms: Choose among "random", "weighted", "unweighted" as input
-
-distance = 500.5
-
-distances = [
-    [0,distance,distance],
-    [distance,0,distance],
-    [distance,distance,0]
-]
 
 partitioning_values = []
 average_partitioning_across_simus = []
@@ -43,12 +34,13 @@ runs = 1
 counter = 0
 for i in range(runs):
 
-    simu2 = Multi_Agent_Simulation(2000, 30, 2, 0.15, 1, distances, "weighted", printing="ON")
+    simu2 = Multi_Agent_Simulation(200, 30, 2, 0.15, 1, 500, "weighted", _printing=True)
     simu2.setup()
     simu2.run()
-    #simu2.csv_export()
 
-    # partitioning_values.append(simu2.measure_partitioning()*100)
+    csv_export(simu2)
+
+    # partitioning_values.append(simu2.measure_partitioning())
     # average_partitioning_across_simus.append(np.mean(partitioning_values))
 
     # update_progress(i/runs, str(i))
@@ -73,6 +65,10 @@ for i in range(runs):
 # PLOTTING
 #############################################################################
 
+# print_graph(simu2)
+# print_tips_over_time(simu2)
+print_tips_over_time_multiple_agents(simu2, simu2.no_of_transactions)
+
 #Plotting the partitioning values for multiple simulations, cumulative mean and 95% confidence interval
 # plt.plot(simu2.record_partitioning)
 # plt.plot(partitioning_values)
@@ -82,7 +78,3 @@ for i in range(runs):
 # plt.axhline(y=lower_bound_95_confidence_interval, color='r', linestyle='-')
 # plt.axhline(y=upper_bound_95_confidence_interval, color='r', linestyle='-')
 # plt.show()
-
-# print_graph(simu2)
-# print_tips_over_time(simu2)
-print_tips_over_time_multiple_agents(simu2, simu2.no_of_transactions)

@@ -2,35 +2,64 @@ import sys
 import timeit
 import random
 import math
-import csv
 import numpy as np
 import networkx as nx
 import matplotlib.pyplot as plt
 
-from simulation.helpers import update_progress, common_elements
-from simulation.plot import print_graph, print_tips_over_time, print_tips_over_time_multiple_agents
+from simulation.helpers import update_progress, common_elements, load_file
+from simulation.plotting import print_info, print_graph, print_tips_over_time, print_tips_over_time_multiple_agents
 from simulation.agent import Agent
 from simulation.transaction import Transaction
-from simulation.plot import print_info
 
 
 class Multi_Agent_Simulation:
     def __init__(self, _no_of_transactions, _lambda, _no_of_agents, \
-                 _alpha, _latency, _distances, _tip_selection_algo, printing="OFF"):
-        self.no_of_transactions = _no_of_transactions
-        self.lam = _lambda
-        self.no_of_agents = _no_of_agents
-        self.alpha = _alpha
-        self.latency = _latency
-        self.distances = _distances
-        self.tip_selection_algo = _tip_selection_algo
-        self.printing = printing
+                 _alpha, _latency, _distance, _tip_selection_algo, \
+                 _agent_choice=None, _printing=False):
 
-        if (self.no_of_agents < 1):
-            print("ERROR:  The number of agents can not be less than 1")
+        #Use configuration file when provided
+        if(len(sys.argv) != 1):
+            self.config = load_file(sys.argv[1])
+            self.no_of_transactions = self.config[0][0]
+            self.lam = self.config[0][1]
+            self.no_of_agents = self.config[0][2]
+            self.alpha = self.config[0][3]
+            self.latency = self.config[0][4]
+            distance = self.config[0][5]
+            self.distances = [
+                [0, distance, distance, distance],
+                [distance, 0, distance, distance],
+                [distance, distance, 0, distance],
+                [distance, distance, distance, 0]
+                ]
+            self.tip_selection_algo = self.config[0][6]
+            if _agent_choice is None:
+                _agent_choice = [1.0,0.0]
+            self.agent_choice = _agent_choice
+            self.printing = self.config[0][7]
+        #Otherwise use the provided parameters
+        else:
+            self.no_of_transactions = _no_of_transactions
+            self.lam = _lambda
+            self.no_of_agents = _no_of_agents
+            self.alpha = _alpha
+            self.latency = _latency
+            self.distances = [
+                [0, _distance, _distance, _distance],
+                [_distance, 0, _distance, _distance],
+                [_distance, _distance, 0, _distance],
+                [_distance, _distance, _distance, 0]
+                ]
+            self.tip_selection_algo = _tip_selection_algo
+            if _agent_choice is None:
+                _agent_choice = [1.0,0.0]
+            self.agent_choice = _agent_choice
+            self.printing = _printing
+
+        if len(self.agent_choice) != self.no_of_agents:
+            print("ERROR:  The number of agents has to match the probabilities")
             sys.exit()
-
-        elif (self.no_of_agents == 1):
+        if (self.no_of_agents == 1):
             print("ERROR:  Use a Single_Agent_Simulation()")
             sys.exit()
 
@@ -49,6 +78,7 @@ class Multi_Agent_Simulation:
     #############################################################################
 
     def setup(self):
+
         #Create agents
         agent_counter = 0
         for agent in range(self.no_of_agents):
@@ -84,81 +114,54 @@ class Multi_Agent_Simulation:
 
         start_time = timeit.default_timer()
 
-        if(self.printing == 'ON'):
+        if self.printing:
             print_info(self)
 
-        agent_choice = [1.0,0.0]
+        #Create dictionary with simulation parameter changes when provided
+        if(len(sys.argv) != 1):
+            dic = {x[0]: x[1:] for x in self.config[1:]}
 
         #Start with first transaction (NOT genesis)
         for transaction in self.transactions[1:]:
 
             #############################################################################
-            # START EVENTS DURING SIMULATION (CHANGE DISTANCE ETC. HERE)
+            # START CHANGE EVENTS DURING SIMULATION
             #############################################################################
 
+            #Execute simulation parameter changes when provided
+            if(len(sys.argv) != 1):
+                temp = (int(str(transaction)))
+                #If change event for a transaction is provided
+                if temp in dic:
+                    #If change of distance is provided
+                    if dic[temp][0] != None:
+                        distance = dic[temp][0]
+                        self.distances = [
+                            [0, distance, distance, distance],
+                            [distance, 0, distance, distance],
+                            [distance, distance, 0, distance],
+                            [distance, distance, distance, 0]
+                            ]
+                    #If change of agent probabilities is provided
+                    if dic[temp][1] != None:
+                        self.agent_choice = dic[temp][1]
+                    print_tips_over_time_multiple_agents(self, int(str(transaction)))
+
+            #Do something every 100th transition
             # if (int(str(transaction)) % 100 == 0):
             #     self.calc_exit_probabilities_multiple_agents(transaction)
             #     self.calc_confirmation_confidence_multiple_agents(transaction)
             #     self.record_partitioning.append(self.measure_partitioning())
 
-
-            if (int(str(transaction)) == 500):
-
-                agent_choice = [0.8,0.2]
-
-                distance = 50000
-                self.distances = [
-                    [0, distance, distance],
-                    [distance, 0, distance],
-                    [distance, distance, 0]
-                ]
-
-                # self.calc_exit_probabilities_multiple_agents(transaction)
-                # self.calc_confirmation_confidence_multiple_agents(transaction)
-                # self.measure_partitioning()
-
-                # print_graph(self)
-                # print_tips_over_time(self)
-                print_tips_over_time_multiple_agents(self, int(str(transaction)))
-
-            # elif (int(str(transaction)) == 750):
-            #     print_graph(self)
-            #     # print_tips_over_time(self)
-            #     print_tips_over_time_multiple_agents(self, int(str(transaction)))
-
-            elif (int(str(transaction)) == 1000):
-
-                distance = 0.5
-                self.distances = [
-                    [0, distance, distance],
-                    [distance, 0, distance],
-                    [distance, distance, 0]
-                ]
-
-                # self.calc_exit_probabilities_multiple_agents(transaction)
-                # self.calc_confirmation_confidence_multiple_agents(transaction)
-                # self.measure_partitioning()
-
-                # print_graph(self)
-                # print_tips_over_time(self)
-                print_tips_over_time_multiple_agents(self, int(str(transaction)))
-
-            elif (int(str(transaction)) == 1250):
-                # print_graph(self)
-                # print_tips_over_time(self)
-                print_tips_over_time_multiple_agents(self, int(str(transaction)))
-
             #############################################################################
-            # END EVENTS DURING SIMULATION
+            # END CHANGE EVENTS DURING SIMULATION
             #############################################################################
 
             #Choose an agent
-            #transaction.agent = np.random.choice(self.agents)
-            transaction.agent = np.random.choice(self.agents, p=agent_choice)
+            transaction.agent = np.random.choice(self.agents, p=self.agent_choice)
 
+            #Add transaction to directed graph object (with random y coordinate for plotting the graph)
             colors = ['#dbeeff', '#ffadad', '#e5d1e6', '#e6ff99'] #For max. four agents
-
-            #Add to directed graph object (with random y coordinate for plotting the graph)
             self.DG.add_node(transaction,pos=(transaction.arrival_time, random.uniform(0, 1)-int(str(transaction.agent))*1.3), node_color=colors[int(str(transaction.agent))])#'#ffadad')
 
             #Select tips
@@ -168,33 +171,18 @@ class Multi_Agent_Simulation:
             self.update_weights_multiple_agents(transaction)
 
             #Progress bar update
-            if(self.printing == 'ON'):
+            if self.printing:
                 update_progress(int(str(transaction))/self.no_of_transactions, transaction)
 
-        print_tips_over_time_multiple_agents(self, int(str(transaction)))
-
-        self.calc_exit_probabilities_multiple_agents(transaction)
-        self.calc_confirmation_confidence_multiple_agents(transaction)
+        #For measuring partitioning
+        # print_tips_over_time_multiple_agents(self, int(str(transaction)))
+        # self.calc_exit_probabilities_multiple_agents(transaction)
+        # self.calc_confirmation_confidence_multiple_agents(transaction)
         # self.measure_partitioning()
 
-        #Sanity checks
-        # for agent in self.agents:
-        #     print("VALID TIPS OF AGENT " + str(agent) + ":   " + str(agent.tips))
-        #     print("SUM OF EXIT PROBS FOR ALL TIPS:   " + str(
-        #         sum(tip.exit_probability_multiple_agents[agent] for tip in agent.tips)) + "\n")
-        #
-        #     for transaction in self.DG.nodes:
-        #         # print(str(transaction) + "   " + str(transaction.cum_weight_multiple_agents[agent]))
-        #         # print(str(transaction) + "   " + str(transaction.exit_probability_multiple_agents[agent]))
-        #         print(str(transaction) + "   " + str(transaction.confirmation_confidence_multiple_agents[agent]))
-
-        # for agent in self.agents:
-        #     for transaction in self.DG.nodes:
-        #         transaction.confirmation_confidence_multiple_agents[agent] = 0
-
-        if(self.printing == 'ON'):
+        if self.printing:
             print("Simulation time: " + str(np.round(timeit.default_timer() - start_time, 3)) + " seconds\n")
-        # print("\nGraph information:\n" + nx.info(self.DG))
+            # print("\nGraph information:\n" + nx.info(self.DG))
 
 
     def tip_selection(self, transaction):
@@ -206,7 +194,7 @@ class Multi_Agent_Simulation:
         elif(self.tip_selection_algo == "weighted"):
             self.weighted_MCMC(transaction)
         else:
-            print("ERROR:  Tip selection algorithms are 'random', 'weighted', 'unweighted'")
+            print("ERROR:  Valid tip selection algorithms are 'random', 'weighted', 'unweighted'")
             sys.exit()
 
 

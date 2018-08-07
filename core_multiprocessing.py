@@ -14,7 +14,7 @@ def simulation(data):
         [distance,distance,0]
     ]
 
-    simu = Multi_Agent_Simulation(300, 2, 2, 0.005, 1, distances, "weighted", printing="OFF")
+    simu = Multi_Agent_Simulation(300, 2, 2, 0.005, 1, distances, "weighted")
     simu.setup()
     simu.run()
     return (data, simu.measure_partitioning())
@@ -34,7 +34,7 @@ if __name__ == '__main__':
         processes=pool_size,
         initializer=start_process,
     )
-    
+
     pool_outputs = pool.map(simulation,number_of_runs)
     pool.close()  # no more tasks
     pool.join()  # wrap up current tasks

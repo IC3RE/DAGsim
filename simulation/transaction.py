@@ -1,9 +1,9 @@
 from collections import defaultdict
 
 class Transaction:
-    def __init__(self, _arrival_time, counter):
+    def __init__(self, _arrival_time, _counter):
         self.arrival_time = _arrival_time
-        self.id = counter
+        self.id = _counter
         self.agent = None
 
         #For tip selection and calculating confirmation_confidence
@@ -23,5 +23,3 @@ class Transaction:
 
     def __repr__(self):
         return str(self.id)
-
-

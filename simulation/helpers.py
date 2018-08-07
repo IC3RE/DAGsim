@@ -1,4 +1,5 @@
 import sys
+import csv
 import numpy as np
 
 def update_progress(progress, transaction):
@@ -32,15 +33,58 @@ def common_elements(a, b):
         return []
 
 
+def load_file(filename):
+    f = open(filename, 'r')
+    lines = []
+    first_line = f.readline()
+
+    _no_of_transactions, _lambda, _no_of_agents, \
+    _alpha, _latency, _distance, _tip_selection_algo, \
+    _printing = first_line.strip().split(",")
+
+    lines.append((int(_no_of_transactions), float(_lambda), int(_no_of_agents), \
+    float(_alpha), int(_latency), float(_distance), _tip_selection_algo, bool(_printing)))
+
+    for line in f:
+        ts_string, _, rest = line.strip().partition(",")
+        dist_string, _, ac_string = rest.partition(",")
+
+        if ts_string=="" or dist_string=="" or ac_string=="":
+            print("Badly formed line: {}".format(line))
+            sys.exit(1)
+
+        transaction = int(ts_string)
+
+        if dist_string=="null":
+            distance = None
+        else:
+            distance = float(dist_string)
+
+        if ac_string=="null":
+            agent_choice = None
+        else:
+            agent_choice = [float(x) for x in eval(ac_string)]
+
+        if agent_choice != None and sum(agent_choice) != 1.0:
+            print("Agent choice not summing to 1.0: {}".format(sum(agent_choice)))
+            sys.exit(1)
+        lines.append((transaction, distance, agent_choice))
+
+    return lines
+
+
 def csv_export(self):
 
-    with open('some.csv', 'w', newline='') as file:
+    with open('data.csv', 'w', newline='') as file:
         writer = csv.writer(file, dialect='excel')
-
+        #Write genesis
+        writer.writerow([0,[],0,0])
         for transaction in self.DG.nodes:
-            line = []
-            line.append(transaction)
-            line.append(list(self.DG.successors(transaction)))
-            line.append(transaction.arrival_time)
-            line.append(transaction.agent)
-            writer.writerow(line)
+            #Write all other transaction
+            if(transaction.arrival_time != 0):
+                line = []
+                line.append(transaction)
+                line.append(list(self.DG.successors(transaction)))
+                line.append(transaction.arrival_time)
+                line.append(transaction.agent)
+                writer.writerow(line)

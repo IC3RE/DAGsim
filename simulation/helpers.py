@@ -23,6 +23,13 @@ def update_progress(progress, transaction):
     sys.stdout.flush()
 
 
+def create_distance_matrix(self, distance):
+    m = [[distance] * self.no_of_agents for i in range(self.no_of_agents)]
+    for i in range(self.no_of_agents):
+        m[i][i] = 0
+    return m
+
+
 def common_elements(a, b):
     a_set = set(a)
     b_set = set(b)

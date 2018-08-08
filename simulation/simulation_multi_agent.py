@@ -6,7 +6,7 @@ import numpy as np
 import networkx as nx
 import matplotlib.pyplot as plt
 
-from simulation.helpers import update_progress, common_elements, load_file
+from simulation.helpers import update_progress, create_distance_matrix, common_elements, load_file
 from simulation.plotting import print_info, print_graph, print_tips_over_time, print_tips_over_time_multiple_agents
 from simulation.agent import Agent
 from simulation.transaction import Transaction
@@ -25,16 +25,10 @@ class Multi_Agent_Simulation:
             self.no_of_agents = self.config[0][2]
             self.alpha = self.config[0][3]
             self.latency = self.config[0][4]
-            distance = self.config[0][5]
-            self.distances = [
-                [0, distance, distance, distance],
-                [distance, 0, distance, distance],
-                [distance, distance, 0, distance],
-                [distance, distance, distance, 0]
-                ]
+            self.distances = create_distance_matrix(self, self.config[0][5])
             self.tip_selection_algo = self.config[0][6]
             if _agent_choice is None:
-                _agent_choice = [1.0,0.0]
+                _agent_choice = list(np.ones(self.no_of_agents)/self.no_of_agents)
             self.agent_choice = _agent_choice
             self.printing = self.config[0][7]
         #Otherwise use the provided parameters
@@ -44,15 +38,11 @@ class Multi_Agent_Simulation:
             self.no_of_agents = _no_of_agents
             self.alpha = _alpha
             self.latency = _latency
-            self.distances = [
-                [0, _distance, _distance, _distance],
-                [_distance, 0, _distance, _distance],
-                [_distance, _distance, 0, _distance],
-                [_distance, _distance, _distance, 0]
-                ]
+            self.distances = create_distance_matrix(self, _distance)
             self.tip_selection_algo = _tip_selection_algo
             if _agent_choice is None:
-                _agent_choice = [1.0,0.0]
+                _agent_choice = list(np.ones(self.no_of_agents)/self.no_of_agents)
+                print(_agent_choice)
             self.agent_choice = _agent_choice
             self.printing = _printing
 
@@ -72,6 +62,12 @@ class Multi_Agent_Simulation:
         self.record_tips = []
         self.record_partitioning = []
 
+        #For max. four agents same colors, for more agents random colors
+        self.agent_colors = ['#dbeeff', '#ffadad', '#e5d1e6', '#e6ff99']
+        for i in range(self.no_of_agents-4):
+            r = lambda: random.randint(0,255)
+            color = '#{:02x}{:02x}{:02x}'.format(r(), r(), r())
+            self.agent_colors.append(color)
 
     #############################################################################
     # SIMULATION: SETUP
@@ -135,17 +131,15 @@ class Multi_Agent_Simulation:
                 if temp in dic:
                     #If change of distance is provided
                     if dic[temp][0] != None:
-                        distance = dic[temp][0]
-                        self.distances = [
-                            [0, distance, distance, distance],
-                            [distance, 0, distance, distance],
-                            [distance, distance, 0, distance],
-                            [distance, distance, distance, 0]
-                            ]
+                        self.distances = create_distance_matrix(self, dic[temp][0])
                     #If change of agent probabilities is provided
                     if dic[temp][1] != None:
                         self.agent_choice = dic[temp][1]
                     print_tips_over_time_multiple_agents(self, int(str(transaction)))
+
+                    self.calc_exit_probabilities_multiple_agents(transaction)
+                    self.calc_confirmation_confidence_multiple_agents(transaction)
+                    self.measure_partitioning()
 
             #Do something every 100th transition
             # if (int(str(transaction)) % 100 == 0):
@@ -161,8 +155,7 @@ class Multi_Agent_Simulation:
             transaction.agent = np.random.choice(self.agents, p=self.agent_choice)
 
             #Add transaction to directed graph object (with random y coordinate for plotting the graph)
-            colors = ['#dbeeff', '#ffadad', '#e5d1e6', '#e6ff99'] #For max. four agents
-            self.DG.add_node(transaction,pos=(transaction.arrival_time, random.uniform(0, 1)-int(str(transaction.agent))*1.3), node_color=colors[int(str(transaction.agent))])#'#ffadad')
+            self.DG.add_node(transaction,pos=(transaction.arrival_time, random.uniform(0, 1)-int(str(transaction.agent))*1.3), node_color=self.agent_colors[int(str(transaction.agent))])#'#ffadad')
 
             #Select tips
             self.tip_selection(transaction)
@@ -271,8 +264,6 @@ class Multi_Agent_Simulation:
     def get_valid_tips_multiple_agents(self, agent):
 
         valid_tips = []
-        # print("\n")
-        # print(agent.visible_transactions)
 
         for transaction in agent.visible_transactions:
 
@@ -462,8 +453,8 @@ class Multi_Agent_Simulation:
 
             #Update for each agent separately
             for agent in self.agents:
-                if (agent not in transaction.cum_weight_multiple_agents):
-                    transaction.cum_weight_multiple_agents[agent] = 1
+                transaction.cum_weight_multiple_agents[agent] = 1
+                #print(transaction.cum_weight_multiple_agents[agent])
 
 
     # def calc_exit_probabilities_multiple_agents(self):
@@ -554,41 +545,41 @@ class Multi_Agent_Simulation:
 
         #Calculate average confirmation rate of a transaction
         #Calculate confirmation rate variance of a transaction and global confirmation rate variance
-        tx_confirmation_confidence_variances = []
-
-        for transaction in self.DG.nodes:
-
-            transaction.tx_average_confirmation_confidence \
-                = (sum(transaction.confirmation_confidence_multiple_agents.values()) / len(self.agents))
-
-            total = 0
-            for agent in self.agents:
-
-                total += (transaction.confirmation_confidence_multiple_agents[agent] \
-                         - transaction.tx_average_confirmation_confidence) ** 2
-
-            transaction.tx_confirmation_confidence_variance = total / len(self.agents)
-            #print("Check NP:   " + str(np.var(list(transaction.confirmation_confidence_multiple_agents.values()))))
-
-            tx_confirmation_confidence_variances.append(transaction.tx_confirmation_confidence_variance)
-
-        return (np.mean(tx_confirmation_confidence_variances))
-
-        # Calculate average confirmation rate of an agent
-        # for agent in self.agents:
+        # tx_confirmation_confidence_variances = []
+        #
+        # for transaction in self.DG.nodes:
+        #
+        #     transaction.tx_average_confirmation_confidence \
+        #         = (sum(transaction.confirmation_confidence_multiple_agents.values()) / len(self.agents))
+        #
         #     total = 0
-        #     agent_no_of_transactions = 0
+        #     for agent in self.agents:
         #
-        #     for transaction in self.DG.nodes:
+        #         total += (transaction.confirmation_confidence_multiple_agents[agent] \
+        #                  - transaction.tx_average_confirmation_confidence) ** 2
         #
-        #         if(agent in transaction.confirmation_confidence_multiple_agents):
-        #             total += transaction.confirmation_confidence_multiple_agents[agent]
-        #             agent_no_of_transactions += 1
+        #     transaction.tx_confirmation_confidence_variance = total / len(self.agents)
+        #     #print("Check NP:   " + str(np.var(list(transaction.confirmation_confidence_multiple_agents.values()))))
         #
-        #     if(agent_no_of_transactions != 0):
-        #         agent.agent_average_confirmation_confidence = total / agent_no_of_transactions
-        #     else:
-        #         print("Agent has no transactions")
+        #     tx_confirmation_confidence_variances.append(transaction.tx_confirmation_confidence_variance)
         #
-        #     print("Average confirmation per agent")
-        #     print(str(agent) + "   " + str(agent.agent_average_confirmation_confidence))
+        # return (np.mean(tx_confirmation_confidence_variances))
+
+        #Calculate average confirmation rate of an agent
+        for agent in self.agents:
+            total = 0
+            agent_no_of_transactions = 0
+
+            for transaction in self.DG.nodes:
+
+                if(agent in transaction.confirmation_confidence_multiple_agents):
+                    total += transaction.confirmation_confidence_multiple_agents[agent]
+                    agent_no_of_transactions += 1
+
+            if(agent_no_of_transactions != 0):
+                agent.agent_average_confirmation_confidence = total / agent_no_of_transactions
+            else:
+                print("Agent has no transactions")
+
+            print("Average confirmation per agent")
+            print(str(agent) + "   " + str(agent.agent_average_confirmation_confidence))

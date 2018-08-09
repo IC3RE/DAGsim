@@ -42,7 +42,6 @@ class Multi_Agent_Simulation:
             self.tip_selection_algo = _tip_selection_algo
             if _agent_choice is None:
                 _agent_choice = list(np.ones(self.no_of_agents)/self.no_of_agents)
-                print(_agent_choice)
             self.agent_choice = _agent_choice
             self.printing = _printing
 
@@ -449,13 +448,10 @@ class Multi_Agent_Simulation:
 
         #For all current tips set cum_weight to 1 (default value)
         tips = self.get_tips()
-        for transaction in tips:
-
+        for tip in tips:
             #Update for each agent separately
             for agent in self.agents:
-                transaction.cum_weight_multiple_agents[agent] = 1
-                #print(transaction.cum_weight_multiple_agents[agent])
-
+                tip.cum_weight_multiple_agents[agent] = 1
 
     # def calc_exit_probabilities_multiple_agents(self):
     #

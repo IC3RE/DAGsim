@@ -34,7 +34,7 @@ runs = 1
 counter = 0
 for i in range(runs):
 
-    simu2 = Multi_Agent_Simulation(70, 3, 10, 0.15, 1, 500, "weighted", _printing=True)
+    simu2 = Multi_Agent_Simulation(1000, 20, 2, 0.02, 1, 30, "weighted", _printing=True)
     simu2.setup()
     simu2.run()
 
@@ -51,11 +51,11 @@ for i in range(runs):
     # for agent in simu2.agents:
     #     print("VALID TIPS OF AGENT " + str(agent) + ":   " + str(agent.tips))
     #     print("SUM OF EXIT PROBS FOR ALL TIPS:   " + str(sum(tip.exit_probability_multiple_agents[agent] for tip in agent.tips)) + "\n")
-        #
-        # for transaction in simu2.DG.nodes:
-        #         #print(str(transaction) + "   " + str(transaction.cum_weight_multiple_agents[agent]))
-        #         print(str(transaction) + "   " + str(transaction.exit_probability_multiple_agents[agent]))
-        #         # print(str(transaction) + "   " + str(transaction.confirmation_confidence_multiple_agents[agent]))
+    #
+    #     for transaction in simu2.DG.nodes:
+    #             print(str(transaction) + "   " + str(transaction.cum_weight_multiple_agents[agent]))
+    #             print(str(transaction) + "   " + str(transaction.exit_probability_multiple_agents[agent]))
+    #             print(str(transaction) + "   " + str(transaction.confirmation_confidence_multiple_agents[agent]))
 
 # print(partitioning_values)
 # print(np.mean(partitioning_values))

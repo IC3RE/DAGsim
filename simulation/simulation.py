@@ -6,7 +6,7 @@ import numpy as np
 import networkx as nx
 import matplotlib.pyplot as plt
 
-from simulation.helpers import update_progress
+from simulation.helpers import update_progress, common_elements
 from simulation.plotting import print_info
 from simulation.agent import Agent
 from simulation.transaction import Transaction
@@ -226,10 +226,9 @@ class Single_Agent_Simulation:
         while (walker_on not in valid_tips):
 
             approvers = list(self.DG.predecessors(walker_on))
-            if approvers == []:
-                return self.weighted_random_walk(self.transactions[0], transaction)
+            visible_approvers = common_elements(approvers, visible_transactions)
 
-            walker_on = random.choice(approvers)
+            walker_on = random.choice(visible_approvers)
 
         return walker_on
 
@@ -265,13 +264,11 @@ class Single_Agent_Simulation:
         while (walker_on not in valid_tips):
 
             approvers = list(self.DG.predecessors(walker_on))
-            if approvers == []:
-                return self.weighted_random_walk(self.transactions[0], transaction)
-
-            transition_probabilities = self.calc_transition_probabilities(approvers)
+            visible_approvers = common_elements(approvers, visible_transactions)
+            transition_probabilities = self.calc_transition_probabilities(visible_approvers)
 
             #Choose with transition probabilities
-            walker_on = np.random.choice(approvers, p=transition_probabilities)
+            walker_on = np.random.choice(visible_approvers, p=transition_probabilities)
 
         return walker_on
 

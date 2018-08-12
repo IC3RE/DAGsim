@@ -14,7 +14,7 @@ from simulation.transaction import Transaction
 
 class Multi_Agent_Simulation:
     def __init__(self, _no_of_transactions, _lambda, _no_of_agents, \
-                 _alpha, _latency, _distance, _tip_selection_algo, \
+                 _alpha, _distance, _tip_selection_algo, _latency = 1 \
                  _agent_choice=None, _printing=False):
 
         #Use configuration file when provided
@@ -84,9 +84,8 @@ class Multi_Agent_Simulation:
         self.DG = nx.DiGraph()
 
         #Create random arrival times
-        random_values = np.random.exponential(1 / self.lam, self.no_of_transactions)
-        arrival_times = np.cumsum(random_values)
-        self.arrival_times = arrival_times
+        inter_arrival_times = np.random.exponential(1 / self.lam, self.no_of_transactions)
+        self.arrival_times = np.cumsum(inter_arrival_times)
 
         #Create genesis transaction object, store in list and add to graph object
         transaction_counter = 0
@@ -119,36 +118,15 @@ class Multi_Agent_Simulation:
         #Start with first transaction (NOT genesis)
         for transaction in self.transactions[1:]:
 
-            #############################################################################
-            # START CHANGE EVENTS DURING SIMULATION
-            #############################################################################
-
             #Execute simulation parameter changes when provided
             if(len(sys.argv) != 1):
-                temp = (int(str(transaction)))
-                #If change event for a transaction is provided
-                if temp in dic:
-                    #If change of distance is provided
-                    if dic[temp][0] != None:
-                        self.distances = create_distance_matrix(self, dic[temp][0])
-                    #If change of agent probabilities is provided
-                    if dic[temp][1] != None:
-                        self.agent_choice = dic[temp][1]
-                    print_tips_over_time_multiple_agents(self, int(str(transaction)))
-
-                    self.calc_exit_probabilities_multiple_agents(transaction)
-                    self.calc_confirmation_confidence_multiple_agents(transaction)
-                    self.measure_partitioning()
+                self.check_parameters_changes(transaction, dic)
 
             #Do something every 100th transition
             # if (int(str(transaction)) % 100 == 0):
             #     self.calc_exit_probabilities_multiple_agents(transaction)
             #     self.calc_confirmation_confidence_multiple_agents(transaction)
             #     self.record_partitioning.append(self.measure_partitioning())
-
-            #############################################################################
-            # END CHANGE EVENTS DURING SIMULATION
-            #############################################################################
 
             #Choose an agent
             transaction.agent = np.random.choice(self.agents, p=self.agent_choice)
@@ -188,6 +166,23 @@ class Multi_Agent_Simulation:
         else:
             print("ERROR:  Valid tip selection algorithms are 'random', 'weighted', 'unweighted'")
             sys.exit()
+
+
+    def check_parameters_changes(self, transaction, dic):
+        temp = (int(str(transaction)))
+        #If change event for a transaction is provided
+        if temp in dic:
+            #If change of distance is provided
+            if dic[temp][0] != None:
+                self.distances = create_distance_matrix(self, dic[temp][0])
+            #If change of agent probabilities is provided
+            if dic[temp][1] != None:
+                self.agent_choice = dic[temp][1]
+            print_tips_over_time_multiple_agents(self, int(str(transaction)))
+
+            # self.calc_exit_probabilities_multiple_agents(transaction)
+            # self.calc_confirmation_confidence_multiple_agents(transaction)
+            # self.measure_partitioning()
 
 
     #############################################################################

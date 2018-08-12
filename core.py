@@ -27,7 +27,8 @@ from simulation.simulation_multi_agent import Multi_Agent_Simulation
 # SIMULATION: MULTI AGENT
 #############################################################################
 
-#Parameters: no_of_transactions, lambda, no_of_agents, alpha, latency (h), distance, tip_selection_algo
+#Parameters: no_of_transactions, lambda, no_of_agents, alpha, distance, tip_selection_algo
+# latency (default value 1), agent_choice (default vlaue uniform distribution, printing)
 #Tip selection algorithms: Choose among "random", "weighted", "unweighted" as input
 
 partitioning_values = []
@@ -37,7 +38,7 @@ runs = 1
 counter = 0
 for i in range(runs):
 
-    simu2 = Multi_Agent_Simulation(1000, 15, 2, 0.001, 1, 0, "weighted", _printing=True)
+    simu2 = Multi_Agent_Simulation(10000, 50, 2, 0.005, 0.5, "weighted", _printing=True)
     simu2.setup()
     simu2.run()
     #
@@ -70,7 +71,7 @@ for i in range(runs):
 
 # print_graph(simu2)
 print_tips_over_time(simu2)
-print_tips_over_time_multiple_agents(simu2, simu2.no_of_transactions)
+# print_tips_over_time_multiple_agents(simu2, simu2.no_of_transactions)
 
 #Plotting the partitioning values for multiple simulations, cumulative mean and 95% confidence interval
 # plt.plot(simu2.record_partitioning)

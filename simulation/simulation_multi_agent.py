@@ -14,7 +14,7 @@ from simulation.transaction import Transaction
 
 class Multi_Agent_Simulation:
     def __init__(self, _no_of_transactions, _lambda, _no_of_agents, \
-                 _alpha, _distance, _tip_selection_algo, _latency = 1 \
+                 _alpha, _distance, _tip_selection_algo, _latency = 1, \
                  _agent_choice=None, _printing=False):
 
         #Use configuration file when provided
@@ -95,8 +95,8 @@ class Multi_Agent_Simulation:
         transaction_counter += 1
 
         #Create other transaction objects and store in list
-        for i in range(len(arrival_times)):
-            self.transactions.append(Transaction(arrival_times[i], transaction_counter))
+        for i in range(len(self.arrival_times)):
+            self.transactions.append(Transaction(self.arrival_times[i], transaction_counter))
             transaction_counter += 1
 
 

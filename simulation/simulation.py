@@ -57,8 +57,8 @@ class Single_Agent_Simulation:
         transaction_counter += 1
 
         #Create other transaction objects and store in list
-        for i in range(len(arrival_times)):
-            self.transactions.append(Transaction(arrival_times[i], transaction_counter))
+        for i in range(len(self.arrival_times)):
+            self.transactions.append(Transaction(self.arrival_times[i], transaction_counter))
             transaction_counter += 1
 
 

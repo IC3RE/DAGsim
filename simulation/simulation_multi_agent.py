@@ -321,9 +321,6 @@ class Multi_Agent_Simulation:
         valid_tips = self.get_valid_tips_multiple_agents(transaction.agent)
         self.record_tips.append(valid_tips)
 
-        if (valid_tips == []):
-            return
-
         #Reference two random valid tips
         tip1 = np.random.choice(valid_tips)
         tip2 = np.random.choice(valid_tips)
@@ -344,12 +341,9 @@ class Multi_Agent_Simulation:
         valid_tips = self.get_valid_tips_multiple_agents(transaction.agent)
         self.record_tips.append(valid_tips)
 
-        #Start walk at genesis
-        start = self.transactions[0]
-
         #Walk to two tips
-        tip1 = self.random_walk(start, transaction, valid_tips)
-        tip2 = self.random_walk(start, transaction, valid_tips)
+        tip1 = self.unweighted_random_walk(transaction, valid_tips)
+        tip2 = self.unweighted_random_walk(transaction, valid_tips)
 
         #Add tips to graph (only once)
         self.DG.add_edge(transaction,tip1)
@@ -357,9 +351,10 @@ class Multi_Agent_Simulation:
             self.DG.add_edge(transaction,tip2)
 
 
-    def random_walk(self, start, transaction, valid_tips):
+    def unweighted_random_walk(self, transaction, valid_tips):
 
-        walker_on = start
+        #Start walk at genesis
+        walker_on = self.transactions[0]
 
         #If only genesis a valid tip, approve genesis
         if (valid_tips == [walker_on]):
@@ -394,12 +389,9 @@ class Multi_Agent_Simulation:
         transaction.agent.record_tips.append(valid_tips)
         self.record_tips.append(valid_tips)
 
-        #Start walk at genesis
-        start = self.transactions[0]
-
         #Walk to two tips
-        tip1 = self.weighted_random_walk(start, transaction, valid_tips)
-        tip2 = self.weighted_random_walk(start, transaction, valid_tips)
+        tip1 = self.weighted_random_walk(transaction, valid_tips)
+        tip2 = self.weighted_random_walk(transaction, valid_tips)
 
         #Add tips to graph (only once)
         self.DG.add_edge(transaction, tip1)
@@ -407,9 +399,10 @@ class Multi_Agent_Simulation:
             self.DG.add_edge(transaction, tip2)
 
 
-    def weighted_random_walk(self, start, transaction, valid_tips):
+    def weighted_random_walk(self, transaction, valid_tips):
 
-        walker_on = start
+        #Start walk at genesis
+        walker_on = self.transactions[0]
 
         #If only genesis a valid tip, approve genesis
         if (valid_tips == [walker_on]):

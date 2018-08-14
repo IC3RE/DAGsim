@@ -46,9 +46,8 @@ class Single_Agent_Simulation:
         self.DG = nx.DiGraph()
 
         #Create random arrival times
-        random_values = np.random.exponential(1 / self.lam, self.no_of_transactions)
-        arrival_times = np.cumsum(random_values)
-        self.arrival_times = arrival_times
+        inter_arrival_times = np.random.exponential(1 / self.lam, self.no_of_transactions)
+        self.arrival_times = np.cumsum(inter_arrival_times)
 
         #Create genesis transaction object, store in list and add to graph object
         transaction_counter = 0
@@ -180,9 +179,6 @@ class Single_Agent_Simulation:
         # 2. it has no approvers at all OR it has some approvers, but all approvers are technically not visible yet
         visible_transactions, not_visible_transactions = self.get_visible_transactions(transaction)
         valid_tips = self.get_valid_tips(visible_transactions, not_visible_transactions)
-
-        if (valid_tips == []):
-            return
 
         #Reference two random valid tips
         tip1 = random.choice(valid_tips)

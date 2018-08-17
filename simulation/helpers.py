@@ -5,16 +5,15 @@ import ast
 import numpy as np
 
 def update_progress(progress, transaction):
-    bar_length = 50 #Modify this to change the length of the progress bar
+
+    bar_length = 50
     status = ""
     if isinstance(progress, int):
         progress = float(progress)
     if not isinstance(progress, float):
         progress = 0
-        status = "Error: Progress var must be float\r\n"
     if progress < 0:
         progress = 0
-        status = "Halt...\r\n"
     if progress >= 1:
         progress = 1
         status = "| Simulation completed...\r\n"
@@ -26,6 +25,7 @@ def update_progress(progress, transaction):
 
 
 def create_distance_matrix(self, distance):
+
     m = [[distance] * self.no_of_agents for i in range(self.no_of_agents)]
     for i in range(self.no_of_agents):
         m[i][i] = 0
@@ -33,6 +33,7 @@ def create_distance_matrix(self, distance):
 
 
 def common_elements(a, b):
+
     a_set = set(a)
     b_set = set(b)
 
@@ -45,14 +46,19 @@ def common_elements(a, b):
 def load_file(filename):
 
     try:
-
         config = configparser.ConfigParser()
         config.read(filename)
-
         data = []
-
         simulation_config_parameters = config['PARAMETERS']
 
+        #Check if all simulation parameters provided
+        if not all(key in simulation_config_parameters.keys() for key in ['no_of_transactions','lambda','no_of_agents',\
+                                                                      'alpha','latency','distance','tip_selection_algo',\
+                                                                      'agent_choice','printing']):
+            print("Parameter error! Please provide 'no_of_transactions','lambda','no_of_agents','alpha','latency','distance','tip_selection_algo','agent_choice','printing'!")
+            sys.exit(1)
+
+        #Load simulation parameters
         _no_of_transactions = int(simulation_config_parameters['no_of_transactions'])
         _lambda = float(simulation_config_parameters['lambda'])
         _no_of_agents = int(simulation_config_parameters['no_of_agents'])
@@ -70,6 +76,7 @@ def load_file(filename):
         data.append((_no_of_transactions, _lambda, _no_of_agents, \
         _alpha, _latency, _distance, _tip_selection_algo, _agent_choice, _printing))
 
+        #Load change parameters
         for key in config:
             if(key != 'PARAMETERS' and key != 'DEFAULT'):
                 print(key)
@@ -93,44 +100,6 @@ def load_file(filename):
         print(e)
 
     return data
-
-    # f = open(filename, 'r')
-    # lines = []
-    # first_line = f.readline()
-    #
-    # _no_of_transactions, _lambda, _no_of_agents, \
-    # _alpha, _latency, _distance, _tip_selection_algo, \
-    # _printing = first_line.strip().split(",")
-    #
-    # lines.append((int(_no_of_transactions), float(_lambda), int(_no_of_agents), \
-    # float(_alpha), int(_latency), float(_distance), _tip_selection_algo, bool(_printing)))
-    #
-    # for line in f:
-    #     ts_string, _, rest = line.strip().partition(",")
-    #     dist_string, _, ac_string = rest.partition(",")
-    #
-    #     if ts_string=="" or dist_string=="" or ac_string=="":
-    #         print("Badly formed line: {}".format(line))
-    #         sys.exit(1)
-    #
-    #     transaction = int(ts_string)
-    #
-    #     if dist_string=="null":
-    #         distance = None
-    #     else:
-    #         distance = float(dist_string)
-    #
-    #     if ac_string=="null":
-    #         agent_choice = None
-    #     else:
-    #         agent_choice = [float(x) for x in eval(ac_string)]
-    #
-    #     if agent_choice != None and sum(agent_choice) != 1.0:
-    #         print("Agent choice not summing to 1.0: {}".format(sum(agent_choice)))
-    #         sys.exit(1)
-    #     lines.append((transaction, distance, agent_choice))
-    #
-    # return lines
 
 
 def csv_export(self):

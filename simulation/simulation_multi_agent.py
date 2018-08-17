@@ -27,10 +27,8 @@ class Multi_Agent_Simulation:
             self.latency = self.config[0][4]
             self.distances = create_distance_matrix(self, self.config[0][5])
             self.tip_selection_algo = self.config[0][6]
-            if _agent_choice is None:
-                _agent_choice = list(np.ones(self.no_of_agents)/self.no_of_agents)
-            self.agent_choice = _agent_choice
-            self.printing = self.config[0][7]
+            self.agent_choice = self.config[0][7]
+            self.printing = self.config[0][8]
         #Otherwise use the provided parameters
         else:
             self.no_of_transactions = _no_of_transactions
@@ -45,9 +43,12 @@ class Multi_Agent_Simulation:
             self.agent_choice = _agent_choice
             self.printing = _printing
 
-        if len(self.agent_choice) != self.no_of_agents:
-            print("ERROR:  The number of agents has to match the probabilities")
-            sys.exit()
+        if (round(sum(self.agent_choice), 3) != 1.0):
+            print("Agent choice not summing to 1.0: {}".format(sum(self.agent_choice)))
+            sys.exit(1)
+        if (len(self.agent_choice) != self.no_of_agents):
+            print("Agent choice not matching no_of_agents: {}".format(len(self.agent_choice)))
+            sys.exit(1)
         if (self.no_of_agents == 1):
             print("ERROR:  Use a Single_Agent_Simulation()")
             sys.exit()
@@ -144,14 +145,19 @@ class Multi_Agent_Simulation:
             if self.printing:
                 update_progress(int(str(transaction))/self.no_of_transactions, transaction)
 
-        #For measuring partitioning
-        # print_tips_over_time_multiple_agents(self, int(str(transaction)))
-        # self.calc_exit_probabilities_multiple_agents(transaction)
-        # self.calc_confirmation_confidence_multiple_agents(transaction)
-        # self.measure_partitioning()
+        #print_tips_over_time_multiple_agents(self, int(str(transaction)))
 
         if self.printing:
             print("Simulation time: " + str(np.round(timeit.default_timer() - start_time, 3)) + " seconds\n")
+
+        #For measuring partitioning
+        start_time2 = timeit.default_timer()
+        self.calc_exit_probabilities_multiple_agents(transaction)
+        self.calc_confirmation_confidence_multiple_agents(transaction)
+        # self.measure_partitioning()
+
+        if self.printing:
+            print("Calculation time confirmation confidence: " + str(np.round(timeit.default_timer() - start_time2, 3)) + " seconds\n")
             # print("\nGraph information:\n" + nx.info(self.DG))
 
 
@@ -261,14 +267,13 @@ class Multi_Agent_Simulation:
 
         for transaction in agent.visible_transactions:
 
-            #Transaction has no approvers at all
+            #Add to valid tips if transaction has no approvers at all
             if(len(list(self.DG.predecessors(transaction))) == 0):
 
                 valid_tips.append(transaction)
 
             #Add to valid tips if all approvers not visible yet
-            elif(len(list(self.DG.predecessors(transaction))) >= 1
-            and self.all_approvers_not_visible(transaction)):
+            elif(self.all_approvers_not_visible(transaction)):
 
                 valid_tips.append(transaction)
 
@@ -435,11 +440,13 @@ class Multi_Agent_Simulation:
                     transaction.cum_weight_multiple_agents[agent] += 1
 
         #For all current tips set cum_weight to 1 (default value)
-        tips = self.get_tips()
-        for tip in tips:
-            #Update for each agent separately
-            for agent in self.agents:
-                tip.cum_weight_multiple_agents[agent] = 1
+        # tips = self.get_tips()
+        #
+        # for tip in tips:
+        #
+        #     #Update for each agent separately
+        #     for agent in self.agents:
+        #         tip.cum_weight_multiple_agents[agent] = 1
 
     # def calc_exit_probabilities_multiple_agents(self):
     #
@@ -470,59 +477,68 @@ class Multi_Agent_Simulation:
 
     def calc_exit_probabilities_multiple_agents(self, incoming_transaction):
 
-        #Start at genesis, tips in the end
-        sorted = list(reversed(list(nx.topological_sort(self.DG))))
-
         for agent in self.agents:
 
-            #Reset exit probability of genesis to 100% for both agents, all others to 0%
-            for transaction in self.DG.nodes:
-                transaction.exit_probability_multiple_agents[agent] = 0
+            #Reset exit probability of all transactions to 0%, just needed when run multiple times throughout simulation
+            # for transaction in self.DG.nodes:
+            #     transaction.exit_probability_multiple_agents[agent] = 0
+
+            #Set genesis to 100%
             self.transactions[0].exit_probability_multiple_agents[agent] = 1
 
             #Determine visible transaction for t + 1, so that all transactions (h = 1) are included
             self.get_visible_transactions(incoming_transaction.arrival_time + 1, agent)
 
-            #Calculate exit probabilities
-            for transaction in sorted:
+        #Start at genesis, tips in the end
+        sorted = list(reversed(list(nx.topological_sort(self.DG))))
+
+        #Calculate exit probabilities
+        for transaction in sorted:
+
+            for agent in self.agents:
 
                 if (transaction in agent.visible_transactions):
 
+                    #Get visible direct approvers and transition probabilities to walk to them
                     approvers = list(self.DG.predecessors(transaction))
                     visible_approvers = common_elements(approvers, agent.visible_transactions)
                     transition_probabilities = self.calc_transition_probabilities_multiple_agents(visible_approvers, agent)
 
+                    #For every visible direct approver update the exit probability by adding the exit probaapproverbility
+                    #of the current transaction times the transition probabilitiy of walking to the approver
                     for (approver, transition_probability) in zip(visible_approvers, transition_probabilities):
-                        approver.exit_probability_multiple_agents[agent] += (transaction.exit_probability_multiple_agents[agent] * transition_probability)
+                        approver.exit_probability_multiple_agents[agent] += (
+                                    transaction.exit_probability_multiple_agents[agent] * transition_probability)
 
 
     def calc_confirmation_confidence_multiple_agents(self, incoming_transaction):
 
+        #Loop over agents and get visible transactions and valid tips
         for agent in self.agents:
-
             self.get_visible_transactions(incoming_transaction.arrival_time + 1, agent)
-
             agent.tips = self.get_valid_tips_multiple_agents(agent)
 
-            for transaction in self.DG.nodes:
-                #Reset confirmation confidence to 0%
-                transaction.confirmation_confidence_multiple_agents[agent] = 0
+            #Loop over visible transactions
+            for transaction in agent.visible_transactions:
+                #Reset confirmation confidence to 0%, just needed when function called multiple times during simulation
+                # transaction.confirmation_confidence_multiple_agents[agent] = 0
 
+                #Loop over valid tips
                 for tip in agent.tips:
 
                     #Tips have 0 confirmation confidence by default
-                    tip.confirmation_confidence_multiple_agents[agent] = 0
+                    # tip.confirmation_confidence_multiple_agents[agent] = 0
 
                     if(nx.has_path(self.DG,tip,transaction) and tip != transaction):
 
                         transaction.confirmation_confidence_multiple_agents[agent] += tip.exit_probability_multiple_agents[agent]
 
-                # (Potentially move the whole coloring to the end, after Tangle is created)
-                # if (np.round(transaction.confirmation_confidence_multiple_agents[agent], 2) == 1.0):
-                #     self.DG.node[transaction]["node_color"] = '#b4ffa3'
-                #
-                # elif(np.round(transaction.confirmation_confidence_multiple_agents[agent],2) >= 0.50):
-                #     self.DG.node[transaction]["node_color"] = '#fff694'
+            # (Potentially move the whole coloring to the end, after Tangle is created)
+            # if (np.round(transaction.confirmation_confidence_multiple_agents[agent], 2) == 1.0):
+            #     self.DG.node[transaction]["node_color"] = '#b4ffa3'
+            #
+            # elif(np.round(transaction.confirmation_confidence_multiple_agents[agent],2) >= 0.50):
+            #     self.DG.node[transaction]["node_color"] = '#fff694'
 
 
     def measure_partitioning(self):

@@ -20,12 +20,13 @@ def print_graph(self):
 
     #Positioning and text of labels
     pos = nx.get_node_attributes(self.DG, 'pos')
-    lower_pos = {key: (x, y - 0.1) for key, (x, y) in pos.items()} #For label offset (0.1)
+    lower_pos = {key: (x, y - 0.07) for key, (x, y) in pos.items()} #For label offset (0.1)
 
     #Create labels with the confirmation confidence of every transaction (of the issueing agent)
     labels = {
-        transaction: str(str(np.round(transaction.exit_probability_multiple_agents[transaction.agent], 2)) + "  " +
-                         str(np.round(transaction.confirmation_confidence_multiple_agents[transaction.agent], 2)))
+        # transaction: str(str(np.round(transaction.exit_probability_multiple_agents[transaction.agent], 2)) + "  " +
+        #                  str(np.round(transaction.confirmation_confidence_multiple_agents[transaction.agent], 2)))
+        transaction : str(np.round(transaction.exit_probability_multiple_agents[transaction.agent],2))
         for transaction in self.DG.nodes if transaction.agent != None
     }
     #For genesis take agent 0 as default (always same value)
@@ -47,7 +48,7 @@ def print_graph(self):
     #Creating figure
     plt.figure(figsize=(14, 8))
     nx.draw_networkx(self.DG, pos, with_labels=True, node_size = 100, font_size=5.5, node_color = col)
-    #nx.draw_networkx_labels(self.DG, lower_pos, labels=labels, font_size=6)
+    nx.draw_networkx_labels(self.DG, lower_pos, labels=labels, font_size=6)
 
     #Print title
     title = "Transactions = " + str(self.no_of_transactions) +\

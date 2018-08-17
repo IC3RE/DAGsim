@@ -143,16 +143,16 @@ class Single_Agent_Simulation:
 
         for transaction in visible_transactions:
 
-            if(len(list(self.DG.predecessors(transaction))) == 0):                  #Transaction has no approvers at all
+            #Add to valid tips if transaction has no approvers at all
+            if(len(list(self.DG.predecessors(transaction))) == 0):
 
                 valid_tips.append(transaction)
 
-            elif(len(list(self.DG.predecessors(transaction))) >= 1                  #All approvers tech. not visible yet
-            and self.all_approvers_not_visible(transaction, not_visible_transactions)):
+            #Add to valid tips if all approvers not visible yet
+            elif(self.all_approvers_not_visible(transaction, not_visible_transactions)):
 
                 valid_tips.append(transaction)
 
-        #print("Valid tips: " + str(valid_tips))
         return valid_tips
 
     def all_approvers_not_visible(self, transaction, not_visible_transactions):

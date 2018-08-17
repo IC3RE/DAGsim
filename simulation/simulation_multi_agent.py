@@ -25,7 +25,7 @@ class Multi_Agent_Simulation:
             self.no_of_agents = self.config[0][2]
             self.alpha = self.config[0][3]
             self.latency = self.config[0][4]
-            self.distances = create_distance_matrix(self, self.config[0][5])
+            self.distances = self.config[0][5]
             self.tip_selection_algo = self.config[0][6]
             self.agent_choice = self.config[0][7]
             self.printing = self.config[0][8]
@@ -36,7 +36,10 @@ class Multi_Agent_Simulation:
             self.no_of_agents = _no_of_agents
             self.alpha = _alpha
             self.latency = _latency
-            self.distances = create_distance_matrix(self, _distance)
+            if (type(_distance) is float or type(_distance) is int):
+                self.distances = create_distance_matrix(self.no_of_agents, _distance)
+            else:
+                self.distances = _distance
             self.tip_selection_algo = _tip_selection_algo
             if _agent_choice is None:
                 _agent_choice = list(np.ones(self.no_of_agents)/self.no_of_agents)
@@ -175,17 +178,19 @@ class Multi_Agent_Simulation:
 
 
     def check_parameters_changes(self, transaction, dic):
+
         temp = (int(str(transaction)))
+
         #If change event for a transaction is provided
         if temp in dic:
             #If change of distance is provided
-            if dic[temp][0] != None:
-                self.distances = create_distance_matrix(self, dic[temp][0])
+            if dic[temp][0] != False:
+                self.distances = dic[temp][0]
             #If change of agent probabilities is provided
-            if dic[temp][1] != None:
+            if dic[temp][1] != False:
                 self.agent_choice = dic[temp][1]
-            print_tips_over_time_multiple_agents(self, int(str(transaction)))
 
+            print_tips_over_time_multiple_agents(self, int(str(transaction)))
             # self.calc_exit_probabilities_multiple_agents(transaction)
             # self.calc_confirmation_confidence_multiple_agents(transaction)
             # self.measure_partitioning()

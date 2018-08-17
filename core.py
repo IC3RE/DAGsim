@@ -37,9 +37,14 @@ average_partitioning_across_simus = []
 
 runs = 1
 counter = 0
+
+# distances = [[0,2,3],
+#              [2,0,1],
+#              [3,1,0]]
+
 for i in range(runs):
 
-    simu2 = Multi_Agent_Simulation(20, 2, 2, 0.005, 5, "weighted", _printing=True)
+    simu2 = Multi_Agent_Simulation(20, 2, 2, 0.005, 5000, "weighted", _printing=True)
     simu2.setup()
     simu2.run()
 
@@ -52,7 +57,7 @@ for i in range(runs):
     # counter += 1
 
     #Sanity checks
-    print("SANITY CHECKS:\n")
+    # print("SANITY CHECKS:\n")
     # for agent in simu2.agents:
         # print("VALID TIPS OF AGENT " + str(agent) + ":   " + str(agent.tips))
         # print("SUM OF EXIT PROBS FOR ALL TIPS:   " + str(sum(tip.exit_probability_multiple_agents[agent] for tip in agent.tips)) + "\n")

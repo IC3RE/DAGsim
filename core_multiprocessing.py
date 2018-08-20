@@ -6,15 +6,7 @@ import numpy as np
 from simulation.simulation_multi_agent import Multi_Agent_Simulation
 
 def simulation(data):
-    distance = 50000
-
-    distances = [
-        [0,distance,distance],
-        [distance,0,distance],
-        [distance,distance,0]
-    ]
-
-    simu = Multi_Agent_Simulation(300, 2, 2, 0.005, 1, distances, "weighted")
+    simu = Multi_Agent_Simulation(300, 2, 2, 0.005, 1, 50000, "weighted")
     simu.setup()
     simu.run()
     return (data, simu.measure_partitioning())
@@ -36,8 +28,8 @@ if __name__ == '__main__':
     )
 
     pool_outputs = pool.map(simulation,number_of_runs)
-    pool.close()  # no more tasks
-    pool.join()  # wrap up current tasks
+    pool.close()
+    pool.join()
 
     print("Results: ", pool_outputs, "\n")
     print("TOTAL simulation time: " + str(np.round(timeit.default_timer() - start_time, 3)) + " seconds\n")

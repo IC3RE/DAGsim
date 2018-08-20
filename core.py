@@ -44,7 +44,7 @@ counter = 0
 
 for i in range(runs):
 
-    simu2 = Multi_Agent_Simulation(20, 2, 2, 0.005, 5000, "weighted", _printing=True)
+    simu2 = Multi_Agent_Simulation(50, 5, 2, 100, 0.5, "weighted", _printing=True)
     simu2.setup()
     simu2.run()
 

@@ -48,7 +48,7 @@ def print_graph(self):
     #Creating figure
     plt.figure(figsize=(14, 8))
     nx.draw_networkx(self.DG, pos, with_labels=True, node_size = 100, font_size=5.5, node_color = col)
-    nx.draw_networkx_labels(self.DG, lower_pos, labels=labels, font_size=6)
+    # nx.draw_networkx_labels(self.DG, lower_pos, labels=labels, font_size=6)
 
     #Print title
     title = "Transactions = " + str(self.no_of_transactions) +\

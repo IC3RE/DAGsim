@@ -67,6 +67,7 @@ class Multi_Agent_Simulation:
 
         #For max. four agents same colors, for more agents random colors
         self.agent_colors = ['#dbeeff', '#ffadad', '#e5d1e6', '#e6ff99']
+        self.agent_tip_colors = ['#f5faff', '#ffe0e0', '#f8f2f8', '#f9ffe6']
         for i in range(self.no_of_agents-4):
             r = lambda: random.randint(0,255)
             color = '#{:02x}{:02x}{:02x}'.format(r(), r(), r())
@@ -155,8 +156,8 @@ class Multi_Agent_Simulation:
 
         #For measuring partitioning
         start_time2 = timeit.default_timer()
-        self.calc_exit_probabilities_multiple_agents(transaction)
-        self.calc_confirmation_confidence_multiple_agents(transaction)
+        # self.calc_exit_probabilities_multiple_agents(transaction)
+        # self.calc_confirmation_confidence_multiple_agents(transaction)
         # self.measure_partitioning()
 
         if self.printing:
@@ -492,7 +493,7 @@ class Multi_Agent_Simulation:
             self.transactions[0].exit_probability_multiple_agents[agent] = 1
 
             #Determine visible transaction for t + 1, so that all transactions (h = 1) are included
-            self.get_visible_transactions(incoming_transaction.arrival_time + 1, agent)
+            self.get_visible_transactions(incoming_transaction.arrival_time + self.latency, agent)
 
         #Start at genesis, tips in the end
         sorted = list(reversed(list(nx.topological_sort(self.DG))))
@@ -520,7 +521,7 @@ class Multi_Agent_Simulation:
 
         #Loop over agents and get visible transactions and valid tips
         for agent in self.agents:
-            self.get_visible_transactions(incoming_transaction.arrival_time + 1, agent)
+            self.get_visible_transactions(incoming_transaction.arrival_time + self.latency, agent)
             agent.tips = self.get_valid_tips_multiple_agents(agent)
 
             #Loop over visible transactions

@@ -38,7 +38,8 @@ def print_graph(self):
     #Coloring of nodes
     tips = self.get_tips()
     for tip in tips:
-        self.DG.node[tip]["node_color"] = '#ffdbb8'
+        # self.DG.node[tip]["node_color"] = '#ffdbb8'
+        self.DG.node[tip]["node_color"] = self.agent_tip_colors[int(str(tip.agent))]
 
     # col = list(nx.get_node_attributes(self.DG, 'node_color').values()) #Didn't work on Linux
     col = []
@@ -165,10 +166,12 @@ def print_tips_over_time_multiple_agents(self, no_current_transactions):
     #pos = graphviz_layout(self.DG, prog="dot", args="")
     #col = [['r','b'][int(np.round(transaction.confirmation_confidence,1))] for transaction in self.DG.nodes()] #Color change for 100% confidence
 
-    #Coloring of nodes
+    #Coloring of tips
     tips = self.get_tips()
     for tip in tips:
-        self.DG.node[tip]["node_color"] = '#ffdbb8'
+        # self.DG.node[tip]["node_color"] = '#ffdbb8'
+        self.DG.node[tip]["node_color"] = self.agent_tip_colors[int(str(tip.agent))]
+
 
     # col = list(nx.get_node_attributes(self.DG, 'node_color').values()) #Didn't work on Linux
     col = []

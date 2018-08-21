@@ -77,7 +77,7 @@ def load_file(filename):
         if (simulation_config_parameters['agent_choice'] == 'None'):
             _agent_choice = list(np.ones(_no_of_agents) / _no_of_agents)
         else:
-            _agent_choice = ast.literal_eval(_agent_choice)
+            _agent_choice = ast.literal_eval(simulation_config_parameters['agent_choice'])
 
         _printing = config.getboolean('PARAMETERS','printing')
 

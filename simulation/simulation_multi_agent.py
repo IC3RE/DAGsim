@@ -66,7 +66,7 @@ class Multi_Agent_Simulation:
         self.record_partitioning = []
 
         #For max. four agents same colors, for more agents random colors
-        self.agent_colors = ['#dbeeff', '#ffadad', '#e5d1e6', '#e6ff99']
+        self.agent_colors = ['#a8d6ff', '#ff9494', '#dcc0dd', '#e0ff80']
         self.agent_tip_colors = ['#f5faff', '#ffe0e0', '#f8f2f8', '#f9ffe6']
         for i in range(self.no_of_agents-4):
             r = lambda: random.randint(0,255)

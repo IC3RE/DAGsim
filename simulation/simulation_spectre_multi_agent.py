@@ -12,7 +12,7 @@ from simulation.agent import Agent
 from simulation.block import Block
 
 
-class Block_Multi_Agent_Simulation:
+class Multi_Agent_Simulation:
     def __init__(self, _no_of_blocks, _lambda, _no_of_agents, \
                  _alpha, _distance, _tip_selection_algo, _latency = 1, \
                  _agent_choice=None, _printing=False):
@@ -100,9 +100,13 @@ class Block_Multi_Agent_Simulation:
         block_counter += 1
 
         #Create other block objects and store in list
+        #This is creating a list of block objects, with as many objects as there are 
+        #arrival times
         for i in range(len(self.arrival_times)):
             self.blocks.append(Block(self.arrival_times[i], block_counter))
             block_counter += 1
+            
+        return(self.blocks, self.agents, self.DG)
             
             
             

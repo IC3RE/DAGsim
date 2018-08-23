@@ -6,7 +6,7 @@ class Block:
         self.id = _counter
         self.agent = None
         
-        #For storing a list of transactions
+        #For storing a list of transactions in the block
         self.transactions = []
         
         #For tip selection and calculating confirmation_confidence

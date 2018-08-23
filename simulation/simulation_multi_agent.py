@@ -64,6 +64,9 @@ class Multi_Agent_Simulation:
         #For analysis only
         self.record_tips = []
         self.record_partitioning = []
+        self.record_desc = []
+        self.record_desc_ratio = []
+
 
         #For max. four agents same colors, for more agents random colors
         self.agent_colors = ['#a8d6ff', '#ff9494', '#dcc0dd', '#e0ff80']
@@ -90,7 +93,7 @@ class Multi_Agent_Simulation:
 
         #Create random arrival times
         inter_arrival_times = np.random.exponential(1 / self.lam, self.no_of_transactions)
-        self.arrival_times = np.cumsum(inter_arrival_times)
+        self.arrival_times = list(np.cumsum(inter_arrival_times))
 
         #Create genesis transaction object, store in list and add to graph object
         transaction_counter = 0
@@ -438,12 +441,31 @@ class Multi_Agent_Simulation:
     def update_weights_multiple_agents(self, incoming_transaction):
 
         #Update all descendants of incoming_transaction only (cum_weight += 1)
-        for transaction in nx.descendants(self.DG, incoming_transaction):
+        # descendants = nx.descendants(self.DG, incoming_transaction)
+        # self.record_desc.append(len(list(descendants)))
+        # self.record_desc_ratio.append(len(list(descendants))/int(str(incoming_transaction)))
+        #
+        # # for transaction in nx.descendants(self.DG, incoming_transaction):
+        # for transaction in descendants:
+        #
+        #     #Update for each agent separately
+        #     for agent in self.agents:
+        #         if(transaction in agent.visible_transactions):
+        #             transaction.cum_weight_multiple_agents_2[agent] += 1
 
-            #Update for each agent separately
+        sorted = nx.topological_sort(self.DG)
+        for transaction in sorted:
+
             for agent in self.agents:
-                if(transaction in agent.visible_transactions):
-                    transaction.cum_weight_multiple_agents[agent] += 1
+                transaction.cum_weight_multiple_agents[agent] = set()
+                children = self.DG.successors(transaction)
+                for child in children:
+                    if(child in agent.visible_transactions):
+
+                        child.ancestors_multiple_agents[agent] = child.ancestors_multiple_agents[agent].union(transaction.ancestors_multiple_agents[agent]).union({transaction})
+
+                transaction.cum_weight_multiple_agents[agent] = len(transaction.ancestors_multiple_agents[agent]) + 1
+                self.transactions[0].cum_weight_multiple_agents[agent] = self.no_of_transactions + 1
 
         #For all current tips set cum_weight to 1 (default value)
         # tips = self.get_tips()

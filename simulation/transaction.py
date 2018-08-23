@@ -9,6 +9,8 @@ class Transaction:
         #For tip selection and calculating confirmation_confidence
         self.cum_weight = 1
         self.cum_weight_multiple_agents  = defaultdict(lambda: 1)
+        # self.cum_weight_multiple_agents_2  = defaultdict(lambda: 1)
+
         self.exit_probability = 0
         self.exit_probability_multiple_agents  = defaultdict(lambda: 0)
         self.confirmation_confidence = 0
@@ -17,6 +19,9 @@ class Transaction:
         #For measuring partitioning
         self.tx_average_confirmation_confidence = 0
         self.tx_confirmation_confidence_variance = 0
+
+        self.ancestors_multiple_agents = defaultdict(lambda: set())
+        self.ancestors = set()
 
     def __str__(self):
         return str(self.id)

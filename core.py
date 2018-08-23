@@ -7,6 +7,7 @@ from simulation.helpers import update_progress, csv_export
 from simulation.plotting import print_graph, print_tips_over_time, print_tips_over_time_multiple_agents
 from simulation.simulation import Single_Agent_Simulation
 from simulation.simulation_multi_agent import Multi_Agent_Simulation
+from simulation.simulation_block_multi_agent import Block_Multi_Agent_Simulation
 
 #############################################################################
 # SIMULATION: SINGLE AGENT
@@ -44,7 +45,7 @@ counter = 0
 
 for i in range(runs):
 
-    simu2 = Multi_Agent_Simulation(100, 50, 2, 0.005, 0.5, "unweighted", _printing=True)
+    simu2 = Block_Multi_Agent_Simulation(10, 50, 2, 0.005, 0.5, "unweighted", _printing=True)
     simu2.setup()
     simu2.run()
 

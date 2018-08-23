@@ -10,8 +10,7 @@ import matplotlib.pyplot as plt
 def print_info(self):
     text = "\nParameters:  Transactions = " + str(self.no_of_transactions) + \
             ",  Tip-Selection = " + str(self.tip_selection_algo).upper() + \
-            ",  Lambda = " + str(self.lam) + \
-            ",  Distances = " + str(self.distances)
+            ",  Lambda = " + str(self.lam)
     if(self.tip_selection_algo == "weighted"):
         text += ",  Alpha = " + str(self.alpha)
     text += " | Simulation started...\n"
@@ -54,8 +53,7 @@ def print_graph(self):
 
     #Print title
     title = "Transactions = " + str(self.no_of_transactions) +\
-            ",  " + r'$\lambda$' + " = " + str(self.lam) +\
-            ",  " + r'$d$' + " = " + str(self.distances[1][0])
+            ",  " + r'$\lambda$' + " = " + str(self.lam)
     if(self.tip_selection_algo == "weighted"):
         title += ",  " + r'$\alpha$' + " = " + str(self.alpha)
     plt.xlabel("Time (s)")

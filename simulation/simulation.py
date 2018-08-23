@@ -275,17 +275,8 @@ class Single_Agent_Simulation:
 
     def update_weights(self, incoming_transaction):
 
-        # for transaction in nx.descendants(self.DG, incoming_transaction):
-        #     transaction.cum_weight += 1
-
-        sorted = nx.topological_sort(self.DG)
-        for transaction in sorted:
-            children = self.DG.successors(transaction)
-
-            for child in children:
-                child.ancestors = child.ancestors.union(transaction.ancestors).union({transaction})
-
-            transaction.cum_weight = len(transaction.ancestors) + 1
+        for transaction in nx.descendants(self.DG, incoming_transaction):
+            transaction.cum_weight += 1
 
     def calc_exit_probabilities(self):
 

@@ -9,8 +9,7 @@ import matplotlib.pyplot as plt
 from simulation.helpers import update_progress, create_distance_matrix, common_elements, load_file
 from simulation.plotting import print_info, print_graph, print_tips_over_time, print_tips_over_time_multiple_agents
 from simulation.agent import Agent
-from simulation.transaction import Transaction
-from siulation.block import Block
+from simulation.block import Block
 
 
 class Block_Multi_Agent_Simulation:
@@ -104,3 +103,105 @@ class Block_Multi_Agent_Simulation:
         for i in range(len(self.arrival_times)):
             self.blocks.append(Block(self.arrival_times[i], block_counter))
             block_counter += 1
+            
+            
+            
+    #############################################################################
+    # SIMULATION: HELPERS
+    #############################################################################
+
+    def get_tips(self):
+
+        tips = []
+        for block in self.DG.nodes:
+            if (len(list(self.DG.predecessors(block))) == 0):
+                tips.append(block)
+
+        return tips
+
+
+    def get_visible_blocks(self, incoming_block_time, incoming_block_agent):
+
+        #Initialize empty lists (for each block these are populated again)
+        self.not_visible_blocks = []
+        for agent in self.agents:
+            agent.visible_blocks = []
+
+        #Loop through all blocks in DAG
+        for block in self.DG.nodes:
+
+            #For EACH agent record the currently visible and not visible blocks
+            for agent in self.agents:
+
+                #Genesis always visible
+                if (block.arrival_time == 0):
+
+                    agent.visible_blocks.append(block)
+
+                else:
+                    #Get distance from agent to agent of block from distance matrix
+                    distance = self.distances[int(str(agent))][int(str(block.agent))]
+
+                    #Determine if the block is visible (incoming_block.arrival_time determines current time)
+                    if (block.arrival_time + self.latency + distance <= incoming_block_time):
+
+                        agent.visible_blocks.append(block)
+
+                    #Record not visible blocks for 'current agent' only (reduces overhead)
+                    elif(incoming_block_agent == agent):
+                        self.not_visible_blocks.append(block)
+
+
+    # def get_valid_tips(self, incoming_block):
+    #
+    #     valid_tips = []
+    #
+    #     for block in incoming_block.agent.visible_blocks:
+    #
+    #         #block has no approvers at all
+    #         if(len(list(self.DG.predecessors(block))) == 0
+    #         #block can't approve itself
+    #         and block != incoming_block):
+    #
+    #             valid_tips.append(block)
+    #
+    #         #Add to valid tips if all approvers not visible yet
+    #         elif(len(list(self.DG.predecessors(block))) >= 1
+    #         #block can't approve itself
+    #         and block != incoming_block
+    #         and self.all_approvers_not_visible(block)):
+    #
+    #             valid_tips.append(block)
+    #
+    #     return valid_tips
+
+
+    def get_valid_tips_multiple_agents(self, agent):
+
+        valid_tips = []
+
+        for block in agent.visible_blocks:
+
+            #Add to valid tips if block has no approvers at all
+            if(len(list(self.DG.predecessors(block))) == 0):
+
+                valid_tips.append(block)
+
+            #Add to valid tips if all approvers not visible yet
+            elif(self.all_approvers_not_visible(block)):
+
+                valid_tips.append(block)
+
+        return valid_tips
+
+
+    def all_approvers_not_visible(self, block):
+
+        #Edge case: if not genesis
+        # if(block.arrival_time != 0):
+        #     approvers = list(self.DG.predecessors(block))
+        #     visible_approvers = common_elements(approvers, block.agent.visible_blocks)
+        #     #Return true if all approvers not visible yet, false otherwise
+        #     return set(visible_approvers).issubset(set(self.not_visible_blocks))
+        # else:
+        return set(list(self.DG.predecessors(block))).issubset(set(self.not_visible_blocks))

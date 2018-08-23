@@ -47,7 +47,7 @@ for i in range(runs):
 
     simu2 = Block_Multi_Agent_Simulation(10, 50, 2, 0.005, 0.5, "unweighted", _printing=True)
     simu2.setup()
-    simu2.run()
+#    simu2.run()
 
     # csv_export(simu2)
 
@@ -77,7 +77,7 @@ for i in range(runs):
 #############################################################################
 
 print_graph(simu2)
-print('test')
+#print('test')
 # print_tips_over_time(simu2)
 # print_tips_over_time_multiple_agents(simu2, simu2.no_of_transactions)
 

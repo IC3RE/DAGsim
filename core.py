@@ -44,7 +44,7 @@ counter = 0
 
 for i in range(runs):
 
-    simu2 = Multi_Agent_Simulation(20, 2, 2, 0.005, 5, "weighted", _printing=True)
+    simu2 = Multi_Agent_Simulation(1500, 50, 2, 0.005, 0.5, "random", _printing=True)
     simu2.setup()
     simu2.run()
 
@@ -76,8 +76,8 @@ for i in range(runs):
 # PLOTTING
 #############################################################################
 
-print_graph(simu2)
-# print_tips_over_time(simu2)
+# print_graph(simu2)
+print_tips_over_time(simu2)
 # print_tips_over_time_multiple_agents(simu2, simu2.no_of_transactions)
 
 #Plotting the partitioning values for multiple simulations, cumulative mean and 95% confidence interval

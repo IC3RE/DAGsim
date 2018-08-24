@@ -246,30 +246,6 @@ class Multi_Agent_Simulation:
                         self.not_visible_transactions.append(transaction)
 
 
-    # def get_valid_tips(self, incoming_transaction):
-    #
-    #     valid_tips = []
-    #
-    #     for transaction in incoming_transaction.agent.visible_transactions:
-    #
-    #         #Transaction has no approvers at all
-    #         if(len(list(self.DG.predecessors(transaction))) == 0
-    #         #Transaction can't approve itself
-    #         and transaction != incoming_transaction):
-    #
-    #             valid_tips.append(transaction)
-    #
-    #         #Add to valid tips if all approvers not visible yet
-    #         elif(len(list(self.DG.predecessors(transaction))) >= 1
-    #         #Transaction can't approve itself
-    #         and transaction != incoming_transaction
-    #         and self.all_approvers_not_visible(transaction)):
-    #
-    #             valid_tips.append(transaction)
-    #
-    #     return valid_tips
-
-
     def get_valid_tips_multiple_agents(self, agent):
 
         valid_tips = []
@@ -299,16 +275,6 @@ class Multi_Agent_Simulation:
         #     return set(visible_approvers).issubset(set(self.not_visible_transactions))
         # else:
         return set(list(self.DG.predecessors(transaction))).issubset(set(self.not_visible_transactions))
-
-
-    # def calc_transition_probabilities(self, approvers):
-    #
-    #     weights = [approver.cum_weight for approver in approvers]
-    #     normalized_weights = [weight - max(weights) for weight in weights]
-    #     denominator_transition_probabilities = sum([math.exp(self.alpha * weight) for weight in normalized_weights])
-    #
-    #     return [math.exp(self.alpha * (approver.cum_weight - max(weights))) / denominator_transition_probabilities for
-    #             approver in approvers]
 
 
     def calc_transition_probabilities_multiple_agents(self, approvers, agent):
@@ -441,66 +407,31 @@ class Multi_Agent_Simulation:
     def update_weights_multiple_agents(self, incoming_transaction):
 
         #Update all descendants of incoming_transaction only (cum_weight += 1)
-        # descendants = nx.descendants(self.DG, incoming_transaction)
-        # self.record_desc.append(len(list(descendants)))
-        # self.record_desc_ratio.append(len(list(descendants))/int(str(incoming_transaction)))
-        #
-        # # for transaction in nx.descendants(self.DG, incoming_transaction):
-        # for transaction in descendants:
-        #
-        #     #Update for each agent separately
-        #     for agent in self.agents:
-        #         if(transaction in agent.visible_transactions):
-        #             transaction.cum_weight_multiple_agents_2[agent] += 1
+        descendants = nx.descendants(self.DG, incoming_transaction)
+        self.record_desc.append(len(list(descendants)))
+        self.record_desc_ratio.append(len(list(descendants))/int(str(incoming_transaction)))
 
-        sorted = nx.topological_sort(self.DG)
-        for transaction in sorted:
+        # for transaction in nx.descendants(self.DG, incoming_transaction):
+        for transaction in descendants:
 
+            #Update for each agent separately
             for agent in self.agents:
-                transaction.cum_weight_multiple_agents[agent] = set()
-                children = self.DG.successors(transaction)
-                for child in children:
-                    if(child in agent.visible_transactions):
+                if(transaction in agent.visible_transactions):
+                    transaction.cum_weight_multiple_agents[agent] += 1
 
-                        child.ancestors_multiple_agents[agent] = child.ancestors_multiple_agents[agent].union(transaction.ancestors_multiple_agents[agent]).union({transaction})
-
-                transaction.cum_weight_multiple_agents[agent] = len(transaction.ancestors_multiple_agents[agent]) + 1
-                self.transactions[0].cum_weight_multiple_agents[agent] = self.no_of_transactions + 1
-
-        #For all current tips set cum_weight to 1 (default value)
-        # tips = self.get_tips()
+        # sorted = nx.topological_sort(self.DG)
+        # for transaction in sorted:
         #
-        # for tip in tips:
-        #
-        #     #Update for each agent separately
         #     for agent in self.agents:
-        #         tip.cum_weight_multiple_agents[agent] = 1
-
-    # def calc_exit_probabilities_multiple_agents(self):
-    #
-    #     self.get_visible_transactions(self.transactions[-1].arrival_time + 1, self.transactions[-1].agent)
-    #
-    #     #Start at genesis, tips in the end
-    #     sorted = list(reversed(list(nx.topological_sort(self.DG))))
-    #
-    #     #Initialize genesis to 100% for both agents
-    #     for agent in self.agents:
-    #         self.transactions[0].exit_probability_multiple_agents[agent] = 1
-    #
-    #     for transaction in sorted:
-    #
-    #         #Update for each agent separately
-    #         for agent in self.agents:
-    #
-    #             if (transaction in agent.visible_transactions):
-    #
-    #                 approvers = list(self.DG.predecessors(transaction))
-    #                 visible_approvers = common_elements(approvers, agent.visible_transactions)
-    #
-    #                 transition_probabilities = self.calc_transition_probabilities(visible_approvers)
-    #
-    #                 for (approver, transition_probability) in zip(visible_approvers, transition_probabilities):
-    #                     approver.exit_probability_multiple_agents[agent] += (transaction.exit_probability_multiple_agents[agent] * transition_probability)
+        #         transaction.cum_weight_multiple_agents[agent] = set()
+        #         children = self.DG.successors(transaction)
+        #         for child in children:
+        #             if(child in agent.visible_transactions):
+        #
+        #                 child.ancestors_multiple_agents[agent] = child.ancestors_multiple_agents[agent].union(transaction.ancestors_multiple_agents[agent]).union({transaction})
+        #
+        #         transaction.cum_weight_multiple_agents[agent] = len(transaction.ancestors_multiple_agents[agent]) + 1
+        #         self.transactions[0].cum_weight_multiple_agents[agent] = self.no_of_transactions + 1
 
 
     def calc_exit_probabilities_multiple_agents(self, incoming_transaction):

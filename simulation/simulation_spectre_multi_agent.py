@@ -14,7 +14,7 @@ from simulation.block import Block
 
 class Multi_Agent_Simulation:
     def __init__(self, _no_of_blocks, _lambda, _no_of_agents, \
-                 _alpha, _distance, _tip_selection_algo, _latency = 1, \
+                 _alpha, _distance, _latency = 1, \
                  _agent_choice=None, _printing=False):
 
         #Use configuration file when provided
@@ -26,9 +26,8 @@ class Multi_Agent_Simulation:
             self.alpha = self.config[0][3]
             self.latency = self.config[0][4]
             self.distances = self.config[0][5]
-            self.tip_selection_algo = self.config[0][6]
-            self.agent_choice = self.config[0][7]
-            self.printing = self.config[0][8]
+            self.agent_choice = self.config[0][6]
+            self.printing = self.config[0][7]
         #Otherwise use the provided parameters
         else:
             self.no_of_blocks = _no_of_blocks
@@ -40,7 +39,6 @@ class Multi_Agent_Simulation:
                 self.distances = create_distance_matrix(self.no_of_agents, _distance)
             else:
                 self.distances = _distance
-            self.tip_selection_algo = _tip_selection_algo
             if _agent_choice is None:
                 _agent_choice = list(np.ones(self.no_of_agents)/self.no_of_agents)
             self.agent_choice = _agent_choice
@@ -108,7 +106,101 @@ class Multi_Agent_Simulation:
             
         return(self.blocks, self.agents, self.DG)
             
-            
+
+    #############################################################################
+    # SIMULATION: MAIN LOOP
+    #############################################################################
+
+    def run(self):
+
+        start_time = timeit.default_timer()
+
+        if self.printing:
+            print_info(self)
+
+        #Create dictionary with simulation parameter changes when provided
+        if(len(sys.argv) != 1):
+            dic = {x[0]: x[1:] for x in self.config[1:]}
+
+        #Start with first block (NOT genesis)
+        for block in self.blocks[1:]:
+
+            #Execute simulation parameter changes when provided
+            if(len(sys.argv) != 1):
+                self.check_parameters_changes(block, dic)
+
+            #Do something every 100th transition
+            # if (int(str(block)) % 100 == 0):
+            #     self.calc_exit_probabilities_multiple_agents(block)
+            #     self.calc_confirmation_confidence_multiple_agents(block)
+            #     self.record_partitioning.append(self.measure_partitioning())
+
+            #Choose an agent
+            block.agent = np.random.choice(self.agents, p=self.agent_choice)
+
+            #Add block to directed graph object (with random y coordinate for plotting the graph)
+            self.DG.add_node(block,pos=(block.arrival_time, random.uniform(0, 1)-int(str(block.agent))*1.3), node_color=self.agent_colors[int(str(block.agent))])#'#ffadad')
+
+            #Select tips
+            self.tip_selection(block)
+
+
+            #Update weights (of blocks referenced by the current block)
+#            self.update_weights_multiple_agents(block)
+
+            #Progress bar update
+            if self.printing:
+                update_progress(int(str(block))/self.no_of_blocks, block)
+
+        #print_tips_over_time_multiple_agents(self, int(str(block)))
+
+        if self.printing:
+            print("Simulation time: " + str(np.round(timeit.default_timer() - start_time, 3)) + " seconds\n")
+
+        #For measuring partitioning
+        start_time2 = timeit.default_timer()
+        # self.calc_exit_probabilities_multiple_agents(block)
+        # self.calc_confirmation_confidence_multiple_agents(block)
+        # self.measure_partitioning()
+
+        if self.printing:
+            print("Calculation time confirmation confidence: " + str(np.round(timeit.default_timer() - start_time2, 3)) + " seconds\n")
+            # print("\nGraph information:\n" + nx.info(self.DG))
+
+
+    def tip_selection(self, block):
+        
+        #Get visible blocks and valid tips (and record these)
+        self.get_visible_blocks(block.arrival_time, block.agent)
+        valid_tips = self.get_valid_tips_multiple_agents(block.agent)
+        self.record_tips.append(valid_tips)
+
+        #Reference all visible tips
+        for tip in valid_tips:
+            self.DG.add_edge(block, tip)    
+        
+        else:
+            print("ERROR:  No tips available")
+            sys.exit()
+
+
+    def check_parameters_changes(self, block, dic):
+
+        temp = (int(str(block)))
+
+        #If change event for a block is provided
+        if temp in dic:
+            #If change of distance is provided
+            if dic[temp][0] != False:
+                self.distances = dic[temp][0]
+            #If change of agent probabilities is provided
+            if dic[temp][1] != False:
+                self.agent_choice = dic[temp][1]
+
+            print_tips_over_time_multiple_agents(self, int(str(block)))
+            # self.calc_exit_probabilities_multiple_agents(block)
+            # self.calc_confirmation_confidence_multiple_agents(block)
+            # self.measure_partitioning()
             
     #############################################################################
     # SIMULATION: HELPERS

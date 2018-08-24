@@ -9,14 +9,15 @@ import matplotlib.pyplot as plt
 
 def print_info(self):
     text = "\nParameters:  blocks = " + str(self.no_of_blocks) + \
-            ",  Tip-Selection = " + str(self.tip_selection_algo).upper() + \
-            ",  Lambda = " + str(self.lam)
-    if(self.tip_selection_algo == "weighted"):
-        text += ",  Alpha = " + str(self.alpha)
+             ",  Lambda = " + str(self.lam)
+#",  Tip-Selection = " + str(self.tip_selection_algo).upper() + \
+            
+#    if(self.tip_selection_algo == "weighted"):
+#        text += ",  Alpha = " + str(self.alpha)
     text += " | Simulation started...\n"
     print(text)
 
-def print_graph_spectre(self):
+def print_graph(self):
 
     #Positioning and text of labels
     pos = nx.get_node_attributes(self.DG, 'pos')
@@ -54,8 +55,8 @@ def print_graph_spectre(self):
     #Print title
     title = "blocks = " + str(self.no_of_blocks) +\
             ",  " + r'$\lambda$' + " = " + str(self.lam)
-    if(self.tip_selection_algo == "weighted"):
-        title += ",  " + r'$\alpha$' + " = " + str(self.alpha)
+#    if(self.tip_selection_algo == "weighted"):
+#        title += ",  " + r'$\alpha$' + " = " + str(self.alpha)
     plt.xlabel("Time (s)")
     plt.yticks([])
     plt.title(title)
@@ -63,7 +64,7 @@ def print_graph_spectre(self):
     #Save the graph
     #plt.savefig('graph.png')
 
-def print_tips_over_time_spectre(self):
+def print_tips_over_time(self):
 
     plt.figure(figsize=(14, 8))
 
@@ -93,15 +94,15 @@ def print_tips_over_time_spectre(self):
     #Print title
     title = "blocks = " + str(self.no_of_blocks) + \
             ",  " + r'$\lambda$' + " = " + str(self.lam)
-    if (self.tip_selection_algo == "weighted"):
-        title += ",  " + r'$\alpha$' + " = " + str(self.alpha)
+#    if (self.tip_selection_algo == "weighted"):
+#        title += ",  " + r'$\alpha$' + " = " + str(self.alpha)
     plt.xlabel("Time (s)")
     plt.ylabel("Number of tips")
     plt.legend(loc='upper left')
     plt.title(title)
     plt.show()
 
-def print_tips_over_time_multiple_agents_spectre(self, no_current_blocks):
+def print_tips_over_time_multiple_agents(self, no_current_blocks):
 
     plt.figure(figsize=(14, 8))
     plt.subplot(2, 1, 1)
@@ -140,8 +141,8 @@ def print_tips_over_time_multiple_agents_spectre(self, no_current_blocks):
     #Print title
     title = "blocks = " + str(self.no_of_blocks) + \
             ",  " + r'$\lambda$' + " = " + str(self.lam)
-    if (self.tip_selection_algo == "weighted"):
-        title += ",  " + r'$\alpha$' + " = " + str(self.alpha)
+#    if (self.tip_selection_algo == "weighted"):
+#        title += ",  " + r'$\alpha$' + " = " + str(self.alpha)
     plt.xlabel("Time (s)")
     plt.ylabel("Number of tips")
     plt.legend(loc='upper left')

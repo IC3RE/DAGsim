@@ -3,10 +3,9 @@ import scipy.stats as st
 import networkx as nx
 import matplotlib.pyplot as plt
 
-from simulation.helpers import update_progress, csv_export
-from simulation.plotting import print_graph, print_tips_over_time, print_tips_over_time_multiple_agents
-from simulation.plotting_spectre import print_graph_spectre, print_tips_over_time_spectre, print_tips_over_time_multiple_agents_spectre
-from simulation.simulation import Single_Agent_Simulation
+from simulation.helpers_spectre import update_progress, csv_export
+from simulation.plotting_spectre import print_graph, print_tips_over_time, print_tips_over_time_multiple_agents
+#from simulation.simulation import Single_Agent_Simulation
 #from simulation.simulation_multi_agent import Multi_Agent_Simulation
 from simulation.simulation_spectre_multi_agent import Multi_Agent_Simulation
 
@@ -30,7 +29,7 @@ from simulation.simulation_spectre_multi_agent import Multi_Agent_Simulation
 # SIMULATION: MULTI AGENT
 #############################################################################
 
-#Parameters: no_of_transactions, lambda, no_of_agents, alpha, distance, tip_selection_algo
+#Parameters: no_of_transactions, lambda, no_of_agents, alpha, distance,
 # latency (default value 1), agent_choice (default vlaue uniform distribution, printing)
 #Tip selection algorithms: Choose among "random", "weighted", "unweighted" as input
 
@@ -46,7 +45,7 @@ counter = 0
 
 for i in range(runs):
 
-    simu2 = Multi_Agent_Simulation(10, 50, 2, 0.005, 0.5, _printing=True)
+    simu2 = Multi_Agent_Simulation(100, 20, 2, 0.005, 1000000000, _printing=True)
     (blocks, agents, graph) = simu2.setup()
     simu2.run()
 
@@ -77,7 +76,7 @@ for i in range(runs):
 # PLOTTING
 #############################################################################
 
-#print_graph_spectre(simu2)
+print_graph(simu2)
 print('test')
 # print_tips_over_time(simu2)
 # print_tips_over_time_multiple_agents(simu2, simu2.no_of_transactions)

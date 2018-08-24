@@ -29,7 +29,7 @@ from simulation.simulation_spectre_multi_agent import Multi_Agent_Simulation
 # SIMULATION: MULTI AGENT
 #############################################################################
 
-#Parameters: no_of_transactions, lambda, no_of_agents, alpha, distance,
+#Parameters: no_of_blocks, lambda, no_of_agents, alpha, distance,
 # latency (default value 1), agent_choice (default vlaue uniform distribution, printing)
 #Tip selection algorithms: Choose among "random", "weighted", "unweighted" as input
 
@@ -45,7 +45,7 @@ counter = 0
 
 for i in range(runs):
 
-    simu2 = Multi_Agent_Simulation(100, 20, 2, 0.005, 1000000000, _printing=True)
+    simu2 = Multi_Agent_Simulation(100, 20, 2, 0.005, 1000000000, 10000, _printing=True) #This has a uniform agent distribution at the moment
     (blocks, agents, graph) = simu2.setup()
     simu2.run()
 

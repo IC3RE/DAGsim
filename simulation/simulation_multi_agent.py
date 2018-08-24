@@ -6,8 +6,8 @@ import numpy as np
 import networkx as nx
 import matplotlib.pyplot as plt
 
-from simulation.helpers_spectre import update_progress, create_distance_matrix, common_elements, load_file
-from simulation.plotting_spectre import print_info, print_graph, print_tips_over_time, print_tips_over_time_multiple_agents
+from simulation.helpers import update_progress, create_distance_matrix, common_elements, load_file
+from simulation.plotting import print_info, print_graph, print_tips_over_time, print_tips_over_time_multiple_agents
 from simulation.agent import Agent
 from simulation.transaction import Transaction
 

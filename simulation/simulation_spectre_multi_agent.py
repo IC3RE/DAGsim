@@ -137,10 +137,15 @@ class Multi_Agent_Simulation:
 
             #Choose an agent
             block.agent = np.random.choice(self.agents, p=self.agent_choice)
+#            print(block.agent)
+
+            ############ Works down to here
 
             #Add block to directed graph object (with random y coordinate for plotting the graph)
             self.DG.add_node(block,pos=(block.arrival_time, random.uniform(0, 1)-int(str(block.agent))*1.3), node_color=self.agent_colors[int(str(block.agent))])#'#ffadad')
 
+
+            ############# This is where the problem is - tip selection algorithm not returning any tips
             #Select tips
             self.tip_selection(block)
 
@@ -172,16 +177,20 @@ class Multi_Agent_Simulation:
         
         #Get visible blocks and valid tips (and record these)
         self.get_visible_blocks(block.arrival_time, block.agent)
+#        print('block arrival time', block.arrival_time)
+#        print('block agent', block.agent)
+#        print('visible blocks', self.get_visible_blocks)
         valid_tips = self.get_valid_tips_multiple_agents(block.agent)
         self.record_tips.append(valid_tips)
-
+        
+#        print('valid tips', valid_tips)
         #Reference all visible tips
         for tip in valid_tips:
             self.DG.add_edge(block, tip)    
         
-        else:
-            print("ERROR:  No tips available")
-            sys.exit()
+#        else:
+#            print("ERROR:  No tips available")
+#            sys.exit()
 
 
     def check_parameters_changes(self, block, dic):
@@ -217,7 +226,7 @@ class Multi_Agent_Simulation:
 
 
     def get_visible_blocks(self, incoming_block_time, incoming_block_agent):
-
+#        print('incoming block time', incoming_block_time)
         #Initialize empty lists (for each block these are populated again)
         self.not_visible_blocks = []
         for agent in self.agents:
@@ -233,19 +242,23 @@ class Multi_Agent_Simulation:
                 if (block.arrival_time == 0):
 
                     agent.visible_blocks.append(block)
+                    
 
                 else:
                     #Get distance from agent to agent of block from distance matrix
                     distance = self.distances[int(str(agent))][int(str(block.agent))]
+#                    print('distance from agent to agent of block', distance)
 
                     #Determine if the block is visible (incoming_block.arrival_time determines current time)
                     if (block.arrival_time + self.latency + distance <= incoming_block_time):
 
                         agent.visible_blocks.append(block)
+#                        print('visible blocks for the agent', agent.visible_blocks)
 
                     #Record not visible blocks for 'current agent' only (reduces overhead)
                     elif(incoming_block_agent == agent):
                         self.not_visible_blocks.append(block)
+#                        print('not visible blocks', self.not_visible_blocks)
 
 
     # def get_valid_tips(self, incoming_block):

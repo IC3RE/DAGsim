@@ -46,9 +46,9 @@ counter = 0
 
 for i in range(runs):
 
-    simu2 = Multi_Agent_Simulation(10, 50, 2, 0.005, 0.5, "unweighted", _printing=True)
+    simu2 = Multi_Agent_Simulation(10, 50, 2, 0.005, 0.5, _printing=True)
     (blocks, agents, graph) = simu2.setup()
-#    simu2.run()
+    simu2.run()
 
     # csv_export(simu2)
 

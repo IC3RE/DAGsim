@@ -110,13 +110,13 @@ class Multi_Agent_Simulation:
         return(self.blocks, self.agents, self.DG)
         
         #Create pairwise vote list
-        pairwise_vote = []
+        self.pairwise_vote = []
         
         #Create accepted transaction list
-        Tx0 = []
+        self.Tx0 = []
         
         #Create robustly accepted transaction list
-        robust_Tx0 = []
+        self.robust_Tx0 = []
             
 
     #############################################################################
@@ -177,7 +177,7 @@ class Multi_Agent_Simulation:
         #######################################################################
         
         #Generate the pairwise vote, taking the blockDAG as an input
-#        self.pairwise_vote(self.DG)
+        self.pairwise_vote(self.DG, self.pairwise_vote)
         
         #Determine the accepted set of transactions, taking the pairwise vote as 
         #input
@@ -218,7 +218,7 @@ class Multi_Agent_Simulation:
 #            print("ERROR:  No tips available")
 #            sys.exit()
     
-    def pairwise_vote(self):
+    def pairwise_vote(self, DG, pairwise_vote):
         """
         Returns a pairwise ordering of all blocks in the blockDAG
         
@@ -227,6 +227,9 @@ class Multi_Agent_Simulation:
         
         """
         
+        #Check that the blockDAG is not empty
+        if DG == 0:
+            pairwise_vote.append()
         
         
 

@@ -76,6 +76,9 @@ class Multi_Agent_Simulation:
     #############################################################################
 
     def setup(self):
+        """
+        Initialises the agents, blocks and arrival times
+        """
 
         #Create agents
         agent_counter = 0
@@ -112,6 +115,9 @@ class Multi_Agent_Simulation:
     #############################################################################
 
     def run(self):
+        """
+        Forms the ledger according to the SPECTRE mining protocol
+        """
 
         start_time = timeit.default_timer()
 
@@ -122,6 +128,10 @@ class Multi_Agent_Simulation:
         if(len(sys.argv) != 1):
             dic = {x[0]: x[1:] for x in self.config[1:]}
 
+        ###################################################################
+        # FORMATION OF LEDGER
+        ###################################################################
+            
         #Start with first block (NOT genesis)
         for block in self.blocks[1:]:
 
@@ -137,17 +147,13 @@ class Multi_Agent_Simulation:
 
             #Choose an agent
             block.agent = np.random.choice(self.agents, p=self.agent_choice)
-#            print(block.agent)
-
-            ############ Works down to here
+#            print(block.agent)         
 
             #Add block to directed graph object (with random y coordinate for plotting the graph)
             self.DG.add_node(block,pos=(block.arrival_time, random.uniform(0, 1)-int(str(block.agent))*1.3), node_color=self.agent_colors[int(str(block.agent))])#'#ffadad')
 
-
-            ############# This is where the problem is - tip selection algorithm not returning any tips
             #Select tips
-            self.tip_selection(block)
+            self.tip_selection(block)            
 
 
             #Update weights (of blocks referenced by the current block)
@@ -156,6 +162,13 @@ class Multi_Agent_Simulation:
             #Progress bar update
             if self.printing:
                 update_progress(int(str(block))/self.no_of_blocks, block)
+        
+        #######################################################################
+        # CONSENSUS PROTOCOL
+        #######################################################################
+        
+        #Call the pairwise voting and accepted transactions methods here
+        
 
         #print_tips_over_time_multiple_agents(self, int(str(block)))
 
@@ -191,6 +204,12 @@ class Multi_Agent_Simulation:
 #        else:
 #            print("ERROR:  No tips available")
 #            sys.exit()
+    
+    def pairwise_vote(self):
+        """
+        Returns a pairwise ordering of all blocks in the blockDAG
+        """
+        
 
 
     def check_parameters_changes(self, block, dic):

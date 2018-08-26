@@ -77,7 +77,7 @@ class Multi_Agent_Simulation:
 
     def setup(self):
         """
-        Initialises the agents, blocks and arrival times
+        Initialises the agents, blocks, arrival times, pairwise vote lists and 
         """
 
         #Create agents
@@ -108,6 +108,15 @@ class Multi_Agent_Simulation:
             block_counter += 1
             
         return(self.blocks, self.agents, self.DG)
+        
+        #Create pairwise vote list
+        pairwise_vote = []
+        
+        #Create accepted transaction list
+        Tx0 = []
+        
+        #Create robustly accepted transaction list
+        robust_Tx0 = []
             
 
     #############################################################################
@@ -167,7 +176,11 @@ class Multi_Agent_Simulation:
         # CONSENSUS PROTOCOL
         #######################################################################
         
-        #Call the pairwise voting and accepted transactions methods here
+        #Generate the pairwise vote, taking the blockDAG as an input
+#        self.pairwise_vote(self.DG)
+        
+        #Determine the accepted set of transactions, taking the pairwise vote as 
+        #input
         
 
         #print_tips_over_time_multiple_agents(self, int(str(block)))
@@ -208,7 +221,13 @@ class Multi_Agent_Simulation:
     def pairwise_vote(self):
         """
         Returns a pairwise ordering of all blocks in the blockDAG
+        
+        Input: G - a blockDAG
+        Output: a pairwise ordering of blocks in G
+        
         """
+        
+        
         
 
 

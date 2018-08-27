@@ -110,7 +110,7 @@ class Multi_Agent_Simulation:
         return(self.blocks, self.agents, self.DG)
         
         #Create pairwise vote list
-        self.pairwise_vote = []
+        self.voting_profile = []
         
         #Create accepted transaction list
         self.Tx0 = []
@@ -233,17 +233,25 @@ class Multi_Agent_Simulation:
         
         #Perform a topological sort of the blockDAG
         self.topo_sort = list(nx.topological_sort(self.DG))    
-        print(self.topo_sort)
+        print('topological sort', self.topo_sort)
         
         #Iterate through each block in the topo_sort
         for z in self.topo_sort:
             
             #Create an empty voting profile, whose x = y = number of blocks
-            self.z_vote = np.zeros((self._no_of_blocks, self._no_of_blocks))
+            #+ 1 is to account for the fact that Python starts indexing at 0 (whereas number of blocks starts from 1)
+            self.z_vote = np.zeros((self.no_of_blocks + 1, self.no_of_blocks + 1))
+            print('initialised voting profile', self.z_vote)
             
             #For each block, look at every other pair of blocks (x, y)
-            for x in self.topo_sort:
-                for y in self.topo_sort:
+            for x in self.DG:
+                for y in self.DG:
+                    print('z', z)
+                    print('x', x.id)
+                    print('y', y.id)
+                    
+#                    test = int(x)
+#                    print('test', test)
                     
                     #If the blocks are not the same
                     if x != y:
@@ -254,11 +262,14 @@ class Multi_Agent_Simulation:
                         #Implement the rules of the pairwise vote algorithm
                         if ((x in past_z) and (y not in past_z)) or \
                         ((x in past_z) and (y == z)):
-                            self.z_vote[x, y] = -1
+                            self.z_vote[x.id, y.id] = -1 #Using the block number to determine the position of the vote in the profile
                             
-                        print(self.z_vote)
+#                        print('voting profile', self.z_vote)
                             #something (y == z):
-                            
+            
+            # Store the voting profile for that particular z
+            self.voting_profile.append(self.z_vote)
+        print(self.voting_profile)
                         
             
 

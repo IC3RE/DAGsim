@@ -19,6 +19,7 @@ class Person:
         for i in range(10):
             self.vote.append(i)
         print(self.vote)
+        
     
 Tom = Person('Tom', '22')
 Tom.setup()

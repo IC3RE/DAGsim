@@ -46,7 +46,7 @@ counter = 0
 for i in range(runs):
     #Distance set as large below to emulate two simulations (agents won't interact)
     #Large latency so that only genesis block should be referenced
-    simu2 = Multi_Agent_Simulation(100, 20, 2, 0.005, 1000000000, 10000, _printing=True) #This has a uniform agent distribution at the moment
+    simu2 = Multi_Agent_Simulation(6, 2, 2, 0.005, 1000000000, 1, _printing=True) #This has a uniform agent distribution at the moment
     (blocks, agents, graph) = simu2.setup()
     simu2.run()
 

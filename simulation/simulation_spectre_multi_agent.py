@@ -267,6 +267,17 @@ class Multi_Agent_Simulation:
                         ((x in past_z) and (y == z)):
                             self.z_vote[x.id, y.id] = -1 #Using the block number to determine the position of the vote in the profile
                             
+                        elif ((y in past_z) and (x not in past_z)) or \
+                        ((y in past_z) and (y == z)):
+                            self.z_vote[x.id, y.id] = 1
+                            
+#                        elif ((x in past_z) and (y in past_z)):
+#                            self.z_vote[x.id, y.id] = #need to work out what to do
+                          
+                        elif ((x not in past_z) and (y not in past_z)):
+                            self.z_vote[x.id, y.id] = 
+                            
+                        
 #                        print('voting profile', self.z_vote)
                             #something (y == z):
             

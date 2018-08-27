@@ -227,12 +227,24 @@ class Multi_Agent_Simulation:
         
         x, y and z throughout this refer to blocks
         
+        This code is an implementation of the pairwise voting algorithm in 
+        the SPECTRE whitepaper titled 'Algorithm 1 - Calc votes'
+        
         """
+        #Current voting profile
         self.voting_profile = []
+        
+        #vote of virtual(past(z))
+        self.past_voting_profile = []
         
         #If the blockDAG is empty, return an empty ordering
         if self.DG.number_of_nodes() == 0:
             self.voting_profile.clear()
+        
+        #Recursive call of vote for past DAGs - used in line 11 of algo
+        for z in self.DG:
+            self.past_voting_profile.append(self.pairwise_vote)
+            
         
         #Perform a topological sort of the blockDAG
         self.topo_sort = list(nx.topological_sort(self.DG))   # think it's correct down to here 
@@ -263,19 +275,24 @@ class Multi_Agent_Simulation:
                         past_z = nx.descendants(self.DG, z)
                         
                         #Implement the rules of the pairwise vote algorithm
+                        
+                        #Line 7 of algo
                         if ((x in past_z) and (y not in past_z)) or \
                         ((x in past_z) and (y == z)):
                             self.z_vote[x.id, y.id] = -1 #Using the block number to determine the position of the vote in the profile
-                            
+                        
+                        #Line 9 of algo
                         elif ((y in past_z) and (x not in past_z)) or \
                         ((y in past_z) and (y == z)):
                             self.z_vote[x.id, y.id] = 1
-                            
+                        
+                        #Line 11 of algo
 #                        elif ((x in past_z) and (y in past_z)):
 #                            self.z_vote[x.id, y.id] = #need to work out what to do
-                          
-                        elif ((x not in past_z) and (y not in past_z)):
-                            self.z_vote[x.id, y.id] = 
+                        
+                        #Line 13 of algo
+#                        elif ((x not in past_z) and (y not in past_z)):
+#                            self.z_vote[x.id, y.id] = 
                             
                         
 #                        print('voting profile', self.z_vote)

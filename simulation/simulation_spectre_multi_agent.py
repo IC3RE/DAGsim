@@ -110,7 +110,7 @@ class Multi_Agent_Simulation:
         return(self.blocks, self.agents, self.DG)
         
         #Create pairwise vote list
-        self.voting_profile = []
+#        self.voting_profile = []
         
         #Create accepted transaction list
         self.Tx0 = []
@@ -225,14 +225,17 @@ class Multi_Agent_Simulation:
         Input: G - a blockDAG
         Output: a pairwise ordering of blocks in G
         
+        x, y and z throughout this refer to blocks
+        
         """
+        self.voting_profile = []
         
         #If the blockDAG is empty, return an empty ordering
         if self.DG.number_of_nodes() == 0:
-            self.pairwise_vote.clear()
+            self.voting_profile.clear()
         
         #Perform a topological sort of the blockDAG
-        self.topo_sort = list(nx.topological_sort(self.DG))    
+        self.topo_sort = list(nx.topological_sort(self.DG))   # think it's correct down to here 
         print('topological sort', self.topo_sort)
         
         #Iterate through each block in the topo_sort
@@ -241,15 +244,15 @@ class Multi_Agent_Simulation:
             #Create an empty voting profile, whose x = y = number of blocks
             #+ 1 is to account for the fact that Python starts indexing at 0 (whereas number of blocks starts from 1)
             self.z_vote = np.zeros((self.no_of_blocks + 1, self.no_of_blocks + 1))
-            print('initialised voting profile', self.z_vote)
+#            print('initialised voting profile', self.z_vote)
             
             #For each block, look at every other pair of blocks (x, y)
             for x in self.DG:
                 for y in self.DG:
-                    print('z', z)
-                    print('x', x.id)
-                    print('y', y.id)
-                    
+#                    print('z', z)
+#                    print('x', x.id)
+#                    print('y', y.id)
+#                    
 #                    test = int(x)
 #                    print('test', test)
                     

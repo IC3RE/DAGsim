@@ -89,6 +89,9 @@ class Multi_Agent_Simulation:
         #Create directed graph object
         self.DG = nx.DiGraph()
 
+        #Create list to store sequentially created graph objects
+        self.DG_store = []
+        
         #Create random arrival times
         inter_arrival_times = np.random.exponential(1 / self.lam, self.no_of_blocks)
         self.arrival_times = np.cumsum(inter_arrival_times)
@@ -177,7 +180,7 @@ class Multi_Agent_Simulation:
         #######################################################################
         
         #Generate the pairwise vote, taking the blockDAG as an input
-        self.pairwise_vote()
+        self.pairwise_vote(self.DG)
         
         #Determine the accepted set of transactions, taking the pairwise vote as 
         #input
@@ -218,7 +221,7 @@ class Multi_Agent_Simulation:
 #            print("ERROR:  No tips available")
 #            sys.exit()
     
-    def pairwise_vote(self):
+    def pairwise_vote(self, graph):
         """
         Returns a pairwise ordering of all blocks in the blockDAG
         
@@ -238,29 +241,32 @@ class Multi_Agent_Simulation:
         self.past_voting_profile = []
         
         #If the blockDAG is empty, return an empty ordering
-        if self.DG.number_of_nodes() == 0:
+        if graph.number_of_nodes() == 0:
             self.voting_profile.clear()
         
         #Recursive call of vote for past DAGs - used in line 11 of algo
-        for z in self.DG:
-            self.past_voting_profile.append(self.pairwise_vote)
+        for z in graph:
+            self.past_voting_profile.append(self.pairwise_vote(graph)) #Need something else in here - descendents of Z
             
         
         #Perform a topological sort of the blockDAG
-        self.topo_sort = list(nx.topological_sort(self.DG))   # think it's correct down to here 
+        self.topo_sort = list(nx.topological_sort(graph))   # think it's correct down to here 
         print('topological sort', self.topo_sort)
+        
+        #Calculate number of blocks, for use later
+        self.no_of_nodes = graph.number_of_nodes()
         
         #Iterate through each block in the topo_sort
         for z in self.topo_sort:
             
             #Create an empty voting profile, whose x = y = number of blocks
             #+ 1 is to account for the fact that Python starts indexing at 0 (whereas number of blocks starts from 1)
-            self.z_vote = np.zeros((self.no_of_blocks + 1, self.no_of_blocks + 1))
+            self.z_vote = np.zeros((self.no_of_nodes + 1, self.no_of_nodes + 1))
 #            print('initialised voting profile', self.z_vote)
             
             #For each block, look at every other pair of blocks (x, y)
-            for x in self.DG:
-                for y in self.DG:
+            for x in graph:
+                for y in graph:
 #                    print('z', z)
 #                    print('x', x.id)
 #                    print('y', y.id)
@@ -272,7 +278,7 @@ class Multi_Agent_Simulation:
                     if x != y:
                         
                         #past(z) - descendants of z (needed multiple times)
-                        past_z = nx.descendants(self.DG, z)
+                        past_z = nx.descendants(graph, z)
                         
                         #Implement the rules of the pairwise vote algorithm
                         

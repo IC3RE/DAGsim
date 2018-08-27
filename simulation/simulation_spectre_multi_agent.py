@@ -177,7 +177,7 @@ class Multi_Agent_Simulation:
         #######################################################################
         
         #Generate the pairwise vote, taking the blockDAG as an input
-        self.pairwise_vote(self.DG, self.pairwise_vote)
+        self.pairwise_vote()
         
         #Determine the accepted set of transactions, taking the pairwise vote as 
         #input
@@ -218,7 +218,7 @@ class Multi_Agent_Simulation:
 #            print("ERROR:  No tips available")
 #            sys.exit()
     
-    def pairwise_vote(self, DG, pairwise_vote):
+    def pairwise_vote(self):
         """
         Returns a pairwise ordering of all blocks in the blockDAG
         
@@ -227,12 +227,40 @@ class Multi_Agent_Simulation:
         
         """
         
-        #Check that the blockDAG is not empty
-        if DG == 0:
-            pairwise_vote.append()
+        #If the blockDAG is empty, return an empty ordering
+        if self.DG.number_of_nodes() == 0:
+            self.pairwise_vote.clear()
         
+        #Perform a topological sort of the blockDAG
+        self.topo_sort = list(nx.topological_sort(self.DG))    
+        print(self.topo_sort)
         
-
+        #Iterate through each block in the topo_sort
+        for z in self.topo_sort:
+            
+            #Create an empty voting profile, whose x = y = number of blocks
+            self.z_vote = np.zeros((self._no_of_blocks, self._no_of_blocks))
+            
+            #For each block, look at every other pair of blocks (x, y)
+            for x in self.topo_sort:
+                for y in self.topo_sort:
+                    
+                    #If the blocks are not the same
+                    if x != y:
+                        
+                        #past(z) - descendants of z (needed multiple times)
+                        past_z = nx.descendants(self.DG, z)
+                        
+                        #Implement the rules of the pairwise vote algorithm
+                        if ((x in past_z) and (y not in past_z)) or \
+                        ((x in past_z) and (y == z)):
+                            self.z_vote[x, y] = -1
+                            
+                        print(self.z_vote)
+                            #something (y == z):
+                            
+                        
+            
 
     def check_parameters_changes(self, block, dic):
 

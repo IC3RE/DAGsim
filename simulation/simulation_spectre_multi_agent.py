@@ -148,24 +148,27 @@ class Multi_Agent_Simulation:
 
             #Choose an agent
             block.agent = np.random.choice(self.agents, p=self.agent_choice)
-#            print(block.agent)         
-
+#            print(block.agent)     
+            
+            """
+            This HAS to come before you add a block - otherwise everything goes out of sync for the 
+            recursion            
+            
+            Create a copy independent to the graph instance (otherwise you can't append the graph - 
+            if you append self.DG then you're appending an instance, which is a pointer to the same underlying 
+            object)
+            """
+            
+            DG_copy = self.DG.copy()
+            self.DG_store.append(DG_copy) 
+                        
             #Add block to directed graph object (with random y coordinate for plotting the graph)
             self.DG.add_node(block,pos=(block.arrival_time, random.uniform(0, 1)-int(str(block.agent))*1.3), node_color=self.agent_colors[int(str(block.agent))])#'#ffadad')
-            
-            #Create a copy independent to the graph instance (otherwise you can't append the graph - 
-            #if you append self.DG then you're appending an instance, which is a pointer to the same underlying 
-            #object)
-            DG_copy = self.DG.copy()
-            self.DG_store.append(DG_copy)            
 
             #Select tips
             self.tip_selection(block)            
-
-            #Record partial blockDAG created - needed for the CalcVotes algo
-
             
-            #Update weights (of blocks referenced by the current block)
+            #Update weights (of blocks referenced by the current block) - not needed in SPECTRE
 #            self.update_weights_multiple_agents(block)
 
             #Progress bar update
@@ -177,7 +180,10 @@ class Multi_Agent_Simulation:
         #######################################################################
         
         #Generate the pairwise vote, taking the blockDAG as an input
-        self.CalcVotes(self.DG)
+        print(type(self.DG))
+        
+        (self.voting_profile) = self.CalcVotes(self.DG)
+        
         
         #Determine the accepted set of transactions, taking the pairwise vote as 
         #input
@@ -198,6 +204,8 @@ class Multi_Agent_Simulation:
             print("Calculation time confirmation confidence: " + str(np.round(timeit.default_timer() - start_time2, 3)) + " seconds\n")
             # print("\nGraph information:\n" + nx.info(self.DG))
 
+        return (result)
+    
     def tip_selection(self, block):
         
         #Get visible blocks and valid tips (and record these)
@@ -230,6 +238,7 @@ class Multi_Agent_Simulation:
         the SPECTRE whitepaper titled 'Algorithm 1 - Calc votes'
         
         """
+#        print(type(graph))
         #Current voting profile
         self.voting_profile = []
         
@@ -240,30 +249,18 @@ class Multi_Agent_Simulation:
         if graph.number_of_nodes() == 0:
             self.voting_profile.clear()
 
-            """
-            This is implementing line 3 and 4 of Algorithm 1 Calc Votes from the 
-            SPECTRE paper. We have previously created a list of all the past_DAGs
-            that were formed for each subsequent block (z) during the formation 
-            of the ledger. 
-            
-            We then iterate through each of these DAGs in turn, call recursion 
-            and calculate the voting profile for each DAG. 
-            
-            Due to the nature of what past(z) means in Algorithm 1, described in the 
-            SPECTRE paper, each DAG here represents the past(z) of the z that is one step
-            ahead of it.
-            
-            For example, the first DAG inputted is just the genesis block and z = 1
-            
-            As a result, the voting profile returned is that for past(z = 2). This indexing 
-            subtlety is important to be aware of, when the result of the recursion is used.
-            """
+        counter = 0
+        result = []
         #Recursive call of CalcVotes
         for z in graph:
-            vote = copy.copy(self.CalcVotes(z))
-            print(vote)
+            result.append(copy.copy(self.past(z)))
+            vote = copy.copy(self.past(z))
+#            print(vote)
             self.past_voting_profile.append(vote)
-             
+            counter += 1
+            print(counter)
+        
+        
         #Perform a topological sort of the blockDAG
         self.topo_sort = list(nx.topological_sort(graph))   # think it's correct down to here 
         print('topological sort', self.topo_sort)
@@ -322,7 +319,8 @@ class Multi_Agent_Simulation:
             # Store the voting profile for that particular z
             z_vote_copy = copy.copy(self.z_vote)
             self.voting_profile.append(z_vote_copy)
-        print(self.voting_profile)
+#        print(self.voting_profile)
+        return self.voting_profile
                         
     def past(self, z):
         """
@@ -331,7 +329,13 @@ class Multi_Agent_Simulation:
         """
         #Indexing for the appropriate z. If z = 5 is inputted, then past(z) should
         #be returning the DAG that contains 4 nodes (i.e. the DAG for z = 4)
-        past_z_dag = self.DG_store[z-2]
+        if z.id >= 1: #Accounting for the fact the genesis does not have a past
+            counter = z.id #To index through the DAG list, z needs to be an integer
+            past_z_dag = self.DG_store[counter-1]
+        
+        else:
+            past_z_dag = 0
+        
         
         return past_z_dag           
 

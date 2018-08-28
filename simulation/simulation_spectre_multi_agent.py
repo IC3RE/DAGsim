@@ -182,7 +182,7 @@ class Multi_Agent_Simulation:
         #Generate the pairwise vote, taking the blockDAG as an input
         print(type(self.DG))
         
-        (self.voting_profile) = self.CalcVotes(self.DG)
+        (voting_profile, virtual_vote) = self.CalcVotes(self.DG)
         
         
         #Determine the accepted set of transactions, taking the pairwise vote as 
@@ -203,8 +203,9 @@ class Multi_Agent_Simulation:
         if self.printing:
             print("Calculation time confirmation confidence: " + str(np.round(timeit.default_timer() - start_time2, 3)) + " seconds\n")
             # print("\nGraph information:\n" + nx.info(self.DG))
-
-        return (result)
+            
+        return (voting_profile, virtual_vote)
+            
     
     def tip_selection(self, block):
         
@@ -319,8 +320,12 @@ class Multi_Agent_Simulation:
             # Store the voting profile for that particular z
             z_vote_copy = copy.copy(self.z_vote)
             self.voting_profile.append(z_vote_copy)
+            
+        #Create the aggregated vote of the entire blockDAG
+        self.aggregate_vote = sum(self.voting_profile)
+        self.virtual_vote = np.sign(self.aggregate_vote)
 #        print(self.voting_profile)
-        return self.voting_profile
+        return (self.voting_profile, self.virtual_vote)
                         
     def past(self, z):
         """

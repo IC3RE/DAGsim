@@ -14,7 +14,7 @@ class Person:
         self.graph = []
         self.vote = []
     
-    def result(self):
+    def run(self, self.vote):
         
         for i in range(10):
             self.vote.append(i)

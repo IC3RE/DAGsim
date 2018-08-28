@@ -2,6 +2,7 @@ import sys
 import timeit
 import random
 import math
+import copy
 import numpy as np
 import networkx as nx
 import matplotlib.pyplot as plt
@@ -109,18 +110,6 @@ class Multi_Agent_Simulation:
         for i in range(len(self.arrival_times)):
             self.blocks.append(Block(self.arrival_times[i], block_counter))
             block_counter += 1
-            
-        return(self.blocks, self.agents, self.DG)
-        
-        #Create pairwise vote list
-#        self.voting_profile = []
-        
-        #Create accepted transaction list
-        self.Tx0 = []
-        
-        #Create robustly accepted transaction list
-        self.robust_Tx0 = []
-            
 
     #############################################################################
     # SIMULATION: MAIN LOOP
@@ -163,11 +152,19 @@ class Multi_Agent_Simulation:
 
             #Add block to directed graph object (with random y coordinate for plotting the graph)
             self.DG.add_node(block,pos=(block.arrival_time, random.uniform(0, 1)-int(str(block.agent))*1.3), node_color=self.agent_colors[int(str(block.agent))])#'#ffadad')
+            
+            #Create a copy independent to the graph instance (otherwise you can't append the graph - 
+            #if you append self.DG then you're appending an instance, which is a pointer to the same underlying 
+            #object)
+            DG_copy = self.DG.copy()
+            self.DG_store.append(DG_copy)            
 
             #Select tips
             self.tip_selection(block)            
 
+            #Record partial blockDAG created - needed for the CalcVotes algo
 
+            
             #Update weights (of blocks referenced by the current block)
 #            self.update_weights_multiple_agents(block)
 
@@ -180,7 +177,7 @@ class Multi_Agent_Simulation:
         #######################################################################
         
         #Generate the pairwise vote, taking the blockDAG as an input
-        self.pairwise_vote(self.DG)
+        self.CalcVotes(self.DG)
         
         #Determine the accepted set of transactions, taking the pairwise vote as 
         #input
@@ -201,7 +198,6 @@ class Multi_Agent_Simulation:
             print("Calculation time confirmation confidence: " + str(np.round(timeit.default_timer() - start_time2, 3)) + " seconds\n")
             # print("\nGraph information:\n" + nx.info(self.DG))
 
-
     def tip_selection(self, block):
         
         #Get visible blocks and valid tips (and record these)
@@ -221,7 +217,7 @@ class Multi_Agent_Simulation:
 #            print("ERROR:  No tips available")
 #            sys.exit()
     
-    def pairwise_vote(self, graph):
+    def CalcVotes(self, graph):
         """
         Returns a pairwise ordering of all blocks in the blockDAG
         
@@ -237,18 +233,37 @@ class Multi_Agent_Simulation:
         #Current voting profile
         self.voting_profile = []
         
-        #vote of virtual(past(z))
+        #Past voting profile for recursive calls
         self.past_voting_profile = []
         
         #If the blockDAG is empty, return an empty ordering
         if graph.number_of_nodes() == 0:
             self.voting_profile.clear()
-        
-        #Recursive call of vote for past DAGs - used in line 11 of algo
-        for z in graph:
-            self.past_voting_profile.append(self.pairwise_vote(graph)) #Need something else in here - descendents of Z
+
+            """
+            This is implementing line 3 and 4 of Algorithm 1 Calc Votes from the 
+            SPECTRE paper. We have previously created a list of all the past_DAGs
+            that were formed for each subsequent block (z) during the formation 
+            of the ledger. 
             
-        
+            We then iterate through each of these DAGs in turn, call recursion 
+            and calculate the voting profile for each DAG. 
+            
+            Due to the nature of what past(z) means in Algorithm 1, described in the 
+            SPECTRE paper, each DAG here represents the past(z) of the z that is one step
+            ahead of it.
+            
+            For example, the first DAG inputted is just the genesis block and z = 1
+            
+            As a result, the voting profile returned is that for past(z = 2). This indexing 
+            subtlety is important to be aware of, when the result of the recursion is used.
+            """
+        #Recursive call of CalcVotes
+        for z in graph:
+            vote = copy.copy(self.CalcVotes(z))
+            print(vote)
+            self.past_voting_profile.append(vote)
+             
         #Perform a topological sort of the blockDAG
         self.topo_sort = list(nx.topological_sort(graph))   # think it's correct down to here 
         print('topological sort', self.topo_sort)
@@ -260,7 +275,7 @@ class Multi_Agent_Simulation:
         for z in self.topo_sort:
             
             #Create an empty voting profile, whose x = y = number of blocks
-            #+ 1 is to account for the fact that Python starts indexing at 0 (whereas number of blocks starts from 1)
+            #+1 is to account for the fact that Python starts indexing at 0 (whereas number of blocks starts from 1)
             self.z_vote = np.zeros((self.no_of_nodes + 1, self.no_of_nodes + 1))
 #            print('initialised voting profile', self.z_vote)
             
@@ -305,10 +320,20 @@ class Multi_Agent_Simulation:
                             #something (y == z):
             
             # Store the voting profile for that particular z
-            self.voting_profile.append(self.z_vote)
+            z_vote_copy = copy.copy(self.z_vote)
+            self.voting_profile.append(z_vote_copy)
         print(self.voting_profile)
                         
-            
+    def past(self, z):
+        """
+        This returns a blockDAG that is the past of z - past(z). It is used in 
+        the CalcVotes method
+        """
+        #Indexing for the appropriate z. If z = 5 is inputted, then past(z) should
+        #be returning the DAG that contains 4 nodes (i.e. the DAG for z = 4)
+        past_z_dag = self.DG_store[z-2]
+        
+        return past_z_dag           
 
     def check_parameters_changes(self, block, dic):
 

@@ -2,6 +2,7 @@ import sys
 import timeit
 import random
 import math
+from collections import Counter
 import numpy as np
 import networkx as nx
 import matplotlib.pyplot as plt
@@ -609,7 +610,7 @@ class Multi_Agent_Simulation:
 
         for agent in self.agents:
 
-            tip_agents = []
+            # tip_agents = []
 
             #Get visible transactions and valid tips (and record these)
             self.get_visible_transactions(incoming_transaction.arrival_time + self.latency, agent)
@@ -617,12 +618,15 @@ class Multi_Agent_Simulation:
 
             for i in range(100):
                 tip = self.weighted_random_walk(incoming_transaction, valid_tips)
-                tip_agents.append(tip.agent)
-            all_tips.append(tip_agents)
+                # tip_agents.append(tip.agent)
+                all_tips.append(tip.agent)
 
         print(all_tips)
 
+        c = Counter(all_tips)
+        perc = [(i, c[i] / len(all_tips) * 100.0) for i in c]
 
+        print(perc)
 
         #     sum_1 = 0
         #     sum_1 = sum(tip.exit_probability_multiple_agents[agent] for tip in agent.tips if tip.agent == agent)

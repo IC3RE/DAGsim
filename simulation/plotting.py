@@ -50,7 +50,7 @@ def print_graph(self):
     #Creating figure
     plt.figure(figsize=(14, 8))
     nx.draw_networkx(self.DG, pos, with_labels=True, node_size = 100, font_size=5.5, node_color = col)
-    # nx.draw_networkx_labels(self.DG, lower_pos, labels=labels, font_size=6)
+    nx.draw_networkx_labels(self.DG, lower_pos, labels=labels, font_size=6)
 
     #Print title
     title = "Transactions = " + str(self.no_of_transactions) +\
@@ -103,7 +103,7 @@ def print_tips_over_time(self):
     plt.title(title)
     plt.show()
 
-def print_tips_over_time_multiple_agents(self, no_current_transactions):
+def print_tips_over_time_multiple_agents_with_tangle(self, no_current_transactions):
 
     plt.figure(figsize=(14, 8))
     plt.subplot(2, 1, 1)
@@ -113,25 +113,26 @@ def print_tips_over_time_multiple_agents(self, no_current_transactions):
         no_tips = [0]
         for i in agent.record_tips:
             no_tips.append(len(i))
-            label = "Tips agent " + str(agent)
+        label = "Tips Agent " + str(agent)
         #plt.subplot(2, 1, int(str(agent))+1)
-        plt.plot(self.arrival_times[:no_current_transactions], no_tips[:no_current_transactions], label=label)
+        plt.plot(self.arrival_times[:no_current_transactions], no_tips[:no_current_transactions], label=label, color=self.agent_colors[int(str(agent))])
 
         #Cut off first 60% of transactions
         if(no_current_transactions >= 500):
-            cut_off = int(no_current_transactions * 0.6)
+            cut_off = int(no_current_transactions * 0.2)
         else:
             cut_off = 0
 
         #Plot mean
-        x_mean = [self.arrival_times[cut_off], self.arrival_times[no_current_transactions-1]]
-        y_mean = [np.mean(no_tips[cut_off:no_current_transactions-1]), np.mean(no_tips[cut_off:no_current_transactions-1])]
-        plt.plot(x_mean, y_mean, label="Average Tips", linestyle='--')
+        # label = "Average Tips Agent " + str(agent)
+        # x_mean = [self.arrival_times[cut_off], self.arrival_times[no_current_transactions-1]]
+        # y_mean = [np.mean(no_tips[cut_off:no_current_transactions-1]), np.mean(no_tips[cut_off:no_current_transactions-1])]
+        # plt.plot(x_mean, y_mean, label=label, linestyle='--')
 
         #Plot best fitted line
-        plt.plot(np.unique(self.arrival_times[cut_off:no_current_transactions-1]), \
-        np.poly1d(np.polyfit(self.arrival_times[cut_off:no_current_transactions-1], no_tips[cut_off:no_current_transactions-1], 1))\
-        (np.unique(self.arrival_times[cut_off:no_current_transactions-1])), label="Best Fit Line", linestyle='--')
+        # plt.plot(np.unique(self.arrival_times[cut_off:no_current_transactions-1]), \
+        # np.poly1d(np.polyfit(self.arrival_times[cut_off:no_current_transactions-1], no_tips[cut_off:no_current_transactions-1], 1))\
+        # (np.unique(self.arrival_times[cut_off:no_current_transactions-1])), label="Best Fit Line", linestyle='--')
 
     # no_tips = []
     # for i in self.record_tips:
@@ -141,7 +142,8 @@ def print_tips_over_time_multiple_agents(self, no_current_transactions):
 
     #Print title
     title = "Transactions = " + str(self.no_of_transactions) + \
-            ",  " + r'$\lambda$' + " = " + str(self.lam)
+            ",  " + r'$\lambda$' + " = " + str(self.lam) + \
+            ",  " + r'$d$' + " = " + str(self.distances[1][0])
     if (self.tip_selection_algo == "weighted"):
         title += ",  " + r'$\alpha$' + " = " + str(self.alpha)
     plt.xlabel("Time (s)")
@@ -193,5 +195,56 @@ def print_tips_over_time_multiple_agents(self, no_current_transactions):
     plt.xlabel("Time (s)")
     plt.yticks([])
     # plt.title(title)
+    plt.show()
+
+
+def print_tips_over_time_multiple_agents(self, no_current_transactions):
+
+    plt.figure(figsize=(14, 8))
+
+    #Get no of tips per time
+    for agent in self.agents:
+        no_tips = [0]
+        for i in agent.record_tips:
+            no_tips.append(len(i))
+        label = "Tips Agent " + str(agent)
+        #plt.subplot(2, 1, int(str(agent))+1)
+        plt.plot(self.arrival_times[:no_current_transactions], no_tips[:no_current_transactions], label=label)#, color=self.agent_colors[int(str(agent))])
+
+        #Cut off first 60% of transactions
+        if(no_current_transactions >= 500):
+            cut_off = int(no_current_transactions * 0.2)
+        else:
+            cut_off = 0
+
+        #Plot mean
+        label = "Average Tips Agent " + str(agent)
+        x_mean = [self.arrival_times[cut_off], self.arrival_times[no_current_transactions-1]]
+        y_mean = [np.mean(no_tips[cut_off:no_current_transactions-1]), np.mean(no_tips[cut_off:no_current_transactions-1])]
+        plt.plot(x_mean, y_mean, label=label, linestyle='--')
+        print(np.mean(no_tips))
+
+        #Plot best fitted line
+        # plt.plot(np.unique(self.arrival_times[cut_off:no_current_transactions-1]), \
+        # np.poly1d(np.polyfit(self.arrival_times[cut_off:no_current_transactions-1], no_tips[cut_off:no_current_transactions-1], 1))\
+        # (np.unique(self.arrival_times[cut_off:no_current_transactions-1])), label="Best Fit Line", linestyle='--')
+
+    # no_tips = []
+    # for i in self.record_tips:
+    #     no_tips.append(len(i))
+    #
+    # plt.plot(self.arrival_times[:no_current_transactions-1], no_tips, label="Tips issueing agent")
+
+    #Print title
+    title = "Transactions = " + str(self.no_of_transactions) + \
+            ",  " + r'$\lambda$' + " = " + str(self.lam) + \
+            ",  " + r'$d$' + " = " + str(self.distances[1][0])
+    if (self.tip_selection_algo == "weighted"):
+        title += ",  " + r'$\alpha$' + " = " + str(self.alpha)
+    plt.xlabel("Time (s)")
+    plt.ylabel("Number of tips")
+    plt.legend(loc='upper left')
+    plt.title(title)
+
 
     plt.show()

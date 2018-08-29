@@ -7,7 +7,8 @@ import networkx as nx
 import matplotlib.pyplot as plt
 
 from simulation.helpers import update_progress, create_distance_matrix, common_elements, load_file
-from simulation.plotting import print_info, print_graph, print_tips_over_time, print_tips_over_time_multiple_agents
+from simulation.plotting import print_info, print_graph, print_tips_over_time, \
+print_tips_over_time_multiple_agents, print_tips_over_time_multiple_agents_with_tangle
 from simulation.agent import Agent
 from simulation.transaction import Transaction
 
@@ -140,13 +141,16 @@ class Multi_Agent_Simulation:
             transaction.agent = np.random.choice(self.agents, p=self.agent_choice)
 
             #Add transaction to directed graph object (with random y coordinate for plotting the graph)
-            self.DG.add_node(transaction,pos=(transaction.arrival_time, random.uniform(0, 1)-int(str(transaction.agent))*1.3), node_color=self.agent_colors[int(str(transaction.agent))])#'#ffadad')
+            self.DG.add_node(transaction,pos=(transaction.arrival_time, \
+                random.uniform(0, 1)-int(str(transaction.agent))*1.3), \
+                node_color=self.agent_colors[int(str(transaction.agent))])
 
             #Select tips
             self.tip_selection(transaction)
 
             #Update weights (of transactions referenced by the current transaction)
-            self.update_weights_multiple_agents(transaction)
+            if(self.tip_selection_algo == "weighted"):
+                self.update_weights_multiple_agents(transaction)
 
             #Progress bar update
             if self.printing:
@@ -160,11 +164,13 @@ class Multi_Agent_Simulation:
         #For measuring partitioning
         start_time2 = timeit.default_timer()
         # self.calc_exit_probabilities_multiple_agents(transaction)
-        # self.calc_confirmation_confidence_multiple_agents(transaction)
-        # self.measure_partitioning()
+        self.measure_partitioning_with_exit_probabilities(transaction)
+        self.measure_partitioning_with_exit_probabilities_2(transaction)
+        self.calc_confirmation_confidence_multiple_agents(transaction)
+        self.measure_partitioning()
 
         if self.printing:
-            print("Calculation time confirmation confidence: " + str(np.round(timeit.default_timer() - start_time2, 3)) + " seconds\n")
+            print("Calculation time further measures: " + str(np.round(timeit.default_timer() - start_time2, 3)) + " seconds\n")
             # print("\nGraph information:\n" + nx.info(self.DG))
 
 
@@ -194,7 +200,7 @@ class Multi_Agent_Simulation:
             if dic[temp][1] != False:
                 self.agent_choice = dic[temp][1]
 
-            print_tips_over_time_multiple_agents(self, int(str(transaction)))
+            print_tips_over_time_multiple_agents_with_tangle(self, int(str(transaction)))
             # self.calc_exit_probabilities_multiple_agents(transaction)
             # self.calc_confirmation_confidence_multiple_agents(transaction)
             # self.measure_partitioning()
@@ -296,9 +302,17 @@ class Multi_Agent_Simulation:
 
     def random_selection(self, transaction):
 
+        #Needed for plotting number of tips over time for ALL agents
+        for agent in self.agents:
+            if(agent != transaction.agent):
+                self.get_visible_transactions(transaction.arrival_time, agent)
+                valid_tips = self.get_valid_tips_multiple_agents(agent)
+                agent.record_tips.append(valid_tips)
+
         #Get visible transactions and valid tips (and record these)
         self.get_visible_transactions(transaction.arrival_time, transaction.agent)
         valid_tips = self.get_valid_tips_multiple_agents(transaction.agent)
+        transaction.agent.record_tips.append(valid_tips)
         self.record_tips.append(valid_tips)
 
         #Reference two random valid tips
@@ -316,9 +330,17 @@ class Multi_Agent_Simulation:
 
     def unweighted_MCMC(self, transaction):
 
+        #Needed for plotting number of tips over time for ALL agents
+        for agent in self.agents:
+            if(agent != transaction.agent):
+                self.get_visible_transactions(transaction.arrival_time, agent)
+                valid_tips = self.get_valid_tips_multiple_agents(agent)
+                agent.record_tips.append(valid_tips)
+
         #Get visible transactions and valid tips (and record these)
         self.get_visible_transactions(transaction.arrival_time, transaction.agent)
         valid_tips = self.get_valid_tips_multiple_agents(transaction.agent)
+        transaction.agent.record_tips.append(valid_tips)
         self.record_tips.append(valid_tips)
 
         #Walk to two tips
@@ -542,3 +564,85 @@ class Multi_Agent_Simulation:
 
             print("Average confirmation per agent")
             print(str(agent) + "   " + str(agent.agent_average_confirmation_confidence))
+
+
+    def measure_partitioning_with_exit_probabilities(self, incoming_transaction):
+
+        self.calc_exit_probabilities_multiple_agents(incoming_transaction)
+
+        sum_1_exit_probabilities = []
+        sum_2_exit_probabilities = []
+
+        for agent in self.agents:
+
+            self.get_visible_transactions(incoming_transaction.arrival_time + self.latency, agent)
+            agent.tips = self.get_valid_tips_multiple_agents(agent)
+            sum_1 = 0
+            sum_1 = sum(tip.exit_probability_multiple_agents[agent] for tip in agent.tips if tip.agent == agent)
+            sum_2 = 0
+            sum_2 = sum(tip.exit_probability_multiple_agents[agent] for tip in agent.tips if tip.agent != agent)
+
+            sum_1_exit_probabilities.append(sum_1)
+            sum_2_exit_probabilities.append(sum_2)
+
+            print(agent.visible_transactions)
+            print(self.not_visible_transactions)
+            # print("VALID TIPS OF AGENT  " + str(agent) + ":   " + str(agent.tips))
+            print("SUM OF EXIT PROBS FOR ALL TIPS FOR AGENT  " + str(agent) + ":   " + str(sum_1))
+            print("SUM OF EXIT PROBS FOR ALL OTHER TIPS:   " + str(sum_2))
+
+        print((sum_1_exit_probabilities[0] + sum_2_exit_probabilities[1])/2)
+        print((sum_1_exit_probabilities[1] + sum_2_exit_probabilities[0])/2)
+
+        # for agent in self.agents:
+        #     print("AGENT  " + str(agent) + ":   " + str(sum_exit_probabilities[int(str(agent))]/sum(sum_exit_probabilities)))
+
+            # print("VALID TIPS OF AGENT " + str(agent) + ":   " + str(agent.tips))
+            # print("SUM OF EXIT PROBS FOR ALL TIPS:   " + str(sum(tip.exit_probability_multiple_agents[agent] for tip in agent.tips)) + "\n")
+
+
+    def measure_partitioning_with_exit_probabilities_2(self, incoming_transaction):
+
+        self.calc_exit_probabilities_multiple_agents(incoming_transaction)
+
+        all_tips = []
+
+        for agent in self.agents:
+
+            tip_agents = []
+
+            #Get visible transactions and valid tips (and record these)
+            self.get_visible_transactions(incoming_transaction.arrival_time + self.latency, agent)
+            valid_tips = self.get_valid_tips_multiple_agents(agent)
+
+            for i in range(100):
+                tip = self.weighted_random_walk(incoming_transaction, valid_tips)
+                tip_agents.append(tip.agent)
+            all_tips.append(tip_agents)
+
+        print(all_tips)
+
+
+
+        #     sum_1 = 0
+        #     sum_1 = sum(tip.exit_probability_multiple_agents[agent] for tip in agent.tips if tip.agent == agent)
+        #     sum_2 = 0
+        #     sum_2 = sum(tip.exit_probability_multiple_agents[agent] for tip in agent.tips if tip.agent != agent)
+        #
+        #     sum_1_exit_probabilities.append(sum_1)
+        #     sum_2_exit_probabilities.append(sum_2)
+        #
+        #     print(agent.visible_transactions)
+        #     print(self.not_visible_transactions)
+        #     # print("VALID TIPS OF AGENT  " + str(agent) + ":   " + str(agent.tips))
+        #     print("SUM OF EXIT PROBS FOR ALL TIPS FOR AGENT  " + str(agent) + ":   " + str(sum_1))
+        #     print("SUM OF EXIT PROBS FOR ALL OTHER TIPS:   " + str(sum_2))
+        #
+        # print((sum_1_exit_probabilities[0] + sum_2_exit_probabilities[1])/2)
+        # print((sum_1_exit_probabilities[1] + sum_2_exit_probabilities[0])/2)
+
+        # for agent in self.agents:
+        #     print("AGENT  " + str(agent) + ":   " + str(sum_exit_probabilities[int(str(agent))]/sum(sum_exit_probabilities)))
+
+            # print("VALID TIPS OF AGENT " + str(agent) + ":   " + str(agent.tips))
+            # print("SUM OF EXIT PROBS FOR ALL TIPS:   " + str(sum(tip.exit_probability_multiple_agents[agent] for tip in agent.tips)) + "\n")

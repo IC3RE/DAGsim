@@ -1,10 +1,12 @@
+import timeit
 import numpy as np
 import scipy.stats as st
 import networkx as nx
 import matplotlib.pyplot as plt
 
 from simulation.helpers import update_progress, csv_export
-from simulation.plotting import print_graph, print_tips_over_time, print_tips_over_time_multiple_agents
+from simulation.plotting import print_graph, print_tips_over_time, \
+print_tips_over_time_multiple_agents, print_tips_over_time_multiple_agents_with_tangle
 from simulation.simulation import Single_Agent_Simulation
 from simulation.simulation_multi_agent import Multi_Agent_Simulation
 
@@ -32,11 +34,12 @@ from simulation.simulation_multi_agent import Multi_Agent_Simulation
 # latency (default value 1), agent_choice (default vlaue uniform distribution, printing)
 #Tip selection algorithms: Choose among "random", "weighted", "unweighted" as input
 
-partitioning_values = []
-average_partitioning_across_simus = []
+# partitioning_values = []
+# average_partitioning_across_simus = []
 
+start_time = timeit.default_timer()
 runs = 1
-counter = 0
+# counter = 0
 
 # distances = [[0,2,3],
 #              [2,0,1],
@@ -44,7 +47,7 @@ counter = 0
 
 for i in range(runs):
 
-    simu2 = Multi_Agent_Simulation(1500, 50, 2, 0.005, 0.5, "random", _printing=True)
+    simu2 = Multi_Agent_Simulation(50, 3, 2, 0.005, 1, "weighted", _agent_choice=[0.7,0.3], _printing=True)
     simu2.setup()
     simu2.run()
 
@@ -57,16 +60,18 @@ for i in range(runs):
     # counter += 1
 
     #Sanity checks
-    # print("SANITY CHECKS:\n")
-    # for agent in simu2.agents:
-    #     print("VALID TIPS OF AGENT " + str(agent) + ":   " + str(agent.tips))
-    #     print("SUM OF EXIT PROBS FOR ALL TIPS:   " + str(sum(tip.exit_probability_multiple_agents[agent] for tip in agent.tips)) + "\n")
+    print("SANITY CHECKS:\n")
+    for agent in simu2.agents:
+        # print("VALID TIPS OF AGENT " + str(agent) + ":   " + str(agent.tips))
+        print("SUM OF EXIT PROBS FOR ALL TIPS:   " + str(sum(tip.exit_probability_multiple_agents[agent] for tip in agent.tips)) + "\n")
     #
     #     for transaction in simu2.DG.nodes:
     #             print(str(transaction) + "   " + str(transaction.cum_weight_multiple_agents[agent]))
     #             print(str(transaction) + "   " + str(transaction.cum_weight_multiple_agents_2[agent]))
     #             # print(str(transaction) + "   " + str(transaction.exit_probability_multiple_agents[agent]))
     #             # print(str(transaction) + "   " + str(transaction.confirmation_confidence_multiple_agents[agent]))
+
+print("TOTAL simulation time: " + str(np.round(timeit.default_timer() - start_time, 3)) + " seconds\n")
 
 # print(partitioning_values)
 # print(np.mean(partitioning_values))
@@ -76,9 +81,11 @@ for i in range(runs):
 # PLOTTING
 #############################################################################
 
-# print_graph(simu2)
-print_tips_over_time(simu2)
+print_graph(simu2)
+# print_tips_over_time(simu2)
 # print_tips_over_time_multiple_agents(simu2, simu2.no_of_transactions)
+# print_tips_over_time_multiple_agents_with_tangle(simu2, simu2.no_of_transactions)
+
 
 #Plotting the partitioning values for multiple simulations, cumulative mean and 95% confidence interval
 

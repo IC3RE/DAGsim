@@ -180,9 +180,9 @@ class Multi_Agent_Simulation:
         #######################################################################
         
         #Generate the pairwise vote, taking the blockDAG as an input
-        print(type(self.DG))
+#        print(type(self.DG))
         
-        (voting_profile, virtual_vote) = self.CalcVotes(self.DG)
+        (voting_profile, virtual_vote, sign_sum_future_votes, z_vote) = self.CalcVotes(self.DG)
         
         
         #Determine the accepted set of transactions, taking the pairwise vote as 
@@ -204,7 +204,7 @@ class Multi_Agent_Simulation:
             print("Calculation time confirmation confidence: " + str(np.round(timeit.default_timer() - start_time2, 3)) + " seconds\n")
             # print("\nGraph information:\n" + nx.info(self.DG))
             
-        return (voting_profile, virtual_vote)
+        return (voting_profile, virtual_vote, sign_sum_future_votes, z_vote)
             
     
     def tip_selection(self, block):
@@ -239,79 +239,144 @@ class Multi_Agent_Simulation:
         the SPECTRE whitepaper titled 'Algorithm 1 - Calc votes'
         
         """
-#        print(type(graph))
+        ######################################################
+        # SETUP
+        ######################################################
+        
         #Current voting profile
         self.voting_profile = []
-        
+               
         #Past voting profile for recursive calls
-        self.past_voting_profile = []
+        self.past_voting_profile = [] 
         
-        #If the blockDAG is empty, return an empty ordering
-        if graph.number_of_nodes() == 0:
-            self.voting_profile.clear()
-
-        counter = 0
-        result = []
-        #Recursive call of CalcVotes
-        for z in graph:
-            result.append(copy.copy(self.past(z)))
-            vote = copy.copy(self.past(z))
-#            print(vote)
-            self.past_voting_profile.append(vote)
-            counter += 1
-            print(counter)
-        
-        
-        #Perform a topological sort of the blockDAG
-        self.topo_sort = list(nx.topological_sort(graph))   # think it's correct down to here 
-        print('topological sort', self.topo_sort)
+        #List for created past(z) DAGs
+        self.past_dags = []
         
         #Calculate number of blocks, for use later
         self.no_of_nodes = graph.number_of_nodes()
         
+        print('input graph nodes', graph.nodes) # - Nodes not topologically sorted yet
+        
+        #If the blockDAG is empty, return an empty ordering
+        if graph.number_of_nodes() == 0:
+            self.voting_profile.clear()
+        """
+        #Recursive call of CalcVotes
+        for z in graph:
+            
+            #Check that the correct past(z) DAGs are being called
+            print('node', z.id, self.past(z).nodes) 
+            self.past_dags.append(self.past(z).nodes)
+            
+            #Perform the recursion
+            vote = self.CalcVotes(self.past(z))
+            vote_copy = copy.copy(vote)
+            
+            #Record the past voting profile
+            self.past_voting_profile.append(vote_copy)
+            
+            print('vote', z.id, vote) 
+        """
+
+            
+        ######################################################################
+        # RUN VOTING ALGORITHM
+        ######################################################################
+                    
+        #Perform a topological sort of the blockDAG
+        self.topo_sort = list(nx.topological_sort(graph))
+#        print('type topo sort', type(self.topo_sort[0]))
+#        print('topo sort', self.topo_sort)
+        
+        """
+        BEWARE: The order of the graph has now been flipped. Previously it went
+        z = 0 to z = 6. Now, due to the topological sort, it goes z = 6 to z = 0
+        """        
         #Iterate through each block in the topo_sort
         for z in self.topo_sort:
-            
-            #Create an empty voting profile, whose x = y = number of blocks
-            #+1 is to account for the fact that Python starts indexing at 0 (whereas number of blocks starts from 1)
-            self.z_vote = np.zeros((self.no_of_nodes + 1, self.no_of_nodes + 1))
-#            print('initialised voting profile', self.z_vote)
+
+            #This will be overwritten at each z
+            self.z_vote = np.zeros((self.no_of_nodes, self.no_of_nodes))
             
             #For each block, look at every other pair of blocks (x, y)
             for x in graph:
                 for y in graph:
-#                    print('z', z)
-#                    print('x', x.id)
-#                    print('y', y.id)
-#                    
-#                    test = int(x)
-#                    print('test', test)
                     
                     #If the blocks are not the same
                     if x != y:
                         
                         #past(z) - descendants of z (needed multiple times)
                         past_z = nx.descendants(graph, z)
+#                        print('z=', z.id, past_z)
                         
-                        #Implement the rules of the pairwise vote algorithm
+                        # Implement the rules of the pairwise vote algorithm #
                         
                         #Line 7 of algo
                         if ((x in past_z) and (y not in past_z)) or \
                         ((x in past_z) and (y == z)):
-                            self.z_vote[x.id, y.id] = -1 #Using the block number to determine the position of the vote in the profile
+                            self.z_vote[x.id, y.id] = int(-1) #Using the block number to determine the position of the vote in the profile
                         
                         #Line 9 of algo
                         elif ((y in past_z) and (x not in past_z)) or \
-                        ((y in past_z) and (y == z)):
-                            self.z_vote[x.id, y.id] = 1
+                        ((y in past_z) and (x == z)):
+                            self.z_vote[x.id, y.id] = int(1)
                         
                         #Line 11 of algo
 #                        elif ((x in past_z) and (y in past_z)):
-#                            self.z_vote[x.id, y.id] = #need to work out what to do
+#                            self.z_vote[x.id, y.id] = self.past_voting_profile[z.id][x.id, y.id]#need to work out what to do
+                        
                         
                         #Line 13 of algo
-#                        elif ((x not in past_z) and (y not in past_z)):
-#                            self.z_vote[x.id, y.id] = 
+                        elif ((x not in past_z) and (y not in past_z)):
+                            
+                            #Overall for loop is iterating from leaves to root - so future z 
+                            #correspond to all the z's for which votes were previously calculated 
+                            #and stored in self.z_vote 
+#                            if z.id != self.no_of_blocks:
+#                                print('z_vote', self.z_vote)
+#                                print('voting profile', self.voting_profile)
+#                                print('sum', sum(self.voting_profile[z.id:]))
+    #                            print('sum_sign', sum_sign_future_z
+                                
+                                #Find the index position of z.id in the topological sort
+                                position = self.get_position(self.topo_sort, z.id)
+                                
+                                if graph.in_degree(z) != 0: #Remove the tips - these have not future and so no voting profile
+#                                    print('z.id=', z.id, 'topo_sort=', self.topo_sort, 'position=', position)
+                                        
+                                
+                                    future_votes = self.voting_profile[:position]
+#                                    print('future votes=', future_votes)
+                                    sum_future_votes = sum(future_votes)
+    #                                print('sum future votes', sum_future_votes)
+                                    sign_sum_future_votes = np.sign(sum_future_votes)
+                                
+    
+#                                print('x=', x.id, 'y=', y.id, 'z = ', z.id, 'result', sign_sum_future_votes)
+                                    self.z_vote[x.id, y.id] = sign_sum_future_votes[x.id, y.id]
+                            
+                                """
+                                if len(sign_sum_future_votes) != 0: #Remove the cases where it equals 0
+                                    print(type(sign_sum_future_votes))
+                                    self.z_vote[x.id, y.id] = sign_sum_future_votes[x.id, y.id]
+                                """
+#                            print('np.sign(sign_sum_future_votes', type(np.sign(sum_future_votes)))
+                            
+                            #Make independent copies - see if that fixes things
+     
+#                            print('z = ', z.id, 'x =', x.id, 'y=', y.id, 'future votes', sign_sum_future_votes)
+#                            print('type for sign_sum_future_votes', type(sign_sum_future_votes))
+#                            print(type(x.id))
+#                            print(sign_sum_future_votes)
+#                            print(type(sign_sum_future_votes[x.id, y.id]))
+#                            print('z_vote', self.z_vote)
+                            
+                            
+                            
+#                            sum_sign_future_z = list(np.sign(sum(self.voting_profile[z.id:])))
+#                            print(type(sum_sign_future_z))
+#                                print('sum_sign_future_z', sum_sign_future_z)
+#                            self.z_vote[x.id, y.id] = sum_sign_future_z
                             
                         
 #                        print('voting profile', self.z_vote)
@@ -325,7 +390,7 @@ class Multi_Agent_Simulation:
         self.aggregate_vote = sum(self.voting_profile)
         self.virtual_vote = np.sign(self.aggregate_vote)
 #        print(self.voting_profile)
-        return (self.voting_profile, self.virtual_vote)
+        return (self.voting_profile, self.virtual_vote, sign_sum_future_votes, self.z_vote)
                         
     def past(self, z):
         """
@@ -334,15 +399,26 @@ class Multi_Agent_Simulation:
         """
         #Indexing for the appropriate z. If z = 5 is inputted, then past(z) should
         #be returning the DAG that contains 4 nodes (i.e. the DAG for z = 4)
-        if z.id >= 1: #Accounting for the fact the genesis does not have a past
-            counter = z.id #To index through the DAG list, z needs to be an integer
-            past_z_dag = self.DG_store[counter-1]
+#        if z.id >= 1: #Accounting for the fact the genesis does not have a past
+        #To index through the DAG list, z needs to be an integer
+        if z.id == 0:
+            past_z_dag = nx.DiGraph()
+            
+        if z.id > 0:
+            past_z_dag = self.DG_store[z.id-1]
+              
+        return past_z_dag     
+
+    def get_position(self, topo_sort, index):  
+        counter = -1 #counter is used to store the index of the desired node in the 
+                    #topological sort. Start at -1, so that when we add one to the counter
+                    #it correctly labels the first entry in the topo sort as being 
+                    #position zero
         
-        else:
-            past_z_dag = 0
-        
-        
-        return past_z_dag           
+        for node in topo_sort:
+            counter += 1
+            if node.id == index:
+                return counter
 
     def check_parameters_changes(self, block, dic):
 

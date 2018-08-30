@@ -248,3 +248,41 @@ def print_tips_over_time_multiple_agents(self, no_current_transactions):
 
 
     plt.show()
+
+
+
+def print_attachment_probabilities(self):
+
+    plt.figure(figsize=(14, 8))
+    print(self.record_attachment_probabilities)
+
+    x = np.squeeze([i[0] for i in self.record_attachment_probabilities])
+    y = np.squeeze([i[1] for i in self.record_attachment_probabilities])
+    # print(x,y)
+
+    plt.plot(x,y)
+    plt.plot(np.unique(x), np.poly1d(np.polyfit(x, y, 1))(np.unique(x)),\
+    label="Best Fit", linestyle='--')
+
+    x_mean = [i for i in x]
+    y_mean = [np.mean(y) for i in y]
+    print(np.mean(y))
+    plt.plot(x_mean, y_mean,\
+    label="Average", linestyle='-')
+
+    # lower_bound_95_confidence_interval = st.t.interval(0.80, len(partitioning_values)-1, loc=np.mean(partitioning_values), scale=st.sem(partitioning_values))[0]
+    # upper_bound_95_confidence_interval = st.t.interval(0.80, len(partitioning_values)-1, loc=np.mean(partitioning_values), scale=st.sem(partitioning_values))[1]
+    # plt.axhline(y=lower_bound_95_confidence_interval, color='r', linestyle='-')
+    # plt.axhline(y=upper_bound_95_confidence_interval, color='r', linestyle='-')
+
+    title = "Transactions = " + str(self.no_of_transactions) + \
+            ",  " + r'$\lambda$' + " = " + str(self.lam) + \
+            ",  " + r'$d$' + " = " + str(self.distances[1][0])
+    if (self.tip_selection_algo == "weighted"):
+        title += ",  " + r'$\alpha$' + " = " + str(self.alpha)
+    plt.xlabel("Transactions (time)")
+    # plt.xticks([])
+    plt.ylabel("Probability to attach to sub-Tangle")
+    plt.legend(loc='upper left')
+    plt.title(title)
+    plt.show()

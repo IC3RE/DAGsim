@@ -6,7 +6,7 @@ import matplotlib.pyplot as plt
 
 from simulation.helpers import update_progress, csv_export
 from simulation.plotting import print_graph, print_tips_over_time, \
-print_tips_over_time_multiple_agents, print_tips_over_time_multiple_agents_with_tangle
+print_tips_over_time_multiple_agents, print_tips_over_time_multiple_agents_with_tangle, print_attachment_probabilities
 from simulation.simulation import Single_Agent_Simulation
 from simulation.simulation_multi_agent import Multi_Agent_Simulation
 
@@ -47,7 +47,7 @@ runs = 1
 
 for i in range(runs):
 
-    simu2 = Multi_Agent_Simulation(50, 3, 2, 0.005, 1, "weighted", _agent_choice=[0.7,0.3], _printing=True)
+    simu2 = Multi_Agent_Simulation(100, 3, 2, 0.005, 1, "weighted", _agent_choice=[0.7,0.3], _printing=True)
     simu2.setup()
     simu2.run()
 
@@ -85,6 +85,7 @@ print_graph(simu2)
 # print_tips_over_time(simu2)
 # print_tips_over_time_multiple_agents(simu2, simu2.no_of_transactions)
 # print_tips_over_time_multiple_agents_with_tangle(simu2, simu2.no_of_transactions)
+#print_attachment_probabilities(simu2)
 
 
 #Plotting the partitioning values for multiple simulations, cumulative mean and 95% confidence interval
@@ -109,10 +110,9 @@ print_graph(simu2)
 # # plt.plot(np.unique(simu2.arrival_times), np.poly1d(np.polyfit(simu2.arrival_times, simu2.record_desc, 1))(np.unique(simu2.arrival_times)), label="Best Fit Line", linestyle='--')
 # plt.xlabel("Time (s)")
 # plt.ylabel("Descendants of incoming transaction / total current transactions in Tangle")
-# # plt.plot(partitioning_values)
-# # plt.plot(average_partitioning_across_simus)
-# # lower_bound_95_confidence_interval = st.t.interval(0.80, len(partitioning_values)-1, loc=np.mean(partitioning_values), scale=st.sem(partitioning_values))[0]
-# # upper_bound_95_confidence_interval = st.t.interval(0.80, len(partitioning_values)-1, loc=np.mean(partitioning_values), scale=st.sem(partitioning_values))[1]
-# # plt.axhline(y=lower_bound_95_confidence_interval, color='r', linestyle='-')
-# # plt.axhline(y=upper_bound_95_confidence_interval, color='r', linestyle='-')
+# plt.plot(simu2.record_attachment_probabilities)
+# lower_bound_95_confidence_interval = st.t.interval(0.80, len(partitioning_values)-1, loc=np.mean(partitioning_values), scale=st.sem(partitioning_values))[0]
+# upper_bound_95_confidence_interval = st.t.interval(0.80, len(partitioning_values)-1, loc=np.mean(partitioning_values), scale=st.sem(partitioning_values))[1]
+# plt.axhline(y=lower_bound_95_confidence_interval, color='r', linestyle='-')
+# plt.axhline(y=upper_bound_95_confidence_interval, color='r', linestyle='-')
 # plt.show()

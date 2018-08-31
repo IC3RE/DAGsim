@@ -134,8 +134,8 @@ class Multi_Agent_Simulation:
                 self.check_parameters_changes(transaction, dic)
 
             #Do something every 100th transition
-            if (transaction.id >= 20000 and
-                transaction.id % 100 == 0):
+            if (transaction.id >= 4000 and
+                transaction.id % 10 == 0):
                 self.record_attachment_probabilities.append((transaction.id,self.calc_attachment_probabilities(transaction)))
                 # self.record_attachment_probabilities.append(self.calc_attachment_probabilities(transaction))
 
@@ -163,9 +163,9 @@ class Multi_Agent_Simulation:
 
         #For measuring partitioning
         start_time2 = timeit.default_timer()
-        # self.calc_exit_probabilities_multiple_agents(transaction)
-        self.calc_attachment_probabilities(transaction)
-        # self.calc_confirmation_confidence_multiple_agents(transaction)
+        self.calc_exit_probabilities_multiple_agents(transaction)
+        # self.calc_attachment_probabilities(transaction)
+        self.calc_confirmation_confidence_multiple_agents(transaction)
 
         if self.printing:
             print("Calculation time further measures: " + str(np.round(timeit.default_timer() - start_time2, 3)) + " seconds\n")
@@ -197,7 +197,8 @@ class Multi_Agent_Simulation:
                 self.agent_choice = dic[transaction.id][1]
 
             # print_tips_over_time_multiple_agents_with_tangle(self, transaction.id)
-            self.calc_attachment_probabilities(transaction)
+            # self.calc_attachment_probabilities(transaction)
+            # print_graph(self)
 
 
     #############################################################################
@@ -507,35 +508,35 @@ class Multi_Agent_Simulation:
         #                  - transaction.tx_average_confirmation_confidence) ** 2
         #
         #     transaction.tx_confirmation_confidence_variance = total / len(self.agents)
-        #     #print("Check NP:   " + str(np.var(list(transaction.confirmation_confidence_multiple_agents.values()))))
         #
         #     tx_confirmation_confidence_variances.append(transaction.tx_confirmation_confidence_variance)
-        #
-        # return (np.mean(tx_confirmation_confidence_variances))
 
         #Calculate average confirmation rate of an agent
-        # for agent in self.agents:
-        #     total = 0
-        #     agent_no_of_transactions = 0
-        #
-        #     for transaction in self.DG.nodes:
-        #
-        #         if(agent in transaction.confirmation_confidence_multiple_agents):
-        #             total += transaction.confirmation_confidence_multiple_agents[agent]
-        #             agent_no_of_transactions += 1
-        #
-        #     if(agent_no_of_transactions != 0):
-        #         agent.agent_average_confirmation_confidence = total / agent_no_of_transactions
-        #     else:
-        #         print("Agent has no transactions")
-        #
-        #     print("Average confirmation per agent")
-        #     print(str(agent) + "   " + str(agent.agent_average_confirmation_confidence))
+        for agent in self.agents:
+            total = 0
+            agent_no_of_transactions = 0
+
+            for transaction in self.DG.nodes:
+
+                if(agent in transaction.confirmation_confidence_multiple_agents):
+                    total += transaction.confirmation_confidence_multiple_agents[agent]
+                    agent_no_of_transactions += 1
+
+            if(agent_no_of_transactions != 0):
+                agent.agent_average_confirmation_confidence = total / agent_no_of_transactions
+            else:
+                print("Agent has no transactions")
+
+            print("Average confirmation per agent")
+            print(str(agent) + "   " + str(agent.agent_average_confirmation_confidence))
+
+        # return (np.mean(tx_confirmation_confidence_variances))
 
 
     def calc_attachment_probabilities(self, incoming_transaction):
 
-        attachment_probabilities = []
+        attachment_probabilities_without_main = []
+        attachment_probabilities_all = []
 
         self.calc_exit_probabilities_multiple_agents(incoming_transaction)
 
@@ -552,10 +553,14 @@ class Multi_Agent_Simulation:
                 if(other_agent != agent):
                     sum_ += sum(tip.exit_probability_multiple_agents[other_agent] for tip in other_agent.tips if tip.agent == agent)
 
-            if(agent != self.agents[0]):
-                attachment_probabilities.append(sum_/self.no_of_agents)
+            attachment_probabilities_all.append(sum_/self.no_of_agents)
 
-        return attachment_probabilities
+            if(agent != self.agents[0]):
+                attachment_probabilities_without_main.append(sum_/self.no_of_agents)
+
+        # print(attachment_probabilities_without_main)
+        # print(attachment_probabilities_all)
+        return attachment_probabilities_without_main
 
 
     def attachment_probabilities_2(self, incoming_transaction):

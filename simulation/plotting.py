@@ -1,3 +1,4 @@
+import pickle
 import numpy as np
 import networkx as nx
 import matplotlib.pyplot as plt
@@ -261,14 +262,16 @@ def print_attachment_probabilities(self):
     # print(x,y)
 
     plt.plot(x,y)
-    plt.plot(np.unique(x), np.poly1d(np.polyfit(x, y, 1))(np.unique(x)),\
-    label="Best Fit", linestyle='--')
 
-    x_mean = [i for i in x]
-    y_mean = [np.mean(y) for i in y]
-    print(np.mean(y))
-    plt.plot(x_mean, y_mean,\
-    label="Average", linestyle='-')
+    # plt.plot(np.unique(x), np.poly1d(np.polyfit(x, y, 1))(np.unique(x)),\
+    # label="Best Fit", linestyle='--')
+    #
+    # x_mean = [i for i in x]
+    # y_mean = [np.mean(y) for i in y]
+    # print(np.mean(y))
+    # print(np.std(y))
+    # plt.plot(x_mean, y_mean,\
+    # label="Average", linestyle='-')
 
     # lower_bound_95_confidence_interval = st.t.interval(0.80, len(partitioning_values)-1, loc=np.mean(partitioning_values), scale=st.sem(partitioning_values))[0]
     # upper_bound_95_confidence_interval = st.t.interval(0.80, len(partitioning_values)-1, loc=np.mean(partitioning_values), scale=st.sem(partitioning_values))[1]
@@ -280,9 +283,13 @@ def print_attachment_probabilities(self):
             ",  " + r'$d$' + " = " + str(self.distances[1][0])
     if (self.tip_selection_algo == "weighted"):
         title += ",  " + r'$\alpha$' + " = " + str(self.alpha)
-    plt.xlabel("Transactions (time)")
+    plt.xlabel("Transactions")
     # plt.xticks([])
-    plt.ylabel("Probability to attach to sub-Tangle")
+    plt.ylabel("Probability to attach to sub-Tangle branch")
     plt.legend(loc='upper left')
     plt.title(title)
     plt.show()
+    # plt.savefig('graph' +  str(title) + '.png')
+
+    with open('graph' +  str(title) + '.pkl', 'wb') as handle:
+        pickle.dump(self.record_attachment_probabilities, handle, protocol=pickle.HIGHEST_PROTOCOL)

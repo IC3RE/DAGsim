@@ -13,10 +13,11 @@ def create_random_graph_distances():
 
     distances = nx.floyd_warshall_numpy(G).tolist()
 
+    # print the random graph
     nx.draw(G, with_labels=True)
     plt.show()
 
     return distances
 
-
+# print distance matrix containing shortest paths
 print(create_random_graph_distances())

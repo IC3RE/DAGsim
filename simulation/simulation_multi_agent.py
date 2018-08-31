@@ -134,8 +134,8 @@ class Multi_Agent_Simulation:
                 self.check_parameters_changes(transaction, dic)
 
             #Do something every 100th transition
-            if (transaction.id >= 4000 and
-                transaction.id % 10 == 0):
+            if (transaction.id >= 15000 and
+                transaction.id % 150 == 0):
                 self.record_attachment_probabilities.append((transaction.id,self.calc_attachment_probabilities(transaction)))
                 # self.record_attachment_probabilities.append(self.calc_attachment_probabilities(transaction))
 
@@ -163,9 +163,9 @@ class Multi_Agent_Simulation:
 
         #For measuring partitioning
         start_time2 = timeit.default_timer()
-        self.calc_exit_probabilities_multiple_agents(transaction)
+        # self.calc_exit_probabilities_multiple_agents(transaction)
         # self.calc_attachment_probabilities(transaction)
-        self.calc_confirmation_confidence_multiple_agents(transaction)
+        # self.calc_confirmation_confidence_multiple_agents(transaction)
 
         if self.printing:
             print("Calculation time further measures: " + str(np.round(timeit.default_timer() - start_time2, 3)) + " seconds\n")

@@ -86,7 +86,7 @@ print("TOTAL simulation time: " + str(np.round(timeit.default_timer() - start_ti
 # print_tips_over_time_multiple_agents(simu2, simu2.no_of_transactions)
 # print_tips_over_time_multiple_agents_with_tangle(simu2, simu2.no_of_transactions)
 print_attachment_probabilities(simu2)
-simu2.measure_partitioning_alon()
+# simu2.measure_partitioning_alon()
 
 
 #Plotting the partitioning values for multiple simulations, cumulative mean and 95% confidence interval

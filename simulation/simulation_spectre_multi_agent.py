@@ -78,7 +78,7 @@ class Multi_Agent_Simulation:
 
     def setup(self):
         """
-        Initialises the agents, blocks, arrival times, pairwise vote lists and 
+        Initialises the agents, blocks, arrival times
         """
 
         #Create agents
@@ -354,34 +354,7 @@ class Multi_Agent_Simulation:
     
 #                                print('x=', x.id, 'y=', y.id, 'z = ', z.id, 'result', sign_sum_future_votes)
                                     self.z_vote[x.id, y.id] = sign_sum_future_votes[x.id, y.id]
-                            
-                                """
-                                if len(sign_sum_future_votes) != 0: #Remove the cases where it equals 0
-                                    print(type(sign_sum_future_votes))
-                                    self.z_vote[x.id, y.id] = sign_sum_future_votes[x.id, y.id]
-                                """
-#                            print('np.sign(sign_sum_future_votes', type(np.sign(sum_future_votes)))
-                            
-                            #Make independent copies - see if that fixes things
-     
-#                            print('z = ', z.id, 'x =', x.id, 'y=', y.id, 'future votes', sign_sum_future_votes)
-#                            print('type for sign_sum_future_votes', type(sign_sum_future_votes))
-#                            print(type(x.id))
-#                            print(sign_sum_future_votes)
-#                            print(type(sign_sum_future_votes[x.id, y.id]))
-#                            print('z_vote', self.z_vote)
-                            
-                            
-                            
-#                            sum_sign_future_z = list(np.sign(sum(self.voting_profile[z.id:])))
-#                            print(type(sum_sign_future_z))
-#                                print('sum_sign_future_z', sum_sign_future_z)
-#                            self.z_vote[x.id, y.id] = sum_sign_future_z
-                            
-                        
-#                        print('voting profile', self.z_vote)
-                            #something (y == z):
-            
+ 
             # Store the voting profile for that particular z
             z_vote_copy = copy.copy(self.z_vote)
             self.voting_profile.append(z_vote_copy)

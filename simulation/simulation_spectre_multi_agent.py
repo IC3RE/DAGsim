@@ -181,7 +181,7 @@ class Multi_Agent_Simulation:
         
         #Generate the pairwise vote, taking the blockDAG as an input
 #        print(type(self.DG))
-        
+#        nx.draw(self.DG, with_labels=True)
         (voting_profile, virtual_vote, sign_sum_future_votes, z_vote) = self.CalcVotes(self.DG)
         
         
@@ -255,7 +255,7 @@ class Multi_Agent_Simulation:
         #Calculate number of blocks, for use later
         self.no_of_nodes = graph.number_of_nodes()
         
-        print('input graph nodes', graph.nodes) # - Nodes not topologically sorted yet
+#        print('input graph nodes', graph.nodes) # - Nodes not topologically sorted yet
         
         #If the blockDAG is empty, return an empty ordering
         if graph.number_of_nodes() == 0:
@@ -286,7 +286,7 @@ class Multi_Agent_Simulation:
         #Perform a topological sort of the blockDAG
         self.topo_sort = list(nx.topological_sort(graph))
 #        print('type topo sort', type(self.topo_sort[0]))
-#        print('topo sort', self.topo_sort)
+        print('topo sort element type', type(self.topo_sort[1]))
         
         """
         BEWARE: The order of the graph has now been flipped. Previously it went
@@ -297,6 +297,12 @@ class Multi_Agent_Simulation:
 
             #This will be overwritten at each z
             self.z_vote = np.zeros((self.no_of_nodes, self.no_of_nodes))
+            
+            #Storage for relevant future votes
+            self.future_votes = []
+            self.block_ancestors = nx.ancestors(graph, z)
+            self.position = []
+#            print('z',z, 'block ancestors', self.block_ancestors)
             
             #For each block, look at every other pair of blocks (x, y)
             for x in graph:
@@ -338,22 +344,36 @@ class Multi_Agent_Simulation:
 #                                print('sum', sum(self.voting_profile[z.id:]))
     #                            print('sum_sign', sum_sign_future_z
                                 
-                                #Find the index position of z.id in the topological sort
-                                position = self.get_position(self.topo_sort, z.id)
+
+                                
+
                                 
                                 if graph.in_degree(z) != 0: #Remove the tips - these have not future and so no voting profile
 #                                    print('z.id=', z.id, 'topo_sort=', self.topo_sort, 'position=', position)
                                         
-                                
-                                    future_votes = self.voting_profile[:position]
-#                                    print('future votes=', future_votes)
-                                    sum_future_votes = sum(future_votes)
-    #                                print('sum future votes', sum_future_votes)
-                                    sign_sum_future_votes = np.sign(sum_future_votes)
-                                
-    
-#                                print('x=', x.id, 'y=', y.id, 'z = ', z.id, 'result', sign_sum_future_votes)
-                                    self.z_vote[x.id, y.id] = sign_sum_future_votes[x.id, y.id]
+                                    for ancestor in self.block_ancestors:
+#                                        print('ancestor type', type(ancestor))
+                                        
+                                    #Get the position
+                                    #Find the index position of z.id in the topological sort
+                                    
+                                    #Issue now is that blocks are likely to have multiple ancestors and so multiple 
+                                    #positions are generated. Function doesn't know what to do, so returns NONE
+                                    # - shouldn't be the case because we are iterating through the ancestors
+                                    # therefore, position function isn't working properly
+                                    
+                                        position = self.get_position(self.topo_sort, ancestor)
+#                                        print('z', z, 'x', x, 'y', y, 'position', position)
+                                        
+                                        self.future_votes.append(self.voting_profile[position])
+    #                                    print('future votes=', future_votes)
+                                        self.sum_future_votes = sum(self.future_votes)
+        #                                print('sum future votes', sum_future_votes)
+                                        self.sign_sum_future_votes = np.sign(self.sum_future_votes)
+                                    
+        
+    #                                print('x=', x.id, 'y=', y.id, 'z = ', z.id, 'result', sign_sum_future_votes)
+                                        self.z_vote[x.id, y.id] = self.sign_sum_future_votes[x.id, y.id]
  
             # Store the voting profile for that particular z
             z_vote_copy = copy.copy(self.z_vote)
@@ -363,7 +383,7 @@ class Multi_Agent_Simulation:
         self.aggregate_vote = sum(self.voting_profile)
         self.virtual_vote = np.sign(self.aggregate_vote)
 #        print(self.voting_profile)
-        return (self.voting_profile, self.virtual_vote, sign_sum_future_votes, self.z_vote)
+        return (self.voting_profile, self.virtual_vote, self.sign_sum_future_votes, self.z_vote)
                         
     def past(self, z):
         """
@@ -390,7 +410,7 @@ class Multi_Agent_Simulation:
         
         for node in topo_sort:
             counter += 1
-            if node.id == index:
+            if node == index:
                 return counter
 
     def check_parameters_changes(self, block, dic):

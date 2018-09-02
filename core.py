@@ -8,6 +8,8 @@ from simulation.plotting_spectre import print_graph, print_tips_over_time, print
 #from simulation.simulation import Single_Agent_Simulation
 #from simulation.simulation_multi_agent import Multi_Agent_Simulation
 from simulation.simulation_spectre_multi_agent import Multi_Agent_Simulation
+from test_dag import build_test_dag
+#from simulation.test_vote import 
 
 #############################################################################
 # SIMULATION: SINGLE AGENT
@@ -33,6 +35,7 @@ from simulation.simulation_spectre_multi_agent import Multi_Agent_Simulation
 # latency (default value 1), agent_choice (default vlaue uniform distribution, printing)
 #Tip selection algorithms: Choose among "random", "weighted", "unweighted" as input
 
+"""
 partitioning_values = []
 average_partitioning_across_simus = []
 
@@ -48,7 +51,7 @@ for i in range(runs):
     #Large latency so that only genesis block should be referenced
     simu2 = Multi_Agent_Simulation(6, 2, 2, 0.005, 1000000000, 1, _printing=True) #This has a uniform agent distribution at the moment
     simu2.setup()
-    (voting_profile, virtual_vote) = simu2.run()
+    (voting_profile, virtual_vote, output, z_vote) = simu2.run()
 
     # csv_export(simu2)
 
@@ -72,12 +75,26 @@ for i in range(runs):
 # print(partitioning_values)
 # print(np.mean(partitioning_values))
 # print(np.var(partitioning_values))
+"""
+
+###############################################################################
+# TESTING
+##############################################################################
+dag = build_test_dag()
+simu3 = Multi_Agent_Simulation(11, 1, 2, 0.005, 100000000000, 1, _printing=True)
+(test_voting_profile, test_virtual_vote, test_output, test_z_vote) = simu3.CalcVotes(dag)
+np.savetxt('voting_profile_excel_2.csv', test_virtual_vote, delimiter=',') 
+
+
+
+
+
 
 #############################################################################
 # PLOTTING
 #############################################################################
 
-print_graph(simu2)
+#print_graph(simu2)
 #print('test')
 # print_tips_over_time(simu2)
 # print_tips_over_time_multiple_agents(simu2, simu2.no_of_transactions)

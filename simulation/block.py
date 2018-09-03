@@ -1,4 +1,5 @@
 from collections import defaultdict
+import random
 
 class Block:
     def __init__(self, _arrival_time, _counter):
@@ -6,8 +7,9 @@ class Block:
         self.id = _counter
         self.agent = None
         
-        #For storing a list of transactions in the block
-        self.transactions = []
+        #For storing a list of transactions in the block. Transactions represented
+        #as a list of 10 integers, each randomly chosen from 1 - 49
+        self.transactions = random.sample(range(50), 10)
         
         #For tip selection and calculating confirmation_confidence
         self.cum_weight = 1

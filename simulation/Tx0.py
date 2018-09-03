@@ -7,7 +7,7 @@ from test_dag import build_test_dag
 
 
 
-def Tx0(graph, voting_profile):
+def Tx0(graph, subgraph, voting_profile):
     """
     Returns a set of accepted transactions, from an input 
     blockDAG and pairwise voting profile
@@ -17,24 +17,109 @@ def Tx0(graph, voting_profile):
     
     #Setup a list to store the accepted set of transactions
     Tx = []
-        
+    
+    #Graph as a set
+    graph_set, all_transactions = useful_attributes(graph)
+    
+    counter = 0
     #Iterate through nodes in the subgraph
-    for block_1 in graph:
-        
+    for block_1 in subgraph:
+        print('counter', counter)
         for tx in block_1.transactions:
-            #Identify the conflicting transactions and blocks they are contained in
+#            print(tx)
+            #Identify transactions that conflict with tx and the blocks they are contained in
             conflict_dict = conflict(graph, tx)
+#            print('block', block_1, 'tx', tx, 'conflicting transaction', list(conflict_dict.values()))
+#            print(graph_set.intersection(list(conflict_dict.values())))
             
-            for tx_2 in graph.intersection(conflict_dict):
+            for tx_2 in list(conflict_dict.values()):
+#                print(tx_2)
+#                print('reached line 36')
                 
-                for block_2 in ({list(conflict_dict.keys())}).intersection(anticone(block_1, graph)): 
-                    
+                #Identify the blocks and transactions that conflict with tx2
+                conflict_dict_2 = conflict(graph, tx_2)                
+                
+                #Convert the conflicting blocks to a set
+                block_conflict_tx2 = set(list(conflict_dict_2.keys()))
+                
+                #Determine the anticone of block_1
+                anticone_block_1 = anticone(block_1, graph) 
+                
+                #Calculate the intersection of conflicting blocks and anticone of block_1
+                intersection = block_conflict_tx2.intersection(anticone_block_1)
+                
+#                print('blocks conflicting with tx_2', block_conflict_tx2)
+#                print('anticone of block 1', anticone_block_1)
+#                print('intersection', intersection)
+                
+                for block_2 in intersection: 
+#                    print('reached line 42')
                     if voting_profile[block_1.id, block_2.id] >= 0:
+#                        print('reached line 44')
                         break
                     
                 break
-            
-            break
+            counter += 1
+                
+                """
+                Need to implement recursion here
+                (Line 9 to line 10 in algo 2)
+                """
+                
+            for tx_3 in inputs(graph, block_1):
+                if tx_3
+        
+        
+def useful_attributes(graph):
+    """
+    General purpose function that takes an input graph and returns useful attributes 
+    of the graph, including: 
+        - the graph nodes as a set
+        - a list of all the transactions in the graph
+    """
+    
+    #Store the graph nodes
+    graph_list = []
+    
+    #Store the transactions in the graph
+    all_tx = []
+    
+    #Iterate through the graph and append useful attributes to relevant lists
+    for block in graph:
+        graph_list.append(block)
+        all_tx.append(block.transactions)
+        
+    #Flatten the transactions list
+    all_tx_flatten = [item for sublist in all_tx for item in sublist]
+#    print('original', all_tx)
+#    print('flattened', all_tx_flatten)
+        
+    #Convert to sets
+    graph_set = set(graph_list)
+#    print('all transactions', all_tx)
+    all_tx_set = set(all_tx_flatten)
+    
+    return (graph_set, all_tx_set)
+
+def inputs(graph, block):
+    """
+    Returns all the input transactions to a block in the graph. This is a 
+    work in progress - really it should be calculating the inputs to a particular
+    transaction in a given block. For the time being, assuming that the inputs to a 
+    particular transaction are all the transactions in the input blocks
+    """
+    
+    #Inputs to a block; in the directed blockDAG architecture are the immediate
+    #descendants of the block
+    successors = list(graph.successors(block))
+    
+    #Flatten the resulting list of lists
+    successors_flatten = [item for sublist in successors for item in sublist]
+
+    
+    return successors_flatten
+    
+    
              
 def anticone(block, graph):
     """
@@ -105,7 +190,7 @@ def conflict(graph, tx):
     for block in graph:
         for transaction in block.transactions:
             if transaction == tx:
-                conflicts[block.id] = transaction
+                conflicts[block] = transaction
     
     return conflicts
 

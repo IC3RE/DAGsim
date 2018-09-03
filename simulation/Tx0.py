@@ -61,14 +61,29 @@ def Tx0(graph, subgraph, voting_profile):
                 break
             counter += 1
                 
-                """
-                Need to implement recursion here
-                (Line 9 to line 10 in algo 2)
-                """
+            """
+            Need to correctly implement the recursion, insert and modify the 
+            past(block) function below and sort out the input arguments generally
+            for the Tx0 function
+            
+            
+            for tx_2 in Tx0(graph, past(block_1)) != 0:
+                break
+            break
                 
-            for tx_3 in inputs(graph, block_1):
-                if tx_3
-        
+            for tx_3 in tx_inputs(graph, block_1):
+                if (set(tx_3).intersection(Tx0(graph, past(block_1)))) = 0:
+                    break
+                break
+            """
+            #Add the transaction to the accepted set of transactions
+            Tx.append(tx)
+    
+    return Tx
+            
+##############################################################################
+# HELPER FUNCTIONS
+##############################################################################
         
 def useful_attributes(graph):
     """
@@ -101,23 +116,46 @@ def useful_attributes(graph):
     
     return (graph_set, all_tx_set)
 
-def inputs(graph, block):
+"""
+def past(self, z):
+    
+#    Returns the past blockDAG of z - past(z)     
+    #Indexing for the appropriate z. If z = 5 is inputted, then past(z) should
+    #be returning the DAG that contains 4 nodes (i.e. the DAG for z = 4)
+#        if z.id >= 1: #Accounting for the fact the genesis does not have a past
+    #To index through the DAG list, z needs to be an integer
+    if z.id == 0:
+        past_z_dag = nx.DiGraph()
+        
+    if z.id > 0:
+        past_z_dag = self.DG_store[z.id-1]
+          
+    return past_z_dag 
+"""
+
+def tx_inputs(graph, block):
     """
     Returns all the input transactions to a block in the graph. This is a 
     work in progress - really it should be calculating the inputs to a particular
     transaction in a given block. For the time being, assuming that the inputs to a 
     particular transaction are all the transactions in the input blocks
     """
+    #List to store input transactions
+    transactions = []
     
     #Inputs to a block; in the directed blockDAG architecture are the immediate
     #descendants of the block
-    successors = list(graph.successors(block))
+    successor_blocks = list(graph.successors(block))
+    
+    #Append the transactions of each successor block
+    for block in successor_blocks:
+        transactions.append(block.transactions)    
     
     #Flatten the resulting list of lists
-    successors_flatten = [item for sublist in successors for item in sublist]
+#    successors_flatten = [item for sublist in successor_blocks for item in sublist]
 
     
-    return successors_flatten
+    return transactions
     
     
              
@@ -206,8 +244,15 @@ voting_profile = np.load('C:/Users/thoma/Documents/GitHub/iota_simulation/voting
 #Build test DAG
 trial = build_test_dag()
 
+#Input transactions
+
+test_list = []
+for block in trial:
+    test_list.append(tx_inputs(trial, block))
+    
+
 # Determine accepted transactions
-accept_transact = Tx0(trial, voting_profile)
+#accept_transact = Tx0(trial, voting_profile)
 
 #result = conflict(trial, 4)
 #print('result', result)

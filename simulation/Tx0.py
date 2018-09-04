@@ -10,55 +10,46 @@ from test_dag import build_test_dag
 def Tx0(graph, subgraph, voting_profile):
     """
     Returns a set of accepted transactions, from an input 
-    blockDAG and pairwise voting profile
-    
-    For the time being, using graph as the sub-graph
+    blockDAG and pairwise voting profile. This function operates recursively
+    and is initially called with the full blockDAG.
     """
     
     #Setup a list to store the accepted set of transactions
     Tx = []
     
-    #Graph as a set
-    graph_set, all_transactions = useful_attributes(graph)
+    #Extract useful attributes of the input graph, for use later
+    graph_set, all_transactions = useful_attributes(subgraph)
+    print('all_transactions', all_transactions)
+#    print('all_transactions', all_transactions)
     
-    counter = 0
-    #Iterate through nodes in the subgraph
+    counter = 0 #Used to determine where in the loops the code is up to
+    
+    #Iterate through blocks in the DAG
     for block_1 in subgraph:
-        print('counter', counter)
+        print('block', block_1.id)
+        
+#        print('counter', counter)
+        
         for tx in block_1.transactions:
-#            print(tx)
-            #Identify transactions that conflict with tx and the blocks they are contained in
-            conflict_dict = conflict(graph, tx)
-#            print('block', block_1, 'tx', tx, 'conflicting transaction', list(conflict_dict.values()))
-#            print(graph_set.intersection(list(conflict_dict.values())))
+            print('transaction', tx)
             
-            for tx_2 in list(conflict_dict.values()):
-#                print(tx_2)
-#                print('reached line 36')
-                
-                #Identify the blocks and transactions that conflict with tx2
-                conflict_dict_2 = conflict(graph, tx_2)                
-                
-                #Convert the conflicting blocks to a set
-                block_conflict_tx2 = set(list(conflict_dict_2.keys()))
-                
-                #Determine the anticone of block_1
-                anticone_block_1 = anticone(block_1, graph) 
-                
-                #Calculate the intersection of conflicting blocks and anticone of block_1
-                intersection = block_conflict_tx2.intersection(anticone_block_1)
-                
-#                print('blocks conflicting with tx_2', block_conflict_tx2)
-#                print('anticone of block 1', anticone_block_1)
-#                print('intersection', intersection)
-                
-                for block_2 in intersection: 
-#                    print('reached line 42')
-                    if voting_profile[block_1.id, block_2.id] >= 0:
-#                        print('reached line 44')
-                        break
-                    
-                break
+            #Create list to store the results of the 3 acceptance tests
+            test_results = []
+            
+            #Insert acceptance test functions here
+            
+            #Test_1
+            test_1 = anticone_test(graph, tx, block_1)
+            test_results.append(test_1)          
+            
+            #Test_2
+            
+            #Test_3
+            
+            print('tx', tx)
+
+            
+            #counter allows me to track where everything is up to
             counter += 1
                 
             """
@@ -68,23 +59,62 @@ def Tx0(graph, subgraph, voting_profile):
             
             
             for tx_2 in Tx0(graph, past(block_1)) != 0:
-                break
-            break
+
                 
             for tx_3 in tx_inputs(graph, block_1):
                 if (set(tx_3).intersection(Tx0(graph, past(block_1)))) = 0:
-                    break
-                break
+
             """
-            #Add the transaction to the accepted set of transactions
-            Tx.append(tx)
+            
+            #Add the transaction to the accepted set of transactions if it passes 
+            #all 3 tests
+            if all(item == True for item in test_results):
+                Tx.append(tx)
     
-    return Tx
+    return (Tx, all_transactions)
             
 ##############################################################################
 # HELPER FUNCTIONS
 ##############################################################################
+
+def anticone_test(graph, tx, block_1):
+    """
+    Determines whether the transaction passes or fails the anticone set condition
+    """    
+    
+    #Identify transactions that conflict with tx and the blocks they are contained in
+    conflict_dict = conflict(graph, tx, block_1.id)
+    print('conflicting transaction', list(conflict_dict.values()), 'block', list(conflict_dict.keys()))
+    
+    #Iterate through the transactions that conflict with the original transaction in the block
+    for tx_2 in list(conflict_dict.values()):
         
+        #Identify the blocks and transactions that conflict with tx2
+    #                conflict_dict_2 = conflict(graph, tx_2, block_1.id)                
+        
+        #Extract the blocks that contain a conflicting transaction 
+        block_conflict_tx2 = set(list(conflict_dict.keys()))
+        print('block that contains a conflicting transaction', block_conflict_tx2)
+    
+        #Determine the anticone of block_1
+        anticone_block_1 = anticone(block_1, graph) 
+        print('anticone_block', anticone_block_1)
+        
+        #Calculate the intersection of conflicting blocks and anticone of block_1
+        intersection = block_conflict_tx2.intersection(anticone_block_1)
+        print('intersection', intersection)
+        
+        #Iterate through all blocks that are in the set of blocks that contain conflicting transactions
+        #and are in the set of blocks that are not ordered by directly by the DAG
+        for block_2 in intersection: 
+            print('voting profile', voting_profile[block_1.id, block_2.id])
+            print('')
+            if voting_profile[block_1.id, block_2.id] >= 0:
+                return False
+            else:
+                return True           
+    
+     
 def useful_attributes(graph):
     """
     General purpose function that takes an input graph and returns useful attributes 
@@ -103,6 +133,7 @@ def useful_attributes(graph):
     for block in graph:
         graph_list.append(block)
         all_tx.append(block.transactions)
+    
         
     #Flatten the transactions list
     all_tx_flatten = [item for sublist in all_tx for item in sublist]
@@ -112,26 +143,12 @@ def useful_attributes(graph):
     #Convert to sets
     graph_set = set(graph_list)
 #    print('all transactions', all_tx)
-    all_tx_set = set(all_tx_flatten)
-    
-    return (graph_set, all_tx_set)
+#    all_tx_set = set(all_tx_flatten)
+#    print('raw all transc', all_tx_flatten)
+#    print('raw set all transc', all_tx_set)
 
-"""
-def past(self, z):
-    
-#    Returns the past blockDAG of z - past(z)     
-    #Indexing for the appropriate z. If z = 5 is inputted, then past(z) should
-    #be returning the DAG that contains 4 nodes (i.e. the DAG for z = 4)
-#        if z.id >= 1: #Accounting for the fact the genesis does not have a past
-    #To index through the DAG list, z needs to be an integer
-    if z.id == 0:
-        past_z_dag = nx.DiGraph()
-        
-    if z.id > 0:
-        past_z_dag = self.DG_store[z.id-1]
-          
-    return past_z_dag 
-"""
+  
+    return (graph_set, all_tx_flatten)
 
 def tx_inputs(graph, block):
     """
@@ -151,12 +168,7 @@ def tx_inputs(graph, block):
     for block in successor_blocks:
         transactions.append(block.transactions)    
     
-    #Flatten the resulting list of lists
-#    successors_flatten = [item for sublist in successor_blocks for item in sublist]
-
-    
     return transactions
-    
     
              
 def anticone(block, graph):
@@ -213,58 +225,44 @@ def anticone(block, graph):
     
     
                 
-def conflict(graph, tx):
+def conflict(graph, tx, current_block_id):
     """
     Returns a set of transactions that conflict with the 
     input transaction tx. 
     
     Outputs a dictionary that maps the conflicting block id to the conflicting 
     transaction - giving a record of both conflicting blocks and transactions
+    
+    Inputs:
+        - current_block = this is the block that the current transaction is stored in
+                            Necessary to know this to stop so that the legitimate transaction
+                            isn't recognised as a conflict
     """
     
     #Store the conflicting transactions
     conflicts = {}
     
     for block in graph:
-        for transaction in block.transactions:
-            if transaction == tx:
-                conflicts[block] = transaction
+        if block.id != current_block_id:
+            for transaction in block.transactions:
+                if transaction == tx:
+                    conflicts[block] = transaction
     
     return conflicts
 
 ##############################################################################
 # RUN
 ##############################################################################
-
-# Setup
     
-#Load voting profile
+#Load voting profile - to test I need an accurate voting profile
 voting_profile = np.load('C:/Users/thoma/Documents/GitHub/iota_simulation/voting_profile_of_test.npy')    
 
 #Build test DAG
-trial = build_test_dag()
-
-#Input transactions
-
-test_list = []
-for block in trial:
-    test_list.append(tx_inputs(trial, block))
-    
+trial_dag = build_test_dag('simple')
 
 # Determine accepted transactions
-#accept_transact = Tx0(trial, voting_profile)
+accept_transact, all_transact = Tx0(trial_dag, trial_dag, voting_profile) #First call the accept transactions with G itself
 
-#result = conflict(trial, 4)
-#print('result', result)
-
-#Print out all the transactions
-#for block in trial:
-#    print(block.transactions)
-
-#test = []
-#Test anticone
-#for block in trial:
-#    test.append(anticone(block, trial))
-#    print('block', block.id, 'anticone', anticone(block, trial))
-
-            
+#Print out final results
+print('accept_transact', accept_transact)
+print('all_transact', all_transact)

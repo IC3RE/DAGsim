@@ -1,6 +1,5 @@
 """
-This script deterministically builds a blockDAG. The CalcVotes method is then 
-called from simulation_spectre_multi_agent.py and the result outputted.
+This script deterministically builds a blockDAG
 
 The blockDAG generated in the SPECTRE paper - figure 1, page 7 - is built as the 
 test object.
@@ -22,124 +21,141 @@ import matplotlib.pyplot as plt
 from agent import Agent
 from block import Block
 
-def build_test_dag():
+def build_test_dag(complexity):
     """
-    Builds the DAG according to the SPECTRE paper
+    Deterministically builds a testDAG
+    
+    Takes as input a complexity parameter. Has to be a string and can be 
+    two options:
+        - 'simple' 
+        - 'complex'
+    
+    'simple' builds and outputs a 4 block graph
+    'complex' builds and outputs a more complex 11 block graph
     """
     ########################### SETUP ######################################
-    #Define the graph structure
-    test_graph = nx.DiGraph()
+    #Check that the input is one of the possible options
+    if (complexity != 'simple') and (complexity != 'complex'):
+        raise ValueError('Input value must either be: simple or: complex in string format')
     
-    #Setup list for blocks
-    blocks = []
+    #Build different DAGs depending on whether the input requests a simple or complex one
     
-    #Define the number of nodes
-    number_of_blocks = 11
-
-    #Create random arrival times
-    arrival_times = np.arange(0, number_of_blocks+1)
-    
-    #Define y position of the node (building a chain that seperates into 2)
-    y_position = []
-    
-    for i in range(number_of_blocks+1):
-        if i <= 4:
-            y_position.append(0)
-            
-        elif i > 4 and i <= 8:
-            y_position.append(1)
-            
-        elif i > 8:
-            y_position.append(0) 
-
-    #Create other block objects and store in list
-    #This is creating a list of block objects, with as many objects as there are 
-    #arrival times
-    
-    block_counter = 0
-    
-    for i in range(len(arrival_times)):
-        blocks.append(Block(arrival_times[i], block_counter))
-        block_counter += 1
+    if complexity == 'simple':
+        number_of_blocks = 4
         
-    counter = 0
-    #Add the graph nodes
-    for block in blocks:
-#        print(node)
-#        print(counter)
-        test_graph.add_node(block, pos = (block.arrival_time, y_position[counter]), no=counter, node_color='#99ffff')
-#        print('x', block.arrival_time, 'y', y_position[counter], 'counter', counter)
-#        print(type(block))
-        counter += 1
+        #Define the graph structure
+        test_graph = nx.DiGraph()
         
-    #Add the edges in
-    test_graph.add_edges_from([(blocks[1], blocks[0]), (blocks[2], blocks[1]), (blocks[3], blocks[2]), \
-                               (blocks[4], blocks[3]), (blocks[5], blocks[4]), \
-                               (blocks[6], blocks[5]), (blocks[7], blocks[6]), (blocks[8], blocks[7]), \
-                               (blocks[9], blocks[4]), (blocks[10], blocks[9]), (blocks[11], blocks[10])])
+        #Setup list for blocks
+        blocks = []
+        
+        #Create random arrival times (x position)
+        arrival_times = np.arange(0, number_of_blocks)
+        
+        #Define y position of the node (building a chain that seperates into 2)
+        y_position = []
+        
+        ##########################################################################
+        # BUILD DAG
+        ##########################################################################
+        #Note: the following behaviour diverges, depending on whether a complex 
+        #or simple DAG is required
+                    
+        #Construct the y position of the blocks - seperating a single chain
+        #into 2 chains part way down
+        for i in range(number_of_blocks+1):
+            if i <= 1:
+                y_position.append(0)
+                
+            elif i == 2:
+                y_position.append(0)
+                
+            elif i == 3:
+                y_position.append(1) 
+    
+     
+#        print('y position', y_position)
+        block_counter = 0
+        
+        #Create list of blocks, with their arrival times and counters as IDs
+        for i in range(len(arrival_times)):
+            blocks.append(Block(arrival_times[i], block_counter))
+            block_counter += 1
+#        print('blocks', blocks)
+            
+        counter = 0
+        
+        #Add the blocks to a graph
+        for block in blocks:
+            test_graph.add_node(block, pos = (block.arrival_time, y_position[counter]), no=counter, node_color='#99ffff')
+            counter += 1
+            
+        #Add the edges between the blocks on the graph
+        test_graph.add_edges_from([(blocks[1], blocks[0]), (blocks[2], blocks[1]), (blocks[3], blocks[1])])
+    
+    #Build the graph in the complex case
+    elif complexity == 'complex':
+        number_of_blocks = 11
+        
+        #Define the graph structure
+        test_graph = nx.DiGraph()
+        
+        #Setup list for blocks
+        blocks = []
+        
+        #Create random arrival times (x position)
+        arrival_times = np.arange(0, number_of_blocks)
+        
+        #Define y position of the node (building a chain that seperates into 2)
+        y_position = []
+        
+        ##########################################################################
+        # BUILD DAG
+        ##########################################################################
+        #Note: the following behaviour diverges, depending on whether a complex 
+        #or simple DAG is required
+                    
+        #Construct the y position of the blocks - seperating a single chain
+        #into 2 chains part way down
+        for i in range(number_of_blocks+1):
+            if i <= 4:
+                y_position.append(0)
+                
+            elif i > 4 and i <= 8:
+                y_position.append(1)
+                
+            elif i > 8:
+                y_position.append(0) 
+    
+     
+        
+        block_counter = 0
+        
+        #Create list of blocks, with their arrival times and counters as IDs
+        for i in range(len(arrival_times)):
+            blocks.append(Block(arrival_times[i], block_counter))
+            block_counter += 1
+            
+        counter = 0
+        
+        #Add the blocks to a graph
+        for block in blocks:
+            test_graph.add_node(block, pos = (block.arrival_time, y_position[counter]), no=counter, node_color='#99ffff')
+            counter += 1
+            
+        #Add the edges between the blocks on the graph
+        test_graph.add_edges_from([(blocks[1], blocks[0]), (blocks[2], blocks[1]), (blocks[3], blocks[2]), \
+                                   (blocks[4], blocks[3]), (blocks[5], blocks[4]), \
+                                   (blocks[6], blocks[5]), (blocks[7], blocks[6]), (blocks[8], blocks[7]), \
+                                   (blocks[9], blocks[4]), (blocks[10], blocks[9])])
+        
+   
     
     #Visualise the graph
     nx.draw(test_graph, with_labels=True)
     plt.show()
     
     return(test_graph)
-    """
-    #Define the number of nodes
-    number_of_blocks = 11
-    
-    #Define x position of the node (time)
-    x_position = np.arange(0, number_of_blocks+1)
-    
-    #Define number of blocks
-    blocks = []
-    
-    #Define y position of the node (building a chain that seperates into 2)
-    y_position = []
-    
-    for i in range(number_of_blocks+1):
-        if i <= 4:
-            y_position.append(0)
-            
-        elif i > 4 and i <= 8:
-            y_position.append(1)
-            
-        elif i > 8:
-            y_position.append(0)      
-
-#    print('y-position', y_position)
-        #Create other block objects and store in list
-        #This is creating a list of block objects, with as many objects as there are 
-        #arrival times
-        
-    block_counter = 0
-    
-    for i in range(number_of_blocks+1):
-        blocks.append(Block(x_position[i], block_counter))
-        
-        block_counter += 1
-        
-    ############################# BUILD DAG ###################################
-    print('blocks', blocks)
-    print('x list', x_position)
-    print('y list', y_position, 'length', len(y_position))
-    counter = 0
-    #Add the graph nodes
-    for block in blocks:
-#        print(node)
-#        print(counter)
-        test_graph.add_node(block, pos = (x_position[counter], y_position[counter]))
-        print('x', x_position[counter], 'y', y_position[counter], 'counter', counter)
-        counter += 1
-        
-     
-
-    
-
-    """
-    
-#result = build_test_dag()
-
-    #print_graph(dag)
         
     
     

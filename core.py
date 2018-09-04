@@ -82,11 +82,15 @@ from simulation.test_dag import build_test_dag
 ###############################################################################
 # TESTING
 ##############################################################################
-dag = build_test_dag()
-simu3 = Multi_Agent_Simulation(11, 1, 2, 0.005, 100000000000, 1, _printing=True)
-(test_voting_profile, test_virtual_vote, test_output, test_z_vote) = simu3.CalcVotes(dag)
-np.savetxt('voting_profile_excel'+(time.strftime("%H-%M-%S"))+"{:%B-%d-%Y}".format(datetime.now())+'.csv', test_virtual_vote, delimiter=',') 
+#Close all pre-existing, open plots
+plt.close('all')
 
+dag = build_test_dag('simple')
+simu3 = Multi_Agent_Simulation(11, 1, 2, 0.005, 100000000000, 1, _printing=True)
+vote = simu3.CalcVotes(dag)
+print('vote', vote)
+#np.savetxt('voting_profile_excel'+(time.strftime("%H-%M-%S"))+"{:%B-%d-%Y}".format(datetime.now())+'.csv', vote, delimiter=',') 
+plt.show()
 
 
 

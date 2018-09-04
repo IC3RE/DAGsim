@@ -9,7 +9,7 @@ class Block:
         
         #For storing a list of transactions in the block. Transactions represented
         #as a list of 10 integers, each randomly chosen from 1 - 49
-        self.transactions = random.sample(range(20), 10)
+        self.transactions = random.sample(range(5), 2)
         
         #For tip selection and calculating confirmation_confidence
         self.cum_weight = 1

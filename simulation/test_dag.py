@@ -18,8 +18,8 @@ import matplotlib.pyplot as plt
 
 
 #from simulation.plotting_spectre import print_info, print_graph, print_tips_over_time, print_tips_over_time_multiple_agents
-from agent import Agent
-from block import Block
+from simulation.agent import Agent
+from simulation.block import Block
 
 def build_test_dag(complexity):
     """

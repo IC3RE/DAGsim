@@ -255,33 +255,34 @@ def print_tips_over_time_multiple_agents(self, no_current_transactions):
 def print_attachment_probabilities(self):
 
     title = "Transactions = " + str(self.no_of_transactions) + \
-            ",  " + r'$\lambda$' + " = " + str(self.lam) #+ \
-            # ",  " + r'$d$' + " = " + str(self.distances[1][0])
+            ",  " + r'$\lambda$' + " = " + str(self.lam) + \
+            ",  " + r'$d$' + " = " + str(self.distances[1][0])
     if (self.tip_selection_algo == "weighted"):
         title += ",  " + r'$\alpha$' + " = " + str(self.alpha)
 
-    with open('graph' +  str(title) + '_3' + '.pkl', 'wb') as handle:
+    # with open('graph' +  str(title) + '_3' + '.pkl', 'wb') as handle:
+    with open('subtangle_attach_prob.pkl', 'wb') as handle:
         pickle.dump(self.record_attachment_probabilities, handle, protocol=pickle.HIGHEST_PROTOCOL)
 
     plt.figure(figsize=(14, 8))
 
-    # print(self.record_attachment_probabilities)
+    print(self.record_attachment_probabilities)
 
     x = np.squeeze([i[0] for i in self.record_attachment_probabilities])
     y = np.squeeze([i[1] for i in self.record_attachment_probabilities])
 
     print(self.record_attachment_probabilities)
 
-    # labels = ["Agent " + str(i) for i in range(len(y))]
+    labels = ["Agent " + str(i) for i in range(len(y))]
 
     # ax = plt.axes()
     # ax.set_color_cycle([plt.cm.tab20c(i) for i in np.linspace(0, 1, len(y))])
-    plt.plot(x,y)
-    plt.ylim(0, 0.6)
+    plt.plot(x,y, label="Attachment probability sub-Tangle branch")
+    plt.ylim(0, 0.7)
 
-    # plt.plot(np.unique(x), np.poly1d(np.polyfit(x, y, 1))(np.unique(x)),\
-    # label="Best Fit", linestyle='--')
-    #
+    plt.plot(np.unique(x), np.poly1d(np.polyfit(x, y, 1))(np.unique(x)),\
+    label="Best Fit", linestyle='--')
+
     x_mean = [i for i in x]
     y_mean = [np.mean(y) for i in y]
     print(np.mean(y))
@@ -300,5 +301,6 @@ def print_attachment_probabilities(self):
     plt.legend(loc='upper left')
     #plt.legend(labels, loc='upper left')
     plt.title(title)
+    plt.tight_layout()
     # plt.show()
-    plt.savefig('graph' +  str(title) + '_3' + '.png')
+    # plt.savefig('graph' +  str(title) + '_3' + '.png')

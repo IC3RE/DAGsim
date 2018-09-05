@@ -564,7 +564,7 @@ class Multi_Agent_Simulation:
 
         # print(attachment_probabilities_without_main)
         # print(attachment_probabilities_all)
-        return attachment_probabilities_all
+        return attachment_probabilities_without_main
 
 
     def attachment_probabilities_2(self, incoming_transaction):

@@ -1,4 +1,5 @@
 import timeit
+import pickle
 import numpy as np
 import scipy.stats as st
 import networkx as nx
@@ -43,15 +44,20 @@ runs = 1
 # counter = 0
 
 number_of_agents = 10
-# distances = create_random_graph_distances(number_of_agents)
+distances = create_random_graph_distances(number_of_agents)
 
 # distances = [[0.0, 80.0, 40.0, 60.0, 80.0, 40.0, 40.0, 20.0, 60.0, 40.0], [80.0, 0.0, 80.0, 60.0, 40.0, 80.0, 80.0, 60.0, 20.0, 40.0], [40.0, 80.0, 0.0, 60.0, 80.0, 40.0, 20.0, 20.0, 60.0, 40.0], [60.0, 60.0, 60.0, 0.0, 60.0, 60.0, 60.0, 40.0, 40.0, 20.0], [80.0, 40.0, 80.0, 60.0, 0.0, 80.0, 80.0, 60.0, 20.0, 40.0], [40.0, 80.0, 40.0, 60.0, 80.0, 0.0, 40.0, 20.0, 60.0, 40.0], [40.0, 80.0, 20.0, 60.0, 80.0, 40.0, 0.0, 20.0, 60.0, 40.0], [20.0, 60.0, 20.0, 40.0, 60.0, 20.0, 20.0, 0.0, 40.0, 20.0], [60.0, 20.0, 60.0, 40.0, 20.0, 60.0, 60.0, 40.0, 0.0, 20.0], [40.0, 40.0, 40.0, 20.0, 40.0, 40.0, 40.0, 20.0, 20.0, 0.0]]
 
 for i in range(runs):
 
-    simu2 = Multi_Agent_Simulation(400, 50, number_of_agents, 0.001, 50000, "weighted", _printing=True)
+    simu2 = Multi_Agent_Simulation(10000, 50, number_of_agents, 0.1, distances, "weighted", _printing=True)
     simu2.setup()
     simu2.run()
+
+    # print(simu2.record_attachment_probabilities)
+
+    with open('scenario1.pkl', 'wb') as handle:
+        pickle.dump(simu2.record_attachment_probabilities, handle, protocol=pickle.HIGHEST_PROTOCOL)
 
     # csv_export(simu2)
 

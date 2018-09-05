@@ -44,7 +44,7 @@ def create_random_graph_distances(no_of_agents):
     while not nx.is_connected(G):
         G = nx.gnm_random_graph(n, m)
 
-    distances = (nx.floyd_warshall_numpy(G)*10).tolist()
+    distances = (nx.floyd_warshall_numpy(G)).tolist()
 
     print(nx.closeness_centrality(G))
 

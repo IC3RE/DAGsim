@@ -11,6 +11,8 @@ from simulation.helpers_spectre import update_progress, create_distance_matrix, 
 from simulation.plotting_spectre import print_info, print_graph, print_tips_over_time, print_tips_over_time_multiple_agents
 from simulation.agent import Agent
 from simulation.block import Block
+from simulation.Tx0_helpers import anticone_test, useful_attributes, tx_inputs, anticone, conflict
+
 
 
 class Multi_Agent_Simulation:
@@ -179,10 +181,11 @@ class Multi_Agent_Simulation:
         # CONSENSUS PROTOCOL
         #######################################################################
         
-        #Generate the pairwise vote, taking the blockDAG as an input
+        #Generate the accepted set of transactions.  pairwise vote, taking the blockDAG as an input
 #        print(type(self.DG))
 #        nx.draw(self.DG, with_labels=True)
-        vote = self.CalcVotes(self.DG)
+#        vote = self.CalcVotes(self.DG)
+        (accept_tx, all_tx) = self.Tx0(self.DG, self.DG)
         
         
         #Determine the accepted set of transactions, taking the pairwise vote as 
@@ -204,27 +207,78 @@ class Multi_Agent_Simulation:
             print("Calculation time confirmation confidence: " + str(np.round(timeit.default_timer() - start_time2, 3)) + " seconds\n")
             # print("\nGraph information:\n" + nx.info(self.DG))
             
-        return vote
+        return (accept_tx, all_tx)
+                       
+    def Tx0(self, graph, subgraph):
+        """
+        Returns a set of accepted transactions, from an input 
+        blockDAG and pairwise voting profile. This function operates recursively
+        and is initially called with the full blockDAG.
+        """
+        #First generate the pairwise vote over all blocks
+        voting_profile = self.CalcVotes(graph)
+        
+        #Execute the accepted transactions (consensus) protocol
+         
+        #Setup a list to store the accepted set of transactions
+        Tx = []
+        
+        #Extract useful attributes of the input graph, for use later
+        graph_set, all_transactions = useful_attributes(subgraph)
+        print('all_transactions', all_transactions)
+    #    print('all_transactions', all_transactions)
+        
+        counter = 0 #Used to determine where in the loops the code is up to
+        
+        #Iterate through blocks in the DAG
+        for block_1 in subgraph:
+#            print('block', block_1.id)
             
+    #        print('counter', counter)
+            
+            for tx in block_1.transactions:
+#                print('transaction', tx)
+                
+                #Create list to store the results of the 3 acceptance tests
+                test_results = []
+                
+                #Insert acceptance test functions here
+                
+                #Test_1
+                test_1 = anticone_test(graph, tx, block_1, voting_profile)
+                test_results.append(test_1)          
+                
+                #Test_2
+                
+                #Test_3
+                
+#                print('tx', tx)
     
-    def tip_selection(self, block):
+                
+                #counter allows me to track where everything is up to
+                counter += 1
+                    
+                """
+                Need to correctly implement the recursion, insert and modify the 
+                past(block) function below and sort out the input arguments generally
+                for the Tx0 function
+                
+                
+                for tx_2 in Tx0(graph, past(block_1)) != 0:
+    
+                    
+                for tx_3 in tx_inputs(graph, block_1):
+                    if (set(tx_3).intersection(Tx0(graph, past(block_1)))) = 0:
+    
+                """
+                
+                #Add the transaction to the accepted set of transactions if it passes 
+                #all 3 tests
+                if all(item == True for item in test_results):
+                    Tx.append(tx)
         
-        #Get visible blocks and valid tips (and record these)
-        self.get_visible_blocks(block.arrival_time, block.agent)
-#        print('block arrival time', block.arrival_time)
-#        print('block agent', block.agent)
-#        print('visible blocks', self.get_visible_blocks)
-        valid_tips = self.get_valid_tips_multiple_agents(block.agent)
-        self.record_tips.append(valid_tips)
-        
-#        print('valid tips', valid_tips)
-        #Reference all visible tips
-        for tip in valid_tips:
-            self.DG.add_edge(block, tip)    
-        
-#        else:
-#            print("ERROR:  No tips available")
-#            sys.exit()
+        return (Tx, all_transactions)
+    
     
     def CalcVotes(self, graph):
         """
@@ -275,20 +329,20 @@ class Multi_Agent_Simulation:
         
         ############################## Recursion ##############################
         #Recursive call of CalcVotes
-        for z in self.topo_sort:
+#        for z in self.topo_sort:
             
-            self.past_dag = graph.subgraph(nx.descendants(graph, z))
-            print('z', z.id, 'past dag nodes', self.past_dag.nodes())
+#        self.past_dag = graph.subgraph(nx.descendants(graph, z))
+#            print('z', z.id, 'past dag nodes', self.past_dag.nodes())
 #            plt.figure()
 #            plt.title(z.id)
 #            nx.draw(past_dag, with_labels=True)
             
 #           Perform the recursion
-            recurs_vote = self.CalcVotes(self.past_dag)
-            recurs_vote_copy = copy.copy(recurs_vote)
+#            recurs_vote = self.CalcVotes(self.past_dag)
+#            recurs_vote_copy = copy.copy(recurs_vote)
             
             #Record the past voting profile
-            self.past_voting_profile.append(recurs_vote_copy)
+#            self.past_voting_profile.append(recurs_vote_copy)
             
 #            print('vote', z.id, vote) 
         
@@ -325,20 +379,20 @@ class Multi_Agent_Simulation:
                         if ((x in future_z) and (y not in past_z)) or \
                         ((x in past_z) and (y == z)):
                             self.z_vote[x.id, y.id] = int(-1) #Using the block number to determine the position of the vote in the profile
-                            print('z', z, 'x', x, 'y', y, 'vote', self.z_vote[x.id, y.id])
+#                            print('z', z, 'x', x, 'y', y, 'vote', self.z_vote[x.id, y.id])
                         
                         #Line 9 of algo
                         elif ((y in future_z) and (x not in past_z)) or \
                         ((y in past_z) and (x == z)):
                             self.z_vote[x.id, y.id] = int(1)
-                            print('z', z, 'x', x, 'y', y, 'vote', self.z_vote[x.id, y.id])
+#                            print('z', z, 'x', x, 'y', y, 'vote', self.z_vote[x.id, y.id])
 
                         
                         #Line 11 of algo
-                        elif ((x in past_z) and (y in past_z)):
-                            self.z_vote[x.id, y.id] = self.past_voting_profile[z.id][x.id, y.id]#need to work out what to do
+#                        elif ((x in past_z) and (y in past_z)):
+#                            self.z_vote[x.id, y.id] = self.past_voting_profile[z.id][x.id, y.id]#need to work out what to do
                         
-                        """
+                        
                         #Line 13 of algo
                         elif ((x not in past_z) and (y not in past_z)):
                             
@@ -346,33 +400,35 @@ class Multi_Agent_Simulation:
                             #correspond to all the z's for which votes were previously calculated 
                             #and stored in self.z_vote 
 
-                                if graph.in_degree(z) != 0: #Remove the tips - these have not future and so no voting profile
+                            if graph.in_degree(z) != 0: #Remove the tips - these have no ancestors (no future) and so no associated voting profile
                                         
-                                    #Iterate through each of z's ancestors
-                                    for ancestor in nx.ancestors(graph, z):
-                                        
-                                        #Get the index position of each ancestor's vote (determined by the 
-                                        #position of the ancestor in the topological sort)
-                                        position = self.get_position(self.topo_sort, ancestor)                                     
-                                        
-                                        #Append to a list, for storage
-                                        self.future_votes.append(self.voting_profile[position])
-                                        print('future votes', self.future_votes)
+                                #Iterate through each of z's ancestors
+                                for ancestor in nx.ancestors(graph, z):
+                                    
+                                    #Get the index position of each ancestor's vote (determined by the 
+                                    #position of the ancestor in the topological sort)
+                                    position = self.get_position(self.topo_sort, ancestor.id)  
+#                                    print('topo sort', self.topo_sort, 'ancestor id', ancestor.id)
+                                    
+                                    #Append to a list, for storage
+                                    self.future_votes.append(self.voting_profile[position])
+    #                                    print('future votes', self.future_votes)
+                            
+                                #Add up all these votes
+                                self.sum_future_votes = sum(self.future_votes)
                                 
-                                    #Add up all these votes
-                                    self.sum_future_votes = sum(self.future_votes)
-                                    
-                                    #Determine the sign of each vote
-                                    self.sign_sum_future_votes = np.sign(self.sum_future_votes)
-                                    
-                                    #Input the vote required for this particular x, y combination
-                                    self.z_vote[x.id, y.id] = self.sign_sum_future_votes[x.id, y.id]
-                        """    
+                                #Determine the sign of each vote
+                                self.sign_sum_future_votes = np.sign(self.sum_future_votes)
+                                
+                                #Input the vote required for this particular x, y combination
+                                self.z_vote[x.id, y.id] = self.sign_sum_future_votes[x.id, y.id]
+                        
+                        
  
             # Store the voting profile for that particular z
             z_vote_copy = copy.copy(self.z_vote)
             self.voting_profile.append(z_vote_copy)
-            
+                
         #Create the aggregated vote of the entire blockDAG
         self.aggregate_vote = sum(self.voting_profile) #Sum the votes of all z for each x,y
         
@@ -380,16 +436,40 @@ class Multi_Agent_Simulation:
         self.virtual_vote = np.sign(self.aggregate_vote)
 
         return self.virtual_vote
-                        
+
+
+    #############################################################################
+    # SIMULATION: HELPERS
+    #############################################################################
+     
+    def tip_selection(self, block):
+        
+        #Get visible blocks and valid tips (and record these)
+        self.get_visible_blocks(block.arrival_time, block.agent)
+#        print('block arrival time', block.arrival_time)
+#        print('block agent', block.agent)
+#        print('visible blocks', self.get_visible_blocks)
+        valid_tips = self.get_valid_tips_multiple_agents(block.agent)
+        self.record_tips.append(valid_tips)
+        
+#        print('valid tips', valid_tips)
+        #Reference all visible tips
+        for tip in valid_tips:
+            self.DG.add_edge(block, tip)    
+        
+#        else:
+#            print("ERROR:  No tips available")
+#            sys.exit()
+                 
     def get_position(self, topo_sort, index):  
         counter = -1 #counter is used to store the index of the desired node in the 
                     #topological sort. Start at -1, so that when we add one to the counter
                     #it correctly labels the first entry in the topo sort as being 
                     #position zero
         
-        for node in topo_sort:
+        for block in topo_sort:
             counter += 1
-            if node == index:
+            if block.id == index:
                 return counter
 
     def check_parameters_changes(self, block, dic):
@@ -410,9 +490,6 @@ class Multi_Agent_Simulation:
             # self.calc_confirmation_confidence_multiple_agents(block)
             # self.measure_partitioning()
             
-    #############################################################################
-    # SIMULATION: HELPERS
-    #############################################################################
 
     def get_tips(self):
 
@@ -458,30 +535,6 @@ class Multi_Agent_Simulation:
                     elif(incoming_block_agent == agent):
                         self.not_visible_blocks.append(block)
 #                        print('not visible blocks', self.not_visible_blocks)
-
-
-    # def get_valid_tips(self, incoming_block):
-    #
-    #     valid_tips = []
-    #
-    #     for block in incoming_block.agent.visible_blocks:
-    #
-    #         #block has no approvers at all
-    #         if(len(list(self.DG.predecessors(block))) == 0
-    #         #block can't approve itself
-    #         and block != incoming_block):
-    #
-    #             valid_tips.append(block)
-    #
-    #         #Add to valid tips if all approvers not visible yet
-    #         elif(len(list(self.DG.predecessors(block))) >= 1
-    #         #block can't approve itself
-    #         and block != incoming_block
-    #         and self.all_approvers_not_visible(block)):
-    #
-    #             valid_tips.append(block)
-    #
-    #     return valid_tips
 
 
     def get_valid_tips_multiple_agents(self, agent):

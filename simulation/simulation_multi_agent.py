@@ -7,7 +7,8 @@ import numpy as np
 import networkx as nx
 import matplotlib.pyplot as plt
 
-from simulation.helpers import update_progress, create_distance_matrix, common_elements, load_file
+from simulation.helpers import update_progress, create_distance_matrix, \
+common_elements, clamp, load_file
 from simulation.plotting import print_info, print_graph, print_tips_over_time, \
 print_tips_over_time_multiple_agents, print_tips_over_time_multiple_agents_with_tangle, \
 print_attachment_probabilities
@@ -71,13 +72,16 @@ class Multi_Agent_Simulation:
         self.record_desc_ratio = []
 
 
-        #For max. four agents same colors, for more agents random colors
+        #For max. four agents always the same colors in prints
         self.agent_colors = ['#a8d6ff', '#ff9494', '#dcc0dd', '#e0ff80']
         self.agent_tip_colors = ['#f5faff', '#ffe0e0', '#f8f2f8', '#f9ffe6']
+
+        #For more than four agents random colors and lighter tip colors
         for i in range(self.no_of_agents-4):
             r = lambda: random.randint(0,255)
             color = '#{:02x}{:02x}{:02x}'.format(r(), r(), r())
             self.agent_colors.append(color)
+            self.agent_tip_colors.append(color)
 
     #############################################################################
     # SIMULATION: SETUP
@@ -135,7 +139,7 @@ class Multi_Agent_Simulation:
 
             #Do something every 100th transition
             if (transaction.id >= 15000 and
-                transaction.id % 150 == 0):
+                transaction.id % 100 == 0):
                 self.record_attachment_probabilities.append((transaction.id,self.calc_attachment_probabilities(transaction)))
                 # self.record_attachment_probabilities.append(self.calc_attachment_probabilities(transaction))
 

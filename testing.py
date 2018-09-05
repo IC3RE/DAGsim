@@ -4,6 +4,7 @@ from networkx import nx
 
 def create_random_graph_distances():
     n = 20  #number nodes
+
     m = 20  #number edges
 
     G = nx.gnm_random_graph(n, m)
@@ -14,8 +15,8 @@ def create_random_graph_distances():
     distances = nx.floyd_warshall_numpy(G).tolist()
 
     # print the random graph
-    nx.draw(G, with_labels=True)
-    plt.show()
+    # nx.draw(G, with_labels=True)
+    # plt.show()
 
     return distances
 

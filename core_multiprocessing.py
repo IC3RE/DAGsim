@@ -1,33 +1,30 @@
+import pickle
 import multiprocessing
 import sys
 import timeit
 import numpy as np
 
-from simulation.helpers import update_progress, csv_export
+from simulation.helpers import update_progress, csv_export, create_random_graph_distances
 from simulation.plotting import print_graph, print_tips_over_time, \
-print_tips_over_time_multiple_agents, print_tips_over_time_multiple_agents_with_tangle
+print_tips_over_time_multiple_agents, print_tips_over_time_multiple_agents_with_tangle, \
+print_attachment_probabilities
 from simulation.simulation_multi_agent import Multi_Agent_Simulation
 
 
 def simulation(data):
-    simu = Multi_Agent_Simulation(5000, 25, 2, 0.005, 500, "weighted")
+
+    number_of_agents = 10
+    distances = [[0.0, 10.0, 30.0, 20.0, 10.0, 10.0, 40.0, 10.0, 20.0, 20.0], [10.0, 0.0, 40.0, 30.0, 20.0, 20.0, 50.0, 20.0, 30.0, 30.0], [30.0, 40.0, 0.0, 30.0, 40.0, 20.0, 10.0, 40.0, 30.0, 10.0], [20.0, 30.0, 30.0, 0.0, 30.0, 10.0, 40.0, 30.0, 20.0, 20.0], [10.0, 20.0, 40.0, 30.0, 0.0, 20.0, 50.0, 20.0, 30.0, 30.0], [10.0, 20.0, 20.0, 10.0, 20.0, 0.0, 30.0, 20.0, 10.0, 10.0], [40.0, 50.0, 10.0, 40.0, 50.0, 30.0, 0.0, 50.0, 40.0, 20.0], [10.0, 20.0, 40.0, 30.0, 20.0, 20.0, 50.0, 0.0, 10.0, 30.0], [20.0, 30.0, 30.0, 20.0, 30.0, 10.0, 40.0, 10.0, 0.0, 20.0], [20.0, 30.0, 10.0, 20.0, 30.0, 10.0, 20.0, 30.0, 20.0, 0.0]]
+
+    simu = Multi_Agent_Simulation(10000, 50, number_of_agents, 0.1, distances, "weighted")
     simu.setup()
     simu.run()
-    # print_tips_over_time_multiple_agents(simu, simu.no_of_transactions)
-
 
     averages = []
 
-    for agent in simu.agents:
-        no_tips = [0]
-        for i in agent.record_tips:
-            no_tips.append(len(i))
+    print("Done with one simu")
 
-        averages.append(np.mean(no_tips))
-
-    print("Done")
-
-    return (data, averages)
+    return (data, simu.record_attachment_probabilities)
 
 def start_process():
     print("Starting", multiprocessing.current_process().name, "\n")
@@ -36,7 +33,7 @@ if __name__ == '__main__':
     start_time = timeit.default_timer()
 
     #Specify here how many simultaneous simulations to run
-    number_of_runs = 30
+    number_of_runs = 20
     input_list = list(range(number_of_runs))
 
     print("Runs:", len(input_list))
@@ -54,14 +51,5 @@ if __name__ == '__main__':
     print("Results: ", pool_outputs, "\n")
     print("TOTAL simulation time: " + str(np.round(timeit.default_timer() - start_time, 3)) + " seconds\n")
 
-    agent_1 = []
-    agent_2 = []
-
-    for i in pool_outputs:
-        agent_1.append(i[1][0])
-        agent_2.append(i[1][1])
-
-    # print(agent_1)
-    # print(agent_2)
-    print(np.mean(agent_1))
-    print(np.mean(agent_2))
+    with open('1.pkl', 'wb') as handle:
+        pickle.dump(pool_outputs, handle, protocol=pickle.HIGHEST_PROTOCOL)

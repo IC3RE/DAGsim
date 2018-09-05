@@ -3,6 +3,8 @@ import csv
 import configparser
 import ast
 import numpy as np
+import networkx as nx
+import matplotlib.pyplot as plt
 
 def update_progress(progress, transaction):
 
@@ -32,6 +34,28 @@ def create_distance_matrix(no_of_agents, distance):
     return m
 
 
+def create_random_graph_distances(no_of_agents):
+
+    n = no_of_agents  #number nodes
+    m = n  #number edges
+
+    G = nx.gnm_random_graph(n, m)
+
+    while not nx.is_connected(G):
+        G = nx.gnm_random_graph(n, m)
+
+    distances = (nx.floyd_warshall_numpy(G)*10).tolist()
+
+    print(nx.closeness_centrality(G))
+
+
+    # print the random graph
+    # nx.draw(G, with_labels=True)
+    # plt.savefig('agent_graph.png')
+
+    return distances
+
+
 def common_elements(a, b):
 
     a_set = set(a)
@@ -41,6 +65,14 @@ def common_elements(a, b):
         return list((a_set.intersection(b_set)))
     else:
         return []
+
+
+def clamp(val, minimum=0, maximum=255):
+    if val < minimum:
+        return minimum
+    if val > maximum:
+        return maximum
+    return val
 
 
 def load_file(filename):

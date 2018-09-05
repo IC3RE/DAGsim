@@ -4,9 +4,10 @@ import scipy.stats as st
 import networkx as nx
 import matplotlib.pyplot as plt
 
-from simulation.helpers import update_progress, csv_export
+from simulation.helpers import update_progress, csv_export, create_random_graph_distances
 from simulation.plotting import print_graph, print_tips_over_time, \
-print_tips_over_time_multiple_agents, print_tips_over_time_multiple_agents_with_tangle, print_attachment_probabilities
+print_tips_over_time_multiple_agents, print_tips_over_time_multiple_agents_with_tangle, \
+print_attachment_probabilities
 from simulation.simulation import Single_Agent_Simulation
 from simulation.simulation_multi_agent import Multi_Agent_Simulation
 
@@ -41,13 +42,14 @@ start_time = timeit.default_timer()
 runs = 1
 # counter = 0
 
-# distances = [[0,2,3],
-#              [2,0,1],
-#              [3,1,0]]
+number_of_agents = 10
+# distances = create_random_graph_distances(number_of_agents)
+
+# distances = [[0.0, 80.0, 40.0, 60.0, 80.0, 40.0, 40.0, 20.0, 60.0, 40.0], [80.0, 0.0, 80.0, 60.0, 40.0, 80.0, 80.0, 60.0, 20.0, 40.0], [40.0, 80.0, 0.0, 60.0, 80.0, 40.0, 20.0, 20.0, 60.0, 40.0], [60.0, 60.0, 60.0, 0.0, 60.0, 60.0, 60.0, 40.0, 40.0, 20.0], [80.0, 40.0, 80.0, 60.0, 0.0, 80.0, 80.0, 60.0, 20.0, 40.0], [40.0, 80.0, 40.0, 60.0, 80.0, 0.0, 40.0, 20.0, 60.0, 40.0], [40.0, 80.0, 20.0, 60.0, 80.0, 40.0, 0.0, 20.0, 60.0, 40.0], [20.0, 60.0, 20.0, 40.0, 60.0, 20.0, 20.0, 0.0, 40.0, 20.0], [60.0, 20.0, 60.0, 40.0, 20.0, 60.0, 60.0, 40.0, 0.0, 20.0], [40.0, 40.0, 40.0, 20.0, 40.0, 40.0, 40.0, 20.0, 20.0, 0.0]]
 
 for i in range(runs):
 
-    simu2 = Multi_Agent_Simulation(100, 5, 2, 0.005, 50000000, "weighted", _agent_choice=[0.7,0.3], _printing=True)
+    simu2 = Multi_Agent_Simulation(400, 50, number_of_agents, 0.001, 50000, "weighted", _printing=True)
     simu2.setup()
     simu2.run()
 

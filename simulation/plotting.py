@@ -11,8 +11,9 @@ import matplotlib.pyplot as plt
 def print_info(self):
     text = "\nParameters:  Transactions = " + str(self.no_of_transactions) + \
             ",  Tip-Selection = " + str(self.tip_selection_algo).upper() + \
-            ",  Lambda = " + str(self.lam) + \
-            ",  Distances = " + str(self.distances)
+            ",  Lambda = " + str(self.lam)
+    if(self.no_of_agents != 1):
+        text += ",  Distances = " + str(self.distances)
     if(self.tip_selection_algo == "weighted"):
         text += ",  Alpha = " + str(self.alpha)
     text += " | Simulation started...\n"
@@ -50,7 +51,7 @@ def print_graph(self):
     #Creating figure
     plt.figure(figsize=(14, 8))
     nx.draw_networkx(self.DG, pos, with_labels=True, node_size = 100, font_size=5.5, node_color = col)
-    nx.draw_networkx_labels(self.DG, lower_pos, labels=labels, font_size=6)
+    # nx.draw_networkx_labels(self.DG, lower_pos, labels=labels, font_size=6)
 
     #Print title
     title = "Transactions = " + str(self.no_of_transactions) +\

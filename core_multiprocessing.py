@@ -7,7 +7,7 @@ import numpy as np
 from simulation.helpers import update_progress, csv_export, create_random_graph_distances
 from simulation.plotting import print_graph, print_tips_over_time, \
 print_tips_over_time_multiple_agents, print_tips_over_time_multiple_agents_with_tangle, \
-print_attachment_probabilities
+print_attachment_probabilities_alone, print_attachment_probabilities_all_agents
 from simulation.simulation_multi_agent import Multi_Agent_Simulation
 
 

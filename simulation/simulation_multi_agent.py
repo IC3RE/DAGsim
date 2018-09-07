@@ -11,7 +11,7 @@ from simulation.helpers import update_progress, create_distance_matrix, \
 common_elements, clamp, load_file
 from simulation.plotting import print_info, print_graph, print_tips_over_time, \
 print_tips_over_time_multiple_agents, print_tips_over_time_multiple_agents_with_tangle, \
-print_attachment_probabilities
+print_attachment_probabilities_alone,print_attachment_probabilities_all_agents
 from simulation.agent import Agent
 from simulation.transaction import Transaction
 

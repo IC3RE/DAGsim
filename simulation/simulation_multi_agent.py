@@ -50,6 +50,7 @@ class Multi_Agent_Simulation:
             self.agent_choice = _agent_choice
             self.printing = _printing
 
+        #Basic parameter checks
         if (round(sum(self.agent_choice), 3) != 1.0):
             print("Agent choice not summing to 1.0: {}".format(sum(self.agent_choice)))
             sys.exit(1)
@@ -68,9 +69,6 @@ class Multi_Agent_Simulation:
         #For analysis only
         self.record_tips = []
         self.record_attachment_probabilities = []
-        self.record_desc = []
-        self.record_desc_ratio = []
-
 
         #For max. four agents always the same colors in prints
         self.agent_colors = ['#a8d6ff', '#ff9494', '#dcc0dd', '#e0ff80']
@@ -83,9 +81,11 @@ class Multi_Agent_Simulation:
             self.agent_colors.append(color)
             self.agent_tip_colors.append(color)
 
+
     #############################################################################
     # SIMULATION: SETUP
     #############################################################################
+
 
     def setup(self):
 
@@ -118,6 +118,7 @@ class Multi_Agent_Simulation:
     #############################################################################
     # SIMULATION: MAIN LOOP
     #############################################################################
+
 
     def run(self):
 
@@ -189,25 +190,22 @@ class Multi_Agent_Simulation:
             sys.exit()
 
 
-    def check_parameters_changes(self, transaction, dic):
+    def check_parameters_changes(self, transaction, parameters):
 
         #If change event for a transaction is provided
-        if transaction.id in dic:
+        if transaction.id in parameters:
             #If change of distance is provided
-            if dic[transaction.id][0] != False:
-                self.distances = dic[transaction.id][0]
+            if parameters[transaction.id][0] != False:
+                self.distances = parameters[transaction.id][0]
             #If change of agent probabilities is provided
-            if dic[transaction.id][1] != False:
-                self.agent_choice = dic[transaction.id][1]
-
-            # print_tips_over_time_multiple_agents_with_tangle(self, transaction.id)
-            # self.calc_attachment_probabilities(transaction)
-            # print_graph(self)
+            if parameters[transaction.id][1] != False:
+                self.agent_choice = parameters[transaction.id][1]
 
 
     #############################################################################
     # SIMULATION: HELPERS
     #############################################################################
+
 
     def get_tips(self):
 
@@ -291,6 +289,7 @@ class Multi_Agent_Simulation:
     # TIP-SELECTION: RANDOM
     #############################################################################
 
+
     def random_selection(self, transaction):
 
         #Needed for plotting number of tips over time for ALL agents
@@ -318,6 +317,7 @@ class Multi_Agent_Simulation:
     #############################################################################
     # TIP-SELECTION: UNWEIGHTED
     #############################################################################
+
 
     def unweighted_MCMC(self, transaction):
 
@@ -366,6 +366,7 @@ class Multi_Agent_Simulation:
     #############################################################################
     # TIP-SELECTION: WEIGHTED
     #############################################################################
+
 
     def weighted_MCMC(self, transaction):
 
@@ -417,6 +418,7 @@ class Multi_Agent_Simulation:
     # CONFIRMATION CONFIDENCE: MULTI AGENT
     #############################################################################
 
+
     def update_weights_multiple_agents(self, incoming_transaction):
 
         #Update all descendants of incoming_transaction only (cum_weight += 1)
@@ -457,7 +459,7 @@ class Multi_Agent_Simulation:
                     visible_approvers = common_elements(approvers, agent.visible_transactions)
                     transition_probabilities = self.calc_transition_probabilities_multiple_agents(visible_approvers, agent)
 
-                    #For every visible direct approver update the exit probability by adding the exit probaapproverbility
+                    #For every visible direct approver update the exit probability by adding the exit probability
                     #of the current transaction times the transition probabilitiy of walking to the approver
                     for (approver, transition_probability) in zip(visible_approvers, transition_probabilities):
                         approver.exit_probability_multiple_agents[agent] += (
@@ -479,64 +481,15 @@ class Multi_Agent_Simulation:
                 #Loop over valid tips
                 for tip in agent.tips:
 
-                    #Tips have 0 confirmation confidence by default
-                    # tip.confirmation_confidence_multiple_agents[agent] = 0
-
                     if(nx.has_path(self.DG,tip,transaction) and tip != transaction):
 
                         transaction.confirmation_confidence_multiple_agents[agent] += tip.exit_probability_multiple_agents[agent]
 
-            # (Potentially move the whole coloring to the end, after Tangle is created)
-            # if (np.round(transaction.confirmation_confidence_multiple_agents[agent], 2) == 1.0):
-            #     self.DG.node[transaction]["node_color"] = '#b4ffa3'
-            #
-            # elif(np.round(transaction.confirmation_confidence_multiple_agents[agent],2) >= 0.50):
-            #     self.DG.node[transaction]["node_color"] = '#fff694'
+                    #Tips have 0 confirmation confidence by default
+                    tip.confirmation_confidence_multiple_agents[agent] = 0
 
 
-    def measure_partitioning_alon(self):
-
-        #Calculate average confirmation rate of a transaction
-        #Calculate confirmation rate variance of a transaction and global confirmation rate variance
-        # tx_confirmation_confidence_variances = []
-        #
-        # for transaction in self.DG.nodes:
-        #
-        #     transaction.tx_average_confirmation_confidence \
-        #         = (sum(transaction.confirmation_confidence_multiple_agents.values()) / len(self.agents))
-        #
-        #     total = 0
-        #     for agent in self.agents:
-        #
-        #         total += (transaction.confirmation_confidence_multiple_agents[agent] \
-        #                  - transaction.tx_average_confirmation_confidence) ** 2
-        #
-        #     transaction.tx_confirmation_confidence_variance = total / len(self.agents)
-        #
-        #     tx_confirmation_confidence_variances.append(transaction.tx_confirmation_confidence_variance)
-
-        #Calculate average confirmation rate of an agent
-        for agent in self.agents:
-            total = 0
-            agent_no_of_transactions = 0
-
-            for transaction in self.DG.nodes:
-
-                if(agent in transaction.confirmation_confidence_multiple_agents):
-                    total += transaction.confirmation_confidence_multiple_agents[agent]
-                    agent_no_of_transactions += 1
-
-            if(agent_no_of_transactions != 0):
-                agent.agent_average_confirmation_confidence = total / agent_no_of_transactions
-            else:
-                print("Agent has no transactions")
-
-            print("Average confirmation per agent")
-            print(str(agent) + "   " + str(agent.agent_average_confirmation_confidence))
-
-        # return (np.mean(tx_confirmation_confidence_variances))
-
-
+    #Uses exit probabilities to caluclate attachment probabilities
     def calc_attachment_probabilities(self, incoming_transaction):
 
         attachment_probabilities_without_main = []
@@ -566,7 +519,7 @@ class Multi_Agent_Simulation:
         # print(attachment_probabilities_all)
         return attachment_probabilities_without_main
 
-
+    #Performs 100 random walks per agent to caluclate attachment probabilities
     def attachment_probabilities_2(self, incoming_transaction):
 
         self.calc_exit_probabilities_multiple_agents(incoming_transaction)

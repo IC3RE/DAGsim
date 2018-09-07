@@ -34,7 +34,6 @@ def print_graph(self):
     #For genesis take agent 0 as default (always same value)
     labels[self.transactions[0]] = str(np.round(self.transactions[0].exit_probability_multiple_agents[self.agents[0]],2))
 
-    #pos = graphviz_layout(self.DG, prog="dot", args="")
     #col = [['r','b'][int(np.round(transaction.confirmation_confidence,1))] for transaction in self.DG.nodes()] #Color change for 100% confidence
 
     #Coloring of nodes
@@ -135,12 +134,6 @@ def print_tips_over_time_multiple_agents_with_tangle(self, no_current_transactio
         # np.poly1d(np.polyfit(self.arrival_times[cut_off:no_current_transactions-1], no_tips[cut_off:no_current_transactions-1], 1))\
         # (np.unique(self.arrival_times[cut_off:no_current_transactions-1])), label="Best Fit Line", linestyle='--')
 
-    # no_tips = []
-    # for i in self.record_tips:
-    #     no_tips.append(len(i))
-    #
-    # plt.plot(self.arrival_times[:no_current_transactions-1], no_tips, label="Tips issueing agent")
-
     #Print title
     title = "Transactions = " + str(self.no_of_transactions) + \
             ",  " + r'$\lambda$' + " = " + str(self.lam) + \
@@ -151,7 +144,6 @@ def print_tips_over_time_multiple_agents_with_tangle(self, no_current_transactio
     plt.ylabel("Number of tips")
     plt.legend(loc='upper left')
     plt.title(title)
-
 
     plt.subplot(2, 1, 2)
 
@@ -168,7 +160,6 @@ def print_tips_over_time_multiple_agents_with_tangle(self, no_current_transactio
     #For genesis take agent 0 as default (always same value)
     labels[self.transactions[0]] = str(np.round(self.transactions[0].exit_probability_multiple_agents[self.agents[0]],2))
 
-    #pos = graphviz_layout(self.DG, prog="dot", args="")
     #col = [['r','b'][int(np.round(transaction.confirmation_confidence,1))] for transaction in self.DG.nodes()] #Color change for 100% confidence
 
     #Coloring of tips
@@ -177,8 +168,8 @@ def print_tips_over_time_multiple_agents_with_tangle(self, no_current_transactio
         # self.DG.node[tip]["node_color"] = '#ffdbb8'
         self.DG.node[tip]["node_color"] = self.agent_tip_colors[int(str(tip.agent))]
 
-
-    # col = list(nx.get_node_attributes(self.DG, 'node_color').values()) #Didn't work on Linux
+    #Didn't work on Linux
+    # col = list(nx.get_node_attributes(self.DG, 'node_color').values())
     col = []
     for transaction in self.DG:
         col.append(self.DG.node[transaction]["node_color"])
@@ -188,14 +179,8 @@ def print_tips_over_time_multiple_agents_with_tangle(self, no_current_transactio
     nx.draw_networkx(self.DG, pos, with_labels=True, node_size = 100, font_size=5.5, node_color = col)
     #nx.draw_networkx_labels(self.DG, lower_pos, labels=labels, font_size=6)
 
-    #Print title
-    # title = "Transactions = " + str(self.no_of_transactions) +\
-    #         ",  " + r'$\lambda$' + " = " + str(self.lam)
-    # if(self.tip_selection_algo == "weighted"):
-    #     title += ",  " + r'$\alpha$' + " = " + str(self.alpha)
     plt.xlabel("Time (s)")
     plt.yticks([])
-    # plt.title(title)
     plt.show()
 
 
@@ -230,12 +215,6 @@ def print_tips_over_time_multiple_agents(self, no_current_transactions):
         # np.poly1d(np.polyfit(self.arrival_times[cut_off:no_current_transactions-1], no_tips[cut_off:no_current_transactions-1], 1))\
         # (np.unique(self.arrival_times[cut_off:no_current_transactions-1])), label="Best Fit Line", linestyle='--')
 
-    # no_tips = []
-    # for i in self.record_tips:
-    #     no_tips.append(len(i))
-    #
-    # plt.plot(self.arrival_times[:no_current_transactions-1], no_tips, label="Tips issueing agent")
-
     #Print title
     title = "Transactions = " + str(self.no_of_transactions) + \
             ",  " + r'$\lambda$' + " = " + str(self.lam) + \
@@ -246,13 +225,10 @@ def print_tips_over_time_multiple_agents(self, no_current_transactions):
     plt.ylabel("Number of tips")
     plt.legend(loc='upper left')
     plt.title(title)
-
-
     plt.show()
 
 
-
-def print_attachment_probabilities(self):
+def print_attachment_probabilities_alone(self):
 
     title = "Transactions = " + str(self.no_of_transactions) + \
             ",  " + r'$\lambda$' + " = " + str(self.lam) + \
@@ -266,17 +242,9 @@ def print_attachment_probabilities(self):
 
     plt.figure(figsize=(14, 8))
 
-    print(self.record_attachment_probabilities)
-
     x = np.squeeze([i[0] for i in self.record_attachment_probabilities])
     y = np.squeeze([i[1] for i in self.record_attachment_probabilities])
 
-    print(self.record_attachment_probabilities)
-
-    labels = ["Agent " + str(i) for i in range(len(y))]
-
-    # ax = plt.axes()
-    # ax.set_color_cycle([plt.cm.tab20c(i) for i in np.linspace(0, 1, len(y))])
     plt.plot(x,y, label="Attachment probability sub-Tangle branch")
     plt.ylim(0, 0.7)
 
@@ -290,17 +258,55 @@ def print_attachment_probabilities(self):
     plt.plot(x_mean, y_mean,\
     label="Average", linestyle='-')
 
-    # lower_bound_95_confidence_interval = st.t.interval(0.80, len(partitioning_values)-1, loc=np.mean(partitioning_values), scale=st.sem(partitioning_values))[0]
-    # upper_bound_95_confidence_interval = st.t.interval(0.80, len(partitioning_values)-1, loc=np.mean(partitioning_values), scale=st.sem(partitioning_values))[1]
-    # plt.axhline(y=lower_bound_95_confidence_interval, color='r', linestyle='-')
-    # plt.axhline(y=upper_bound_95_confidence_interval, color='r', linestyle='-')
-
     plt.xlabel("Transactions")
-    # plt.xticks([])
     plt.ylabel("Probability to attach to sub-Tangle branch")
     plt.legend(loc='upper left')
-    #plt.legend(labels, loc='upper left')
     plt.title(title)
     plt.tight_layout()
     # plt.show()
     # plt.savefig('graph' +  str(title) + '_3' + '.png')
+
+
+def print_attachment_probabilities_all_agents(self):
+
+    title = "Transactions = " + str(self.no_of_transactions) + \
+            ",  " + r'$\lambda$' + " = " + str(self.lam) + \
+            ",  " + r'$d$' + " = " + str(self.distances[1][0])
+    if (self.tip_selection_algo == "weighted"):
+        title += ",  " + r'$\alpha$' + " = " + str(self.alpha)
+
+    plt.figure(figsize=(20, 10))
+
+    #Attachment probabilities
+    plt.subplot(1, 2, 1)
+
+    x = np.squeeze([i[0] for i in self.record_attachment_probabilities])
+    y = np.squeeze([i[1] for i in self.record_attachment_probabilities])
+
+    labels = ["Agent " + str(i) for i in range(len(y))]
+
+    #For more than 10 agents
+    # ax = plt.axes()
+    # ax.set_color_cycle([plt.cm.tab20c(i) for i in np.linspace(0, 1, len(y))])
+    plt.plot(x, y)
+    plt.xlabel("Transactions")
+    plt.ylabel("Probability to attach to sub-Tangle branch")
+    plt.legend(labels, loc="upper right", ncol=2)
+
+    #Boxplot
+    plt.subplot(1, 2, 2)
+
+    data = []
+
+    for agent in range(10):
+        agent_data = [i[1][agent] for i in self.record_attachment_probabilities]
+        data.append(agent_data)
+
+    plt.boxplot(data, 0, '+')
+    plt.xlabel("Agents")
+    plt.xticks(np.arange(1, 11), np.arange(0, 10))
+    plt.suptitle(title)
+    plt.tight_layout()
+    plt.subplots_adjust(top=0.94)
+    # plt.show()
+    # plt.savefig(str(no) + '.png')

@@ -35,8 +35,66 @@ def build_test_dag(complexity):
     """
     ########################### SETUP ######################################
     #Check that the input is one of the possible options
-    if (complexity != 'simple') and (complexity != 'complex'):
+    if (complexity != 'simple') and (complexity != 'complex') and (complexity != 'chain'):
         raise ValueError('Input value must either be: simple or: complex in string format')
+    
+    if complexity == 'chain':
+        number_of_blocks = 4
+        
+        #Define the graph structure
+        test_graph = nx.DiGraph()
+        
+        #Setup list for blocks
+        blocks = []
+        
+        #Create random arrival times (x position)
+        arrival_times = np.arange(0, number_of_blocks)
+        
+        #Deterministically create the set of input transactions
+        transactions = [[1, 2], [3, 2], [5, 1], [7, 9]]
+        
+        #Define y position of the node (building a chain that seperates into 2)
+        y_position = []
+        
+        ##########################################################################
+        # BUILD DAG
+        ##########################################################################
+        #Note: the following behaviour diverges, depending on whether a complex 
+        #or simple DAG is required
+                    
+        #Construct the y position of the blocks - seperating a single chain
+        #into 2 chains part way down
+        for i in range(number_of_blocks+1):
+            if i <= 1:
+                y_position.append(0)
+                
+            elif i == 2:
+                y_position.append(0)
+                
+            elif i == 3:
+                y_position.append(0) 
+    
+     
+#        print('y position', y_position)
+        block_counter = 0
+        
+        #Create list of blocks, with their arrival times and counters as IDs
+        for i in range(len(arrival_times)):
+            blocks.append(Block(arrival_times[i], block_counter, transactions[i]))
+            block_counter += 1
+#        print('blocks', blocks)
+            
+        counter = 0
+        
+        #Add the blocks to a graph
+        for block in blocks:
+            test_graph.add_node(block, pos = (block.arrival_time, y_position[counter]), no=counter, node_color='#99ffff')
+            counter += 1
+            
+        #Add the edges between the blocks on the graph
+        test_graph.add_edges_from([(blocks[1], blocks[0]), (blocks[2], blocks[1]), (blocks[3], blocks[2])])
+    
+    
     
     #Build different DAGs depending on whether the input requests a simple or complex one
     
@@ -48,6 +106,10 @@ def build_test_dag(complexity):
         
         #Setup list for blocks
         blocks = []
+        
+        #Deterministically chosen set of transactions
+        transactions = [[1, 2], [3, 2], [2, 1], [7, 2]]
+
         
         #Create random arrival times (x position)
         arrival_times = np.arange(0, number_of_blocks)
@@ -79,7 +141,7 @@ def build_test_dag(complexity):
         
         #Create list of blocks, with their arrival times and counters as IDs
         for i in range(len(arrival_times)):
-            blocks.append(Block(arrival_times[i], block_counter))
+            blocks.append(Block(arrival_times[i], block_counter, transactions[i]))
             block_counter += 1
 #        print('blocks', blocks)
             

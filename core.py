@@ -86,12 +86,12 @@ from simulation.test_dag import build_test_dag
 plt.close('all')
 
 #Deterministically build a sample DAG 
-dag = build_test_dag('complex')
+dag = build_test_dag('simple')
 simu3 = Multi_Agent_Simulation(11, 1, 2, 0.005, 100000000000, 1, _printing=True)
 accept_tx, all_tx = simu3.Tx0(dag, dag)
 #Print out final results
-print('accept_transact', accept_tx)
-print('all_transact', all_tx)
+print('Accepted transactions', accept_tx)
+#print('all_transact', all_tx)
 
 #np.savetxt('voting_profile_excel'+(time.strftime("%H-%M-%S"))+"{:%B-%d-%Y}".format(datetime.now())+'.csv', vote, delimiter=',') 
 plt.show()

@@ -26,20 +26,20 @@ def anticone_test(graph, tx, block_1, voting_profile):
         
         #Extract the blocks that contain a conflicting transaction 
         block_conflict_tx2 = set(list(conflict_dict.keys()))
-#        print('block that contains a conflicting transaction', block_conflict_tx2)
+        print('block that contains a conflicting transaction', block_conflict_tx2)
     
         #Determine the anticone of block_1
         anticone_block_1 = anticone(block_1, graph) 
-#        print('anticone_block', anticone_block_1)
+        print('anticone_block', anticone_block_1)
         
         #Calculate the intersection of conflicting blocks and anticone of block_1
         intersection = block_conflict_tx2.intersection(anticone_block_1)
-#        print('intersection', intersection)
+        print('intersection', intersection)
         
         #Iterate through all blocks that are in the set of blocks that contain conflicting transactions
         #and are in the set of blocks that are not ordered by directly by the DAG
         for block_2 in intersection: 
-#            print('voting profile', voting_profile[block_1.id, block_2.id])
+            print('voting profile', voting_profile[block_1.id, block_2.id])
 #            print('')
             if voting_profile[block_1.id, block_2.id] >= 0:
                 return False

@@ -225,19 +225,21 @@ class Multi_Agent_Simulation:
         
         #Extract useful attributes of the input graph, for use later
         graph_set, all_transactions = useful_attributes(subgraph)
-        print('all_transactions', all_transactions)
+        print('All transactions in the blockDAG', all_transactions)
     #    print('all_transactions', all_transactions)
         
         counter = 0 #Used to determine where in the loops the code is up to
         
         #Iterate through blocks in the DAG
         for block_1 in subgraph:
-#            print('block', block_1.id)
+            print('')
+            print('block', block_1.id)
             
     #        print('counter', counter)
             
             for tx in block_1.transactions:
-#                print('transaction', tx)
+                print('')
+                print('transaction', tx)
                 
                 #Create list to store the results of the 3 acceptance tests
                 test_results = []

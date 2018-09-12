@@ -11,7 +11,7 @@ from simulation.helpers_spectre import update_progress, create_distance_matrix, 
 from simulation.plotting_spectre import print_info, print_graph, print_tips_over_time, print_tips_over_time_multiple_agents
 from simulation.agent import Agent
 from simulation.block import Block
-from simulation.Tx0_helpers import anticone_test, useful_attributes, tx_inputs, anticone, conflict
+from simulation.Tx0_helpers import anticone_test, check_inputs, useful_attributes, tx_inputs, anticone, conflict
 
 
 
@@ -38,6 +38,12 @@ class Multi_Agent_Simulation:
             self.no_of_agents = _no_of_agents
             self.alpha = _alpha
             self.latency = _latency
+            #Create list to store the results of the 3 acceptance tests
+            self.test_results = []
+        
+            #Setup a list to store the accepted set of transactions
+            self.Tx = []
+        
             if (type(_distance) is float or type(_distance) is int):
                 self.distances = create_distance_matrix(self.no_of_agents, _distance)
             else:
@@ -112,6 +118,7 @@ class Multi_Agent_Simulation:
         for i in range(len(self.arrival_times)):
             self.blocks.append(Block(self.arrival_times[i], block_counter))
             block_counter += 1
+        
 
     #############################################################################
     # SIMULATION: MAIN LOOP
@@ -185,6 +192,15 @@ class Multi_Agent_Simulation:
 #        print(type(self.DG))
 #        nx.draw(self.DG, with_labels=True)
 #        vote = self.CalcVotes(self.DG)
+        
+        #Transaction acceptance result storage
+        
+        """
+        These need to go here rather than in setup because, when I artificially
+        create and put a blockDAG in I don't call the setup method. So the storage
+        needs to be created here
+        """
+        
         (accept_tx, all_tx) = self.Tx0(self.DG, self.DG)
         
         
@@ -214,14 +230,33 @@ class Multi_Agent_Simulation:
         Returns a set of accepted transactions, from an input 
         blockDAG and pairwise voting profile. This function operates recursively
         and is initially called with the full blockDAG.
+        
+        How it works:
+            The transactions acceptance algorithm requires a given transaction 
+            to pass 3 tests in order to be verified as an accepted transaction.
+            This function prepares the ground for these tests and then 
+            implements them.
+            
+            Test 1 and 2 are contained in the same function (due to the way that
+            the algorithm is designed), whilst test 3 is in a seperate function. 
+            
+            Each test outputs a boolean - 'True' or 'False'. 
+            
+            True refers to the transaction having passed the test, False refers
+            to the transaction having failed the test.
+            
+            A transaction is accepted if all three tests return 'True' responses. 
+            Each response is stored in a list, and the list of responses checked
+            after all the tests for the transaction have been run.
+            
+            The list is emptied for each new transaction being tested.
         """
         #First generate the pairwise vote over all blocks
         voting_profile = self.CalcVotes(graph)
         
         #Execute the accepted transactions (consensus) protocol
-         
-        #Setup a list to store the accepted set of transactions
-        Tx = []
+#        self.Tx = []
+
         
         #Extract useful attributes of the input graph, for use later
         graph_set, all_transactions = useful_attributes(subgraph)
@@ -232,27 +267,31 @@ class Multi_Agent_Simulation:
         
         #Iterate through blocks in the DAG
         for block_1 in subgraph:
-            print('')
-            print('block', block_1.id)
+#            print('')
+#            print('block', block_1.id)
             
     #        print('counter', counter)
             
             for tx in block_1.transactions:
-                print('')
-                print('transaction', tx)
-                
-                #Create list to store the results of the 3 acceptance tests
-                test_results = []
+                self.test_results = []
+#                print('')
+#                print('transaction', tx)
                 
                 #Insert acceptance test functions here
                 
-                #Test_1
-                test_1 = anticone_test(graph, tx, block_1, voting_profile)
-                test_results.append(test_1)          
+                #Test_1 and Test 2 (contains lines 5 - 10 of algorithm 2)
+                test_1, test_2 = anticone_test(self, graph, tx, block_1, voting_profile)
+#                print(test_1)
+                self.test_results.append(test_1) 
+                self.test_results.append(test_2)
+                print('finished test 1, result is', test_1, 'finished test 2, result is', test_2)
                 
-                #Test_2
                 
                 #Test_3
+                test_3 = check_inputs(self, graph, tx, block_1, voting_profile)
+                self.test_results.append(test_3)
+                print('finished test 3 and the result is', test_3)
+
                 
 #                print('tx', tx)
     
@@ -273,13 +312,14 @@ class Multi_Agent_Simulation:
                     if (set(tx_3).intersection(Tx0(graph, past(block_1)))) = 0:
     
                 """
-                
+                print('test results', self.test_results)
                 #Add the transaction to the accepted set of transactions if it passes 
                 #all 3 tests
-                if all(item == True for item in test_results):
-                    Tx.append(tx)
+                if all(item == True for item in self.test_results):
+                    self.Tx.append(tx)
+            print('accepted set', self.Tx)
         
-        return (Tx, all_transactions)
+        return (self.Tx, all_transactions)
     
     
     def CalcVotes(self, graph):

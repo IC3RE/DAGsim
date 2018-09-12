@@ -9,10 +9,16 @@ from simulation.test_dag import build_test_dag
 # HELPER FUNCTIONS
 ##############################################################################
 
-def anticone_test(graph, tx, block_1, voting_profile):
+def anticone_test(self, graph, tx, block_1, voting_profile):
     """
     Determines whether the transaction passes or fails the anticone set condition
+    
+    Performs test 1 and test 2. See Tx0 documentation for detailed description of how this works
     """    
+    #Initialise test_1 and test_2 results as zero, in case of non-assignment during the 
+    #for and if loops
+    test_1 = None
+    test_2 = None
     
     #Identify transactions that conflict with tx and the blocks they are contained in
     conflict_dict = conflict(graph, tx, block_1.id)
@@ -26,27 +32,95 @@ def anticone_test(graph, tx, block_1, voting_profile):
         
         #Extract the blocks that contain a conflicting transaction 
         block_conflict_tx2 = set(list(conflict_dict.keys()))
-        print('block that contains a conflicting transaction', block_conflict_tx2)
+#        print('block that contains a conflicting transaction', block_conflict_tx2)
     
         #Determine the anticone of block_1
         anticone_block_1 = anticone(block_1, graph) 
-        print('anticone_block', anticone_block_1)
+#        print('anticone_block', anticone_block_1)
         
         #Calculate the intersection of conflicting blocks and anticone of block_1
         intersection = block_conflict_tx2.intersection(anticone_block_1)
-        print('intersection', intersection)
+#        print('intersection', intersection)
         
+        
+        #################### Test 1 ###################
         #Iterate through all blocks that are in the set of blocks that contain conflicting transactions
         #and are in the set of blocks that are not ordered by directly by the DAG
         for block_2 in intersection: 
-            print('voting profile', voting_profile[block_1.id, block_2.id])
+#            print('voting profile', voting_profile[block_1.id, block_2.id])
 #            print('')
             if voting_profile[block_1.id, block_2.id] >= 0:
-                return False
+                test_1 = False
             else:
-                return True           
+                test_1 = True
+            
+        #################### Test 2 ####################
+        #Convert the transaction object to a set (needed for syntax of an operator)
+        tx_2_set = {tx_2}
+        
+        #Determine the past of block_1 (it's past DAG)
+        past_dag = nx.descendants(graph, block_1)
+        
+        accept_tx, all_tx = self.Tx0(graph, past_dag)
+        accept_tx_set = set(accept_tx)
+        
+        # If the transaction is not in the accepted transactions for the past blockDAG
+        # belonging to the block
+        if bool(tx_2_set.intersection(accept_tx_set)) == True:
+            test_2 = False
+        else:
+            test_2 = True
+            
+        return (test_1, test_2)
+"""          
+def reject_past_tx(graph, tx_2, block_1):
     
-     
+    #Determine the  past of block 1
+    past_block_1 = nx.ancestors(graph, block_1)
+    
+    #Check if the conflicting transaction is part of the accepted set of transactions 
+    #of the previous blocks
+    if tx_2.intersection(Tx0(graph, past_block_1)) != 0:
+        return False
+    else:
+        return True
+"""
+
+def check_inputs(self, graph, tx, block_1, voting_profile):
+    
+    
+    #Determine the inputs to the transaction
+    predecessors = list(graph.successors(block_1)) #have to use successor because 
+                                                  #we're iterating through the graph
+                                                  #in the opposite direction?
+    
+    #Determine the transactions associated with these predecessors
+    inputs = []
+    
+    #Store the transactions of each predecessor block
+    for block in predecessors:
+        inputs.append(block.transactions)
+        
+#    print('block', block_1, 'predecessor blocks', predecessors, 'predecessor transactions', inputs, 'tx', tx)
+    
+    #Determine the past of block_1 (it's past DAG)
+    past_dag = nx.descendants(graph, block_1)
+    
+    #Iterate through the input transactions
+    for transaction in inputs:
+        transaction_set = set(transaction)
+        accept_tx, all_tx = self.Tx0(graph, past_dag)
+        accept_tx_set = set(accept_tx)
+        
+        # If the transaction is not in the accepted transactions for the past blockDAG
+        # belonging to the block
+        if bool(transaction_set.intersection(accept_tx_set)) == False:
+#            print('block', block, 'transaction', transaction, 'Tx0 output for the block', accept_tx)
+            return False
+        else:
+            return True
+            
+         
 def useful_attributes(graph):
     """
     General purpose function that takes an input graph and returns useful attributes 

@@ -38,12 +38,36 @@ class Multi_Agent_Simulation:
             self.no_of_agents = _no_of_agents
             self.alpha = _alpha
             self.latency = _latency
+            
+            ###################################################################
+            # SETUP: Tx0 
+            ###################################################################
+            
             #Create list to store the results of the 3 acceptance tests
             self.test_results = []
         
             #Setup a list to store the accepted set of transactions
             self.Tx = []
         
+             ######################################################
+             # SETUP: Pairwise voting
+             ######################################################
+        
+            #Current voting profile
+            self.voting_profile = []
+                   
+            #Past voting profile for recursive calls
+            self.past_voting_profile = [] 
+            
+            #List for created past(z) DAGs
+            self.past_dags = []
+            
+            #Storage for relevant future votes
+            self.future_votes = []
+            
+            #Creat storage for position indices
+            self.position = []
+            
             if (type(_distance) is float or type(_distance) is int):
                 self.distances = create_distance_matrix(self.no_of_agents, _distance)
             else:
@@ -260,7 +284,7 @@ class Multi_Agent_Simulation:
         
         #Extract useful attributes of the input graph, for use later
         graph_set, all_transactions = useful_attributes(subgraph)
-        print('All transactions in the blockDAG', all_transactions)
+#        print('All transactions in the blockDAG', all_transactions)
     #    print('all_transactions', all_transactions)
         
         counter = 0 #Used to determine where in the loops the code is up to
@@ -280,17 +304,18 @@ class Multi_Agent_Simulation:
                 #Insert acceptance test functions here
                 
                 #Test_1 and Test 2 (contains lines 5 - 10 of algorithm 2)
+#                print('graph nodes', graph.nodes(), 'tx', tx, 'block', block_1, 'voting profile', voting_profile)
                 test_1, test_2 = anticone_test(self, graph, tx, block_1, voting_profile)
 #                print(test_1)
                 self.test_results.append(test_1) 
                 self.test_results.append(test_2)
-                print('finished test 1, result is', test_1, 'finished test 2, result is', test_2)
+#                print('finished test 1, result is', test_1, 'finished test 2, result is', test_2)
                 
                 
                 #Test_3
                 test_3 = check_inputs(self, graph, tx, block_1, voting_profile)
                 self.test_results.append(test_3)
-                print('finished test 3 and the result is', test_3)
+#                print('finished test 3 and the result is', test_3)
 
                 
 #                print('tx', tx)
@@ -312,12 +337,12 @@ class Multi_Agent_Simulation:
                     if (set(tx_3).intersection(Tx0(graph, past(block_1)))) = 0:
     
                 """
-                print('test results', self.test_results)
+#                print('test results', self.test_results)
                 #Add the transaction to the accepted set of transactions if it passes 
                 #all 3 tests
                 if all(item == True for item in self.test_results):
                     self.Tx.append(tx)
-            print('accepted set', self.Tx)
+#            print('accepted set', self.Tx)
         
         return (self.Tx, all_transactions)
     
@@ -334,73 +359,67 @@ class Multi_Agent_Simulation:
         This code is an implementation of the pairwise voting algorithm in 
         the SPECTRE whitepaper titled 'Algorithm 1 - Calc votes'
         
-        """
-        ######################################################
-        # SETUP
-        ######################################################
-        
-        #Current voting profile
-        self.voting_profile = []
-               
-        #Past voting profile for recursive calls
-        self.past_voting_profile = [] 
-        
-        #List for created past(z) DAGs
-        self.past_dags = []
-        
+        """        
         #Calculate number of blocks, for use later
         self.no_of_nodes = graph.number_of_nodes()
-        
 #        print('input graph nodes', graph.nodes) # - Nodes not topologically sorted yet
+        self.topo_sort = list(nx.topological_sort(graph))
+        
+        ########################### BASE CASE #################################
         
         #If the blockDAG is empty, return an empty ordering
         if graph.number_of_nodes() == 0:
-            self.voting_profile.clear()
+            self.voting_profile = []
+            return self.voting_profile
         
+    
+        
+        ######################### RECURSIVE STEPS #############################
         ######################################################################
         # RUN VOTING ALGORITHM
         ######################################################################
                     
-        #Perform a topological sort of the blockDAG
-        self.topo_sort = list(nx.topological_sort(graph))
+            #Perform a topological sort of the blockDAG
+    
+    #        print('sorted graph', self.topo_sort)
+            
+            """
+    #        BEWARE: The order of the graph has now been flipped. Previously it went
+    #        z = 0 to z = 6. Now, due to the topological sort, it goes z = 6 to z = 0
+            """      
+            
+            ############################## Recursion ##############################
+            #Recursive call of CalcVotes
+        for z in self.topo_sort:
+            
+            self.past_dag = graph.subgraph(nx.descendants(graph, z))
+            print('z', z.id, 'past dag nodes', self.past_dag.nodes())
+            plt.figure()
+            nx.draw(self.past_dag, with_labels=True)
+            plt.title(z.id)
+            
+    #           Perform the recursion
+            recurs_vote = self.CalcVotes(self.past_dag)
+            recurs_vote_copy = copy.copy(recurs_vote)
+            print('recurs_vote_copy', recurs_vote_copy)
+            
+    #            Record the past voting profile
+            self.past_voting_profile.append(recurs_vote_copy)
         
-        """
-#        BEWARE: The order of the graph has now been flipped. Previously it went
-#        z = 0 to z = 6. Now, due to the topological sort, it goes z = 6 to z = 0
-        """      
-        
-        ############################## Recursion ##############################
-        #Recursive call of CalcVotes
-#        for z in self.topo_sort:
-            
-#        self.past_dag = graph.subgraph(nx.descendants(graph, z))
-#            print('z', z.id, 'past dag nodes', self.past_dag.nodes())
-#            plt.figure()
-#            plt.title(z.id)
-#            nx.draw(past_dag, with_labels=True)
-            
-#           Perform the recursion
-#            recurs_vote = self.CalcVotes(self.past_dag)
-#            recurs_vote_copy = copy.copy(recurs_vote)
-            
-            #Record the past voting profile
-#            self.past_voting_profile.append(recurs_vote_copy)
-            
-#            print('vote', z.id, vote) 
-        
+        print('past voting profile', self.past_voting_profile)
+                    
         ############### Main section of the pairwise vote #####################
         #Iterate through each block in the topo_sort
+        
+#        print('above the main loop')
+#        print('topological sort', self.topo_sort)
+        
         for z in self.topo_sort:
-#            if z.id == 1:
+            print('entered main loop and block ID is', z.id)
 
             #This will be overwritten at each z
             self.z_vote = np.zeros((self.no_of_nodes, self.no_of_nodes))
             
-            #Storage for relevant future votes
-            self.future_votes = []
-            
-            #Creat storage for position indices
-            self.position = []
 #            print('z',z, 'block ancestors', self.block_ancestors)
             
             #For each block, look at every other pair of blocks (x, y)
@@ -421,20 +440,20 @@ class Multi_Agent_Simulation:
                         if ((x in future_z) and (y not in past_z)) or \
                         ((x in past_z) and (y == z)):
                             self.z_vote[x.id, y.id] = int(-1) #Using the block number to determine the position of the vote in the profile
-#                            print('z', z, 'x', x, 'y', y, 'vote', self.z_vote[x.id, y.id])
+                            print('z', z, 'x', x, 'y', y, 'vote', self.z_vote[x.id, y.id])
                         
                         #Line 9 of algo
                         elif ((y in future_z) and (x not in past_z)) or \
                         ((y in past_z) and (x == z)):
                             self.z_vote[x.id, y.id] = int(1)
-#                            print('z', z, 'x', x, 'y', y, 'vote', self.z_vote[x.id, y.id])
+                            print('z', z, 'x', x, 'y', y, 'vote', self.z_vote[x.id, y.id])
 
                         
                         #Line 11 of algo
 #                        elif ((x in past_z) and (y in past_z)):
 #                            self.z_vote[x.id, y.id] = self.past_voting_profile[z.id][x.id, y.id]#need to work out what to do
                         
-                        
+                        """
                         #Line 13 of algo
                         elif ((x not in past_z) and (y not in past_z)):
                             
@@ -464,7 +483,7 @@ class Multi_Agent_Simulation:
                                 
                                 #Input the vote required for this particular x, y combination
                                 self.z_vote[x.id, y.id] = self.sign_sum_future_votes[x.id, y.id]
-                        
+                        """
                         
  
             # Store the voting profile for that particular z
@@ -476,7 +495,8 @@ class Multi_Agent_Simulation:
         
         #Take the sign of each aggregated vote - this is the pairwise vote
         self.virtual_vote = np.sign(self.aggregate_vote)
-
+        
+        print('at end of method')
         return self.virtual_vote
 
 

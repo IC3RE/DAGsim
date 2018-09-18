@@ -99,7 +99,7 @@ def build_test_dag(complexity):
     #Build different DAGs depending on whether the input requests a simple or complex one
     
     if complexity == 'simple':
-        number_of_blocks = 4
+        number_of_blocks = 5
         
         #Define the graph structure
         test_graph = nx.DiGraph()
@@ -108,7 +108,7 @@ def build_test_dag(complexity):
         blocks = []
         
         #Deterministically chosen set of transactions
-        transactions = [[1, 2], [3, 2], [2, 1], [7, 2]]
+        transactions = [[1, 2], [3, 2], [2, 1], [7, 2], [10, 4]]
 
         
         #Create random arrival times (x position)
@@ -125,7 +125,7 @@ def build_test_dag(complexity):
                     
         #Construct the y position of the blocks - seperating a single chain
         #into 2 chains part way down
-        for i in range(number_of_blocks+1):
+        for i in range(number_of_blocks+1): # +1 because range() only goes up to number_of_blocks - 1
             if i <= 1:
                 y_position.append(0)
                 
@@ -134,6 +134,9 @@ def build_test_dag(complexity):
                 
             elif i == 3:
                 y_position.append(1) 
+                
+            elif i == 4:
+                y_position.append(1)
     
      
 #        print('y position', y_position)
@@ -151,9 +154,11 @@ def build_test_dag(complexity):
         for block in blocks:
             test_graph.add_node(block, pos = (block.arrival_time, y_position[counter]), no=counter, node_color='#99ffff')
             counter += 1
+        
             
         #Add the edges between the blocks on the graph
-        test_graph.add_edges_from([(blocks[1], blocks[0]), (blocks[2], blocks[1]), (blocks[3], blocks[1])])
+        test_graph.add_edges_from([(blocks[1], blocks[0]), (blocks[2], blocks[1]), (blocks[3], blocks[1]), \
+                                   (blocks[4], blocks[3])])
     
     #Build the graph in the complex case
     elif complexity == 'complex':

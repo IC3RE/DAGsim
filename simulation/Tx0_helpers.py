@@ -17,61 +17,65 @@ def anticone_test(self, graph, tx, block_1, voting_profile):
     """    
     #Initialise test_1 and test_2 results as zero, in case of non-assignment during the 
     #for and if loops
-    test_1 = None
-    test_2 = None
+    test_1 = 0
+    test_2 = 0
     
     #Identify transactions that conflict with tx and the blocks they are contained in
     conflict_dict = conflict(graph, tx, block_1.id)
 #    print('conflicting transaction', list(conflict_dict.values()), 'block', list(conflict_dict.keys()))
+#    print('conflict_dict', conflict_dict)
     
-    #Iterate through the transactions that conflict with the original transaction in the block
-    for tx_2 in list(conflict_dict.values()):
+    #Check if there are any conflicts and only execute the following for loop
+    #if there is. Otherwise 'NoneType' error is thrown
+    if bool(conflict_dict) == True:
+        #Iterate through the transactions that conflict with the original transaction in the block
+        for tx_2 in list(conflict_dict.values()):
+#            print('tx_2', tx_2, 'conflict_dict', conflict_dict.values())
+            #Identify the blocks and transactions that conflict with tx2
+        #                conflict_dict_2 = conflict(graph, tx_2, block_1.id)                
+            
+            #Extract the blocks that contain a conflicting transaction 
+            block_conflict_tx2 = set(list(conflict_dict.keys()))
+    #        print('block that contains a conflicting transaction', block_conflict_tx2)
         
-        #Identify the blocks and transactions that conflict with tx2
-    #                conflict_dict_2 = conflict(graph, tx_2, block_1.id)                
-        
-        #Extract the blocks that contain a conflicting transaction 
-        block_conflict_tx2 = set(list(conflict_dict.keys()))
-#        print('block that contains a conflicting transaction', block_conflict_tx2)
-    
-        #Determine the anticone of block_1
-        anticone_block_1 = anticone(block_1, graph) 
-#        print('anticone_block', anticone_block_1)
-        
-        #Calculate the intersection of conflicting blocks and anticone of block_1
-        intersection = block_conflict_tx2.intersection(anticone_block_1)
-#        print('intersection', intersection)
-        
-        
-        #################### Test 1 ###################
-        #Iterate through all blocks that are in the set of blocks that contain conflicting transactions
-        #and are in the set of blocks that are not ordered by directly by the DAG
-        for block_2 in intersection: 
-#            print('voting profile', voting_profile[block_1.id, block_2.id])
-#            print('')
-            if voting_profile[block_1.id, block_2.id] >= 0:
-                test_1 = False
+            #Determine the anticone of block_1
+            anticone_block_1 = anticone(block_1, graph) 
+    #        print('anticone_block', anticone_block_1)
+            
+            #Calculate the intersection of conflicting blocks and anticone of block_1
+            intersection = block_conflict_tx2.intersection(anticone_block_1)
+    #        print('intersection', intersection)
+            
+            
+            #################### Test 1 ###################
+            #Iterate through all blocks that are in the set of blocks that contain conflicting transactions
+            #and are in the set of blocks that are not ordered by directly by the DAG
+            for block_2 in intersection: 
+    #            print('voting profile', voting_profile[block_1.id, block_2.id])
+    #            print('')
+                if voting_profile[block_1.id, block_2.id] >= 0:
+                    test_1 = False
+                else:
+                    test_1 = True
+                
+            #################### Test 2 ####################
+            #Convert the transaction object to a set (needed for syntax of an operator)
+            tx_2_set = {tx_2}
+            
+            #Determine the past of block_1 (it's past DAG)
+            past_dag = nx.descendants(graph, block_1)
+            
+            accept_tx, all_tx = self.Tx0(graph, past_dag)
+            accept_tx_set = set(accept_tx)
+            
+            # If the transaction is not in the accepted transactions for the past blockDAG
+            # belonging to the block
+            if bool(tx_2_set.intersection(accept_tx_set)) == True:
+                test_2 = False
             else:
-                test_1 = True
+                test_2 = True
             
-        #################### Test 2 ####################
-        #Convert the transaction object to a set (needed for syntax of an operator)
-        tx_2_set = {tx_2}
-        
-        #Determine the past of block_1 (it's past DAG)
-        past_dag = nx.descendants(graph, block_1)
-        
-        accept_tx, all_tx = self.Tx0(graph, past_dag)
-        accept_tx_set = set(accept_tx)
-        
-        # If the transaction is not in the accepted transactions for the past blockDAG
-        # belonging to the block
-        if bool(tx_2_set.intersection(accept_tx_set)) == True:
-            test_2 = False
-        else:
-            test_2 = True
-            
-        return (test_1, test_2)
+    return (test_1, test_2)
 """          
 def reject_past_tx(graph, tx_2, block_1):
     
@@ -87,7 +91,10 @@ def reject_past_tx(graph, tx_2, block_1):
 """
 
 def check_inputs(self, graph, tx, block_1, voting_profile):
-    
+    """
+    This performs test 3 of algorithm 2 in SPECTRE
+    """
+    test_3 = 0
     
     #Determine the inputs to the transaction
     predecessors = list(graph.successors(block_1)) #have to use successor because 
@@ -116,9 +123,11 @@ def check_inputs(self, graph, tx, block_1, voting_profile):
         # belonging to the block
         if bool(transaction_set.intersection(accept_tx_set)) == False:
 #            print('block', block, 'transaction', transaction, 'Tx0 output for the block', accept_tx)
-            return False
+            test_3 = False
         else:
-            return True
+            test_3 = True
+    
+    return test_3
             
          
 def useful_attributes(graph):

@@ -389,6 +389,8 @@ class Multi_Agent_Simulation:
             """      
             
             ############################## Recursion ##############################
+            """
+            Recursion is a work in progress
             #Recursive call of CalcVotes
         for z in self.topo_sort:
             
@@ -407,7 +409,8 @@ class Multi_Agent_Simulation:
             self.past_voting_profile.append(recurs_vote_copy)
         
         print('past voting profile', self.past_voting_profile)
-                    
+        
+        """           
         ############### Main section of the pairwise vote #####################
         #Iterate through each block in the topo_sort
         

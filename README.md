@@ -6,34 +6,17 @@ This is a single- and multi-agent simulation of the IOTA Tangle, as described in
 
 These instructions will get you a copy of the project up and running on your local machine for development and testing purposes.
 
-### Prerequisites
+### Requirements
 
-The code is run and tested with Python 3.6.3 and 3.7 on macOS 10.12.6., 10.13 and 10.14.
-Create a virtual environment for Python 3 with:
+MacOS or Linux with Python 3.
 
+### Install
+
+If running MacOS 10.14, install command line tools, then run the headers package file (on your system) `/Library/Developer/CommandLineTools/Packages/macOS_SDK_headers_for_macOS_10.14.pkg`.
+
+Set up a virtual environment if desired, then run:
 ```
-virtualenv -p python3 envname
-```
-
-### Installing packages
-
-Pip's install of pygraphviz is currently broken, thus run the following before using the makefile:
-
-```
-brew install graphviz
-pip3 install pygraphviz
-```
-
-Then the used Python libraries/packages can be installed with:
-
-```
-make
-```
-
-or alternatively with:
-
-```
-pip install -r requirements.txt
+sudo make
 ```
 
 ## Running the tests
@@ -42,18 +25,24 @@ The Python unittest module is used for testing.
 Run the tests with:
 
 ```
-python -m unittest discover
+python3 -m unittest discover
 ```
 
-## Running the simulation
+## Run
 
 Run the simulation with:
 
 ```
-python core.py
+python3 core.py
 ```
 
 In this file you can also change the configurations of the simulation.
+
+## Test
+
+```
+python3 -m unittest
+```
 
 ## Authors
 

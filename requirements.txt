@@ -47,7 +47,7 @@ py==1.5.3
 pycodestyle==2.0.0
 pydot==1.2.4
 pyflakes==1.2.3
-Pygments==2.2.0
+Pygments==2.7.4
 pygraphviz==1.5
 pylint==2.1.1
 pyparsing==2.2.0
